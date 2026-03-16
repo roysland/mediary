@@ -2,7 +2,7 @@
 
 {{ define "trackable_add_content" }}
 <fieldset>
-    <form action="/trackables/add" method="post">
+    <form action="/trackables/add" method="post" data-submit-state>
         <div class="trackable-form__header">
             <label for="trackable_name">{{ t "trackable.name.label" }}</label>
 
@@ -62,7 +62,11 @@
 
     </div>
         
-        <button type="submit" class="primary">{{ t "save" }}</button>
+        <button type="submit" class="primary submit-button" data-submit-state-button data-submit-visual="idle">
+            <span class="submit-layer submit-label">{{ t "save" }}</span>
+            <span class="submit-layer submit-spinner" aria-hidden="true"></span>
+            <span class="submit-layer submit-check" aria-hidden="true"></span>
+        </button>
     </form>
 </fieldset>
 {{ end }}

@@ -4,7 +4,7 @@
 <section>
     <fieldset>
         <legend>{{ t "settings.general" }}</legend>
-    <form method="post" action="/settings">
+    <form method="post" action="/settings" data-submit-state>
         <label for="language_select">{{ t "settings.language.label" }}</label>
         <select id="language_select" name="language">
             <option value="en" {{ if eq .Settings.Language "en" }}selected{{ end }}>{{ t "settings.language.english" }}</option>
@@ -34,7 +34,11 @@
             <option value="600" {{ if eq .Settings.ShareTimer "600" }}selected{{ end }}>{{ t "settings.share_timer.10_minutes" }}</option>
             <option value="1800" {{ if eq .Settings.ShareTimer "1800" }}selected{{ end }}>{{ t "settings.share_timer.30_minutes" }}</option>
         </select>
-        <button type="submit" class="">{{ t "save" }}</button>
+        <button type="submit" class="submit-button" data-submit-state-button data-submit-visual="idle">
+            <span class="submit-layer submit-label">{{ t "save" }}</span>
+            <span class="submit-layer submit-spinner" aria-hidden="true"></span>
+            <span class="submit-layer submit-check" aria-hidden="true"></span>
+        </button>
     </form>
 </fieldset>
 

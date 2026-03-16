@@ -5,7 +5,8 @@
 
 <form method="post" action="/entry/add"
       hx-post="/entry/add"
-      hx-swap="none">
+  hx-swap="none"
+  data-submit-state>
 <div style="display: flex; justify-content: space-between;">
     <label for="entry_input">{{t "entry.input.label"}}</label>
 <label for="is_private-entry">
@@ -20,7 +21,7 @@
 id="entry_submit_button" 
             type="submit"
             class="submit-button"
-            data-submit-state
+            data-submit-state-button
             data-submit-visual="idle"
           >
             <span class="submit-layer submit-label">{{t "save"}}</span>

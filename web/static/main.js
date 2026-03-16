@@ -1,4 +1,5 @@
 import "./dist/mecfs.js";
+import "./submit-state.js";
 import "./forms.js";
 import "./entries.js";
 import "./trackable-picker.js";
