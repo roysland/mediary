@@ -19,7 +19,7 @@
                     hx-post="/trackables/{{ .ID }}/add" hx-trigger="pointerup, change" hx-swap="none" hx-indicator="closest form"
                     >
                 </label>
-                <span class="save-status" aria-live="polite" style="display: none;">…</span>
+                <span class="save-status" aria-live="polite">…</span>
             </form>
             {{ end }}
 
@@ -30,7 +30,7 @@
                     <span class="icon">{{ .Icon.String }}</span><span> {{ .Name }}</span>
                     <button type="button" class="boolean-trigger" data-swipe-ignore hx-post="/trackables/{{ .ID }}/add" hx-trigger="click" hx-swap="none" hx-indicator="closest form">{{ .Name }}</button>
                 </label>
-                <span class="save-status" aria-live="polite" style="display: none;">…</span>
+                <span class="save-status" aria-live="polite">…</span>
             </form>
             {{ end }}
 
@@ -42,7 +42,7 @@
                     <div>{{ .Name }}</div>
                     <input type="text" name="value_text" hx-post="/trackables/{{ .ID }}/add" hx-trigger="blur, delay:1000ms from:this" hx-swap="none" hx-indicator="closest form" />
                 </label>
-                <span class="save-status" aria-live="polite" style="display: none;">…</span>
+                <span class="save-status" aria-live="polite">…</span>
             </form>
             {{ end }}
         </mecfs-swipe-dismiss>
@@ -58,7 +58,7 @@
                     {{ if .Icon.String }}<span class="icon">{{ .Icon.String }}</span>{{ end }}
                     <span>{{ .Name }}</span>
                 </div>
-                <form method="POST" action="/trackables/{{ .ID }}/dismissal" style="display: inline">
+                <form method="POST" action="/trackables/{{ .ID }}/dismissal" class="dismissed-trackable__form">
                     <input type="hidden" name="dismissed" value="false">
                     <button type="submit" class="restore-trackable" hx-post="/trackables/{{ .ID }}/dismissal" hx-trigger="click" hx-swap="none">Restore</button>
                 </form>
@@ -67,46 +67,5 @@
         </ul>
     </details>
 </section>
-
-<style>
-.trackable-picker .textinput {
-    display: flex;
-    flex-direction: column;
-}
-.trackable-picker form {
-    margin: 0;
-}
-.trackable-picker .save-status {
-    font-size: 0.75em;
-    min-height: 1em;
-    transition: opacity 0.3s;
-    display: none;
-}
-.trackable-picker .autosave-form.htmx-request .save-status,
-.trackable-picker .autosave-form.htmx-settling .save-status {
-    display: inline;
-}
-.trackable-picker .dismissed-trackables {
-    margin-top: 1rem;
-}
-.trackable-picker .dismissed-trackables-list {
-    list-style: none;
-    padding: 0;
-    margin: 0.75rem 0 0;
-}
-.trackable-picker .dismissed-trackable {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--color-secondary);
-}
-.trackable-picker .dismissed-trackable__meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-</style>
 
 {{ end }}

@@ -37,78 +37,11 @@
 
 </dialog>
 
-<style>
-    .entry-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .entry-list li {
-        border-bottom: 1px solid var(--color-secondary);
-        display: grid;
-        grid-template-columns: auto;
-        grid-template-rows: auto auto;
-        margin-bottom: 1rem;
-    }
-    time {
-        font-size: 0.875rem;
-        color: var(--color-secondary);
-        opacity: 0.5;
-    }
-
-    .entry-meta {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-    }
-
-    .entry-date-note {
-        font-size: 0.75rem;
-        color: var(--color-secondary);
-    }
-
-    .entry-item--private {
-        filter: blur(1px);
-        user-select: none;
-    }
-
-    .entry-trackables {
-        list-style: none;
-        padding: 0;
-        margin: 0.5rem 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .entry-trackables li {
-        border: 1px solid var(--color-secondary);
-        border-radius: 999px;
-        padding: 0.25rem 0.625rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        margin: 0;
-    }
-
-    .entry-text {
-        position: relative;
-        display: grid;
-        grid-template-columns: auto max-content;
-        align-items: start;
-    }
-
-    .entry-text .button--more {
-        grid-column: 2;
-    }
-
-</style>
-
 {{ end }}
 
 {{ define "entry_item" }}
 <li class="entry-item {{ if .IsPrivate }}entry-item--private{{ end }}" data-id="entry-{{ .ID }}">
-    <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="entry-item__header">
         <div class="entry-meta">
             <time is="relative-time" datetime="{{ formatISO .RecordedAtUtc }}">{{ formatUnix .RecordedAtUtc }}</time>
             {{ if ne .EntryDate (formatUnix .RecordedAtUtc | printf "%.10s") }}
@@ -116,9 +49,9 @@
             {{ end }}
         </div>
         {{ if .IsPrivate }}
-        <div>
-        <img src="/static/security.svg" alt="Private entry" style="width: 1rem; height: 1rem; margin-left: 0.5rem; opacity: 0.5;">
-        <span style="font-size: 0.75rem; color: var(--color-secondary); opacity: 0.5; margin-left: 0.5rem;">{{ t "entry.private.label" }}</span>
+        <div class="entry-private-indicator">
+        <img src="/static/security.svg" alt="Private entry" class="entry-private-indicator__icon">
+        <span class="entry-private-indicator__label">{{ t "entry.private.label" }}</span>
         </div>
         {{ end }}
     </div>
@@ -141,7 +74,7 @@
                 <path d="M3 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm5-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4-1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
             </svg>
         </button>
-        <div class="entry-actions flex col" style="flex-direction: column;" popover id="entry-{{ .ID }}-context" anchor="entry-{{ .ID}}-context-button" data-placement="left">
+        <div class="entry-actions entry-actions--column flex col" popover id="entry-{{ .ID }}-context" anchor="entry-{{ .ID}}-context-button" data-placement="left">
         <button type="button" class="button--ghost button--sm edit-note-button" data-entry-id="{{ .ID }}" hx-get="/entry/{{ .ID }}/trackables" hx-target="#add-quick-trackable-dialog" hx-swap="innerHTML">{{ t "entry.add_trackable" }}</button>
         <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
         </div>

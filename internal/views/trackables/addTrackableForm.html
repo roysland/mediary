@@ -3,7 +3,7 @@
 {{ define "trackable_add_content" }}
 <fieldset>
     <form action="/trackables/add" method="post">
-        <div style="display: flex; justify-content: space-between;">
+        <div class="trackable-form__header">
             <label for="trackable_name">{{ t "trackable.name.label" }}</label>
 
             <label for="trackable_is-sensitive">{{ t "trackable.sensitive.label" }}
@@ -65,11 +65,4 @@
         <button type="submit" class="primary">{{ t "save" }}</button>
     </form>
 </fieldset>
-
-<style>
-    .custom-definition label {
-        display: block;
-        margin-top: 1rem;
-    }
-</style>
 {{ end }}
