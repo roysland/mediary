@@ -50,19 +50,10 @@
           <button type="button" popovertarget="sample-popover" popovertargetaction="hide">
             Cancel
           </button>
-            <button type="button" class="button--danger" id="delete_everything">{{ t "settings.clear_data" }}</button>
+            <button type="button" class="button--danger" id="delete_everything" data-confirm-message="{{ t "settings.clear_data_confirm" }}">{{ t "settings.clear_data" }}</button>
         </div>
     </form>
 </fieldset>
-    <script>
-        const deleteButton = document.getElementById('delete_everything');
-        deleteButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            if (confirm('{{ t "settings.clear_data_confirm" }}')) {
-                // Add logic to clear data here
-            }
-        });
-    </script>
 </section>  
 
 {{ end }}
