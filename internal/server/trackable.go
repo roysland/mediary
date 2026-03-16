@@ -49,13 +49,25 @@ func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
 		}
 
 		now := time.Now()
-		name := strings.TrimSpace(r.FormValue("trackable_name"))
-		valueType := strings.TrimSpace(r.FormValue("trackable_value-type"))
+		name, err := requireNonEmpty(r.FormValue("trackable_name"), "trackable_name")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
+
+		valueType, err := requireOneOf(r.FormValue("trackable_value-type"), "trackable_value-type", "integer", "boolean", "text")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
+
 		icon := strings.TrimSpace(r.FormValue("trackable_icon"))
 		unit := strings.TrimSpace(r.FormValue("trackable_unit"))
-		minValue := strings.TrimSpace(r.FormValue("trackable_min_value"))
-		maxValue := strings.TrimSpace(r.FormValue("trackable_max_value"))
 		privateLabel := strings.TrimSpace(r.FormValue("trackable_private-label"))
+		if privateLabel == "" {
+			// Accept legacy field name used by the current template.
+			privateLabel = strings.TrimSpace(r.FormValue("trackable_description"))
+		}
 
 		toNullString := func(s string) sql.NullString {
 			if s == "" {
@@ -68,31 +80,48 @@ func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
 		unitVal := toNullString(unit)
 		privateLabelVal := toNullString(privateLabel)
 
-		isSensitive := int64(0)
-		if r.FormValue("trackable_is-sensitive") == "on" {
-			isSensitive = 1
+		isSensitive, err := checkboxToInt64(r.FormValue("trackable_is-sensitive"), "trackable_is-sensitive")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
 		}
 
-		minVal := sql.NullInt64{}
-		if minValue != "" {
-			if v, err := strconv.ParseInt(minValue, 10, 64); err == nil {
-				minVal = sql.NullInt64{Int64: v, Valid: true}
-			}
+		minVal, err := optionalInt64(r.FormValue("trackable_min_value"), "trackable_min_value")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
 		}
 
-		maxVal := sql.NullInt64{}
-		if maxValue != "" {
-			if v, err := strconv.ParseInt(maxValue, 10, 64); err == nil {
-				maxVal = sql.NullInt64{Int64: v, Valid: true}
-			}
+		maxVal, err := optionalInt64(r.FormValue("trackable_max_value"), "trackable_max_value")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
+
+		if minVal.Valid && maxVal.Valid && minVal.Int64 > maxVal.Int64 {
+			respondBadRequest(w, r, "trackable_min_value must be less than or equal to trackable_max_value")
+			return
 		}
 
 		category := strings.TrimSpace(r.FormValue("trackable_category"))
 		if category == "" {
 			category = "default"
 		}
+		category, err = requireOneOf(category, "trackable_category", "default", "symptom", "activity", "measurement", "state")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
 
-		_, err := s.queries.CreateTrackableDefinition(r.Context(), db.CreateTrackableDefinitionParams{
+		if valueType != "integer" {
+			// Integer-only fields should not be persisted for non-integer trackables.
+			minVal = sql.NullInt64{}
+			maxVal = sql.NullInt64{}
+			unit = ""
+			unitVal = sql.NullString{}
+		}
+
+		_, err = s.queries.CreateTrackableDefinition(r.Context(), db.CreateTrackableDefinitionParams{
 			UserID:       userID,
 			Name:         name,
 			ValueType:    valueType,

@@ -127,11 +127,22 @@ func (s *Server) addEntry(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if err := r.ParseForm(); err != nil {
+			respondBadRequest(w, r, "Invalid form data")
+			return
+		}
+
 		now := time.Now()
-		note := r.FormValue("entry_input")
-		isPrivate := int64(0)
-		if r.FormValue("is_private_entry") == "on" {
-			isPrivate = 1
+		note, err := requireNonEmpty(r.FormValue("entry_input"), "entry_input")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
+
+		isPrivate, err := checkboxToInt64(r.FormValue("is_private_entry"), "is_private_entry")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
 		}
 		noteText := sql.NullString{String: note, Valid: note != ""}
 

@@ -34,12 +34,41 @@ func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
 			"Settings": settings,
 		})
 	case http.MethodPost:
+		if err := r.ParseForm(); err != nil {
+			respondBadRequest(w, r, "Invalid form data")
+			return
+		}
+
+		language, err := requireOneOf(r.FormValue("language"), "language", "en", "no")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
+
+		theme, err := requireOneOf(r.FormValue("theme"), "theme", "light", "dark", "system")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
+
+		screenLock, err := requireOneOf(r.FormValue("screen_lock"), "screen_lock", "none", "60", "300", "600")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
+
+		shareTimer, err := requireOneOf(r.FormValue("share_timer"), "share_timer", "300", "600", "1800")
+		if err != nil {
+			respondBadRequest(w, r, err.Error())
+			return
+		}
+
 		now := time.Now().UTC().Unix()
 		settings := UserSettings{
-			Language:   r.FormValue("language"),
-			Theme:      r.FormValue("theme"),
-			ScreenLock: r.FormValue("screen_lock"),
-			ShareTimer: r.FormValue("share_timer"),
+			Language:   language,
+			Theme:      theme,
+			ScreenLock: screenLock,
+			ShareTimer: shareTimer,
 		}
 
 		if err := s.saveUserSettings(r.Context(), userID, settings, now); err != nil {

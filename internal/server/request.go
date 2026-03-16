@@ -1,7 +1,10 @@
 package server
 
 import (
+	"database/sql"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -28,5 +31,54 @@ func classifyRequest(r *http.Request) requestMeta {
 		IsXHR:       isXHR,
 		AcceptsJSON: acceptsJSON,
 		IsAJAX:      isJSON || isXHR || isHTMX,
+	}
+}
+
+func requireNonEmpty(value, field string) (string, error) {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return "", fmt.Errorf("%s is required", field)
+	}
+	return trimmed, nil
+}
+
+func optionalInt64(value, field string) (sql.NullInt64, error) {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return sql.NullInt64{}, nil
+	}
+
+	parsed, err := strconv.ParseInt(trimmed, 10, 64)
+	if err != nil {
+		return sql.NullInt64{}, fmt.Errorf("%s must be an integer", field)
+	}
+
+	return sql.NullInt64{Int64: parsed, Valid: true}, nil
+}
+
+func requireOneOf(value, field string, allowed ...string) (string, error) {
+	trimmed := strings.TrimSpace(value)
+	for _, option := range allowed {
+		if trimmed == option {
+			return trimmed, nil
+		}
+	}
+
+	return "", fmt.Errorf("invalid %s", field)
+}
+
+func checkboxToInt64(value, field string) (int64, error) {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return 0, nil
+	}
+
+	switch strings.ToLower(trimmed) {
+	case "on", "true", "1":
+		return 1, nil
+	case "off", "false", "0":
+		return 0, nil
+	default:
+		return 0, fmt.Errorf("invalid %s", field)
 	}
 }
