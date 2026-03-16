@@ -1,0 +1,91 @@
+{{ define "trackablePresetList" }}
+<ul class="trackablePresetList">
+    {{ range .TrackablePresets }}
+    <li data-name="{{ .Name }}">
+        <button type="button" data-name="{{ .Name }}">
+        <span class="icon">{{ .Icon.String }}</span>
+        {{ .Name }}
+    </button>
+    </li>
+    {{ end }}
+</ul>
+
+<template id="trackablePresetListTemplate">
+    <button type="button" data-name="">
+        <span class="icon"></span>
+        <span class="name"></span>
+    </button>
+</template>
+
+<script>
+    const presetList = {{ .TrackablePresets | json }};
+
+    const trackablePresetList = document.querySelector('.trackablePresetList');
+    const hiddenPresetIdInput = document.getElementById('presetId');
+    const trackableNameInput = document.getElementById('trackable_name');
+
+    function nullableString(v, fallback = '') {
+        if (v == null) return fallback;
+        if (typeof v === 'string') return v || fallback;
+        if (typeof v.String === 'string') return v.String || fallback;
+        return fallback;
+    }
+
+    function nullableInt(v, fallback = 0) {
+        if (v == null) return fallback;
+        if (typeof v === 'number') return v;
+        if (typeof v.Int64 === 'number') return v.Int64;
+        return fallback;
+    }
+
+    function updateFieldsFromPreset(preset) {
+        if (!preset) return;
+
+        try {
+            trackableNameInput.value = preset.name ?? '';
+            hiddenPresetIdInput.value = preset.id ?? '';
+
+            const iconInput = document.getElementById('trackable_icon');
+            const valueTypeInput =
+                document.getElementById('trackable_value_type') ||
+                document.getElementById('trackable_value-type');
+            const categoryInput = document.getElementById('trackable_category');
+            const minValueInput = document.getElementById('trackable_min_value');
+            const maxValueInput = document.getElementById('trackable_max_value');
+
+            if (iconInput) iconInput.value = nullableString(preset.icon, '');
+            if (valueTypeInput) valueTypeInput.value = preset.value_type ?? 'integer';
+            if (categoryInput) categoryInput.value = nullableString(preset.category, 'default');
+            if (minValueInput) minValueInput.value = nullableInt(preset.min_value, 0);
+            if (maxValueInput) maxValueInput.value = nullableInt(preset.max_value, 10);
+        } catch (error) {
+            console.error('Error updating fields from preset:', error);
+        }
+    }
+
+    const trackablePresetButtons = trackablePresetList.querySelectorAll('li button');
+    trackablePresetButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (trackableNameInput) {
+                const presetName = button.dataset.name;
+                const preset = presetList.find(p => p.name === presetName);
+                updateFieldsFromPreset(preset);
+                trackableNameInput.dispatchEvent(new Event('input'));
+            }
+        });
+    });
+
+    if (trackableNameInput) {
+        trackableNameInput.addEventListener('input', () => {
+            hiddenPresetIdInput.value = '';
+            const inputValue = trackableNameInput.value.toLowerCase();
+            const listItems = trackablePresetList.querySelectorAll('li');
+            listItems.forEach(listItem => {
+                const name = listItem.dataset.name.toLowerCase();
+                listItem.style.display = name.includes(inputValue) ? '' : 'none';
+            });
+        });
+    }
+</script>
+
+{{ end }}

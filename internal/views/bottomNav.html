@@ -1,0 +1,24 @@
+{{ define "bottomNav" }}
+<nav id="bottom-nav" slot="mobile-nav" class="bottom-nav" aria-label="{{ t "nav.aria_label" }}">
+    <ul class="bottom-nav__group">
+
+            <li></li><a href="/" class="bottom-nav__link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon-home"><path d="M5 12l-2 0l9 -9l9 9l-2 0l0 8a2 2 0 0 1 -2 2l-4 0a2 2 0 0 1 -2 -2z"></path><path d="M9 21l0 -6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2l0 6"></path></svg>
+                <span>{{ t "nav.home"}}</span></a></li>
+            <li><a href="/entries" class="bottom-nav__link" class="secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon-list"><path d="M4 6l16 0"></path><path d="M4 12l16 0"></path><path d="M4 18l16 0"></path></svg>
+                <span>{{ t "nav.entries"}}</span></a>
+                </li>
+                <li>
+            <a href="/trackables" class="bottom-nav__link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon-grid"><path d="M4 4h6v6h-6z"></path><path d="M14 4h6v6h-6z"></path><path d="M4 14h6v6h-6z"></path><path d="M14 14h6v6h-6z"></path></svg>
+                <span>{{ t "nav.trackables"}}</span></a>
+                </li>
+                <li>
+            <a href="/settings" class="bottom-nav__link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon-settings"><path d="M10.325 4.317c.426 -1.756 3.076 -1.756 3.502 0a1.724 1.724 0 0 0 2.573 .73c1.543 -.94 3.233 .549 2.292 2.292a1.724 1.724 0 0 0 .73 2.573c1.756 .426 1.756 3.076 0 3.502a1.724 1.724 0 0 0 -.73 2.573c.94 1.543 -.549 3.233 -2.292 2.292a1.724 1.724 0 0 0 -2.573 .73c-.426 1.756 -3.076 1.756 -3.502 0a1.724 1.724 0 0 0 -2.573 -.73c-1.543 .94 -3.233 -.549 -2.292 -2.292a1.724 1.724 0 0 0 -.73 -2.573c-1.756 -.426 -1.756 -3.076 0 -3.502a1.724 1.724 0 0 0 .73 -2.573c-.94 -1.543 .549 -3.233 2.292 -2.292z"></path><path d="M12 9a3 3 0 1 0 .001 .001z"></path></svg>
+                <span>{{ t "nav.settings"}}</span></a>
+                </li>
+        </ul>
+    </nav>
+{{ end }}

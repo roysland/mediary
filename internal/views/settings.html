@@ -1,0 +1,68 @@
+{{ define "settings_title" }}Settings{{ end }}
+
+{{ define "settings_content" }}
+<section>
+    <fieldset>
+        <legend>{{ t "settings.general" }}</legend>
+    <form method="post" action="/settings">
+        <label for="language_select">{{ t "settings.language.label" }}</label>
+        <select id="language_select" name="language">
+            <option value="en" {{ if eq .Settings.Language "en" }}selected{{ end }}>{{ t "settings.language.english" }}</option>
+            <option value="no" {{ if eq .Settings.Language "no" }}selected{{ end }}>{{ t "settings.language.norwegian" }}</option>
+            <!-- Add more languages as needed -->
+        </select>
+
+        <label for="theme_select">{{ t "settings.theme.label" }}</label>
+        <select id="theme_select" name="theme">
+            <option value="light" {{ if eq .Settings.Theme "light" }}selected{{ end }}>{{ t "settings.theme.light" }}</option>
+            <option value="dark" {{ if eq .Settings.Theme "dark" }}selected{{ end }}>{{ t "settings.theme.dark" }}</option>
+            <option value="system" {{ if eq .Settings.Theme "system" }}selected{{ end }}>{{ t "settings.theme.system" }}</option>
+            <!-- Add more themes as needed -->
+        </select>
+
+        <label for="screen_lock">{{ t "settings.screen_lock.label" }}</label>
+        <select id="screen_lock" name="screen_lock">
+            <option value="none" {{ if eq .Settings.ScreenLock "none" }}selected{{ end }}>{{ t "settings.screen_lock.never" }}</option>
+            <option value="60" {{ if eq .Settings.ScreenLock "60" }}selected{{ end }}>{{ t "settings.screen_lock.1_minute" }}</option>
+            <option value="300" {{ if eq .Settings.ScreenLock "300" }}selected{{ end }}>{{ t "settings.screen_lock.5_minutes" }}</option>
+            <option value="600" {{ if eq .Settings.ScreenLock "600" }}selected{{ end }}>{{ t "settings.screen_lock.10_minutes" }}</option>
+        </select>
+
+        <label for="share-timer">{{ t "settings.share_timer.label" }}</label>
+        <select id="share-timer" name="share_timer">
+            <option value="300" {{ if eq .Settings.ShareTimer "300" }}selected{{ end }}>{{ t "settings.share_timer.5_minutes" }}</option>
+            <option value="600" {{ if eq .Settings.ShareTimer "600" }}selected{{ end }}>{{ t "settings.share_timer.10_minutes" }}</option>
+            <option value="1800" {{ if eq .Settings.ShareTimer "1800" }}selected{{ end }}>{{ t "settings.share_timer.30_minutes" }}</option>
+        </select>
+        <button type="submit" class="">{{ t "save" }}</button>
+    </form>
+</fieldset>
+
+<fieldset>
+    <legend>{{ t "settings.danger_zone" }}</legend>
+    
+        <h3>Danger zone</h3>
+        <button class="button--danger"  type="button" popovertarget="sample-popover" class="danger">{{ t "settings.clear_data" }}</button>
+
+    <form>
+        <div id="sample-popover" popover anchor="popover-trigger" role="region" aria-label="Sample popover">
+          <p>This will delete everything. It cannot be undone.</p>
+          <button type="button" popovertarget="sample-popover" popovertargetaction="hide">
+            Cancel
+          </button>
+            <button type="button" class="button--danger" id="delete_everything">{{ t "settings.clear_data" }}</button>
+        </div>
+    </form>
+</fieldset>
+    <script>
+        const deleteButton = document.getElementById('delete_everything');
+        deleteButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            if (confirm('{{ t "settings.clear_data_confirm" }}')) {
+                // Add logic to clear data here
+            }
+        });
+    </script>
+</section>  
+
+{{ end }}

@@ -1,0 +1,273 @@
+{{ define "trackable_picker_content" }}
+<section class="trackable-picker" data-trackable-picker data-picker-id="{{ .PickerID }}">
+    {{ if .ShowAddTrackableLink }}
+    <div>
+        <a class="button" href="/trackables/add">{{ t "entry.add_trackable_link" }}</a>
+    </div>
+    {{ end }}
+
+    <section class="quick-tracker" data-active-trackables>
+        {{ range .ActiveTrackables }}
+        <mecfs-swipe-dismiss class="trackable-item" threshold="0.5" direction="right" data-trackable-id="{{ .ID }}" data-trackable-name="{{ .Name }}" data-trackable-icon="{{ .Icon.String }}">
+            {{ if eq .ValueType "integer" }}
+            <form class="autosave-form" method="POST" action="/trackables/{{ .ID }}/add">
+                {{ if $.HasEntryID }}<input type="hidden" name="entry_id" value="{{ $.EntryID }}">{{ end }}
+                <label>
+                    <span class="icon">{{ .Icon.String }}</span><span> {{ .Name }}</span>
+                    <output id="trackable-{{ $.PickerID }}-{{ .ID }}-output">0</output>
+                    <input data-swipe-ignore type="range" min="{{ .MinValue.Int64 }}" max="{{ .MaxValue.Int64 }}" value="0" class="slider" name="value_int"
+                    hx-post="/trackables/{{ .ID }}/add" hx-trigger="pointerup, change" hx-swap="none" hx-indicator="closest form"
+                    oninput="document.getElementById('trackable-{{ $.PickerID }}-{{ .ID }}-output').value = this.value"
+                    >
+                </label>
+                <span class="save-status" aria-live="polite" style="display: none;">…</span>
+            </form>
+            {{ end }}
+
+            {{ if eq .ValueType "boolean" }}
+            <form class="autosave-form" method="POST" action="/trackables/{{ .ID }}/add">
+                {{ if $.HasEntryID }}<input type="hidden" name="entry_id" value="{{ $.EntryID }}">{{ end }}
+                <label>
+                    <span class="icon">{{ .Icon.String }}</span><span> {{ .Name }}</span>
+                    <button type="button" class="boolean-trigger" data-swipe-ignore hx-post="/trackables/{{ .ID }}/add" hx-trigger="click" hx-swap="none" hx-indicator="closest form">{{ .Name }}</button>
+                </label>
+                <span class="save-status" aria-live="polite" style="display: none;">…</span>
+            </form>
+            {{ end }}
+
+            {{ if eq .ValueType "text" }}
+            <form class="autosave-form" method="POST" action="/trackables/{{ .ID }}/add">
+                {{ if $.HasEntryID }}<input type="hidden" name="entry_id" value="{{ $.EntryID }}">{{ end }}
+                <label class="textinput">
+                    <span class="icon">{{ .Icon.String }}</span>
+                    <div>{{ .Name }}</div>
+                    <input type="text" name="value_text" hx-post="/trackables/{{ .ID }}/add" hx-trigger="blur, delay:1000ms from:this" hx-swap="none" hx-indicator="closest form" />
+                </label>
+                <span class="save-status" aria-live="polite" style="display: none;">…</span>
+            </form>
+            {{ end }}
+        </mecfs-swipe-dismiss>
+        {{ end }}
+    </section>
+
+    <details class="dismissed-trackables" data-dismissed-trackables-panel {{ if .DismissedTrackables }}{{ else }}hidden{{ end }}>
+        <summary>Dismissed for today</summary>
+        <ul class="dismissed-trackables-list" data-dismissed-trackables-list>
+            {{ range .DismissedTrackables }}
+            <li class="dismissed-trackable" data-trackable-id="{{ .ID }}">
+                <div class="dismissed-trackable__meta">
+                    {{ if .Icon.String }}<span class="icon">{{ .Icon.String }}</span>{{ end }}
+                    <span>{{ .Name }}</span>
+                </div>
+                <form method="POST" action="/trackables/{{ .ID }}/dismissal" style="display: inline">
+                    <input type="hidden" name="dismissed" value="false">
+                    <button type="submit" class="restore-trackable" hx-post="/trackables/{{ .ID }}/dismissal" hx-trigger="click" hx-swap="none">Restore</button>
+                </form>
+            </li>
+            {{ end }}
+        </ul>
+    </details>
+</section>
+
+<style>
+.trackable-picker .textinput {
+    display: flex;
+    flex-direction: column;
+}
+.trackable-picker form {
+    margin: 0;
+}
+.trackable-picker .save-status {
+    font-size: 0.75em;
+    min-height: 1em;
+    transition: opacity 0.3s;
+    display: none;
+}
+.trackable-picker .autosave-form.htmx-request .save-status,
+.trackable-picker .autosave-form.htmx-settling .save-status {
+    display: inline;
+}
+.trackable-picker .dismissed-trackables {
+    margin-top: 1rem;
+}
+.trackable-picker .dismissed-trackables-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0 0;
+}
+.trackable-picker .dismissed-trackable {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-secondary);
+}
+.trackable-picker .dismissed-trackable__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+</style>
+
+<script>
+(() => {
+    const ensureDismissedPanelVisibility = (root) => {
+        const dismissedPanel = root.querySelector('[data-dismissed-trackables-panel]');
+        const dismissedTrackablesList = root.querySelector('[data-dismissed-trackables-list]');
+        if (!dismissedPanel || !dismissedTrackablesList) {
+            return;
+        }
+        dismissedPanel.hidden = dismissedTrackablesList.children.length === 0;
+    };
+
+    const createDismissedItem = (trackableElement) => {
+        const item = document.createElement('li');
+        item.className = 'dismissed-trackable';
+        item.dataset.trackableId = trackableElement.dataset.trackableId;
+
+        const meta = document.createElement('div');
+        meta.className = 'dismissed-trackable__meta';
+
+        const icon = trackableElement.querySelector('.icon');
+        if (icon) {
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'icon';
+            iconSpan.textContent = icon.textContent;
+            meta.appendChild(iconSpan);
+        }
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = trackableElement.dataset.trackableName;
+        meta.appendChild(nameSpan);
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/trackables/${trackableElement.dataset.trackableId}/dismissal`;
+        form.style.display = 'inline';
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'dismissed';
+        hiddenInput.value = 'false';
+        form.appendChild(hiddenInput);
+
+        const button = document.createElement('button');
+        button.type = 'submit';
+        button.className = 'restore-trackable';
+        button.textContent = 'Restore';
+        button.setAttribute('hx-post', `/trackables/${trackableElement.dataset.trackableId}/dismissal`);
+        button.setAttribute('hx-trigger', 'click');
+        button.setAttribute('hx-swap', 'none');
+        form.appendChild(button);
+
+        item.appendChild(meta);
+        item.appendChild(form);
+        return item;
+    };
+
+    const initTrackablePickers = (scope = document) => {
+        const roots = scope instanceof Element && scope.matches('[data-trackable-picker]')
+            ? [scope]
+            : Array.from(scope.querySelectorAll?.('[data-trackable-picker]') ?? []);
+
+        roots.forEach((root) => {
+            if (!(root instanceof HTMLElement) || root.dataset.trackablePickerReady === 'true') {
+                return;
+            }
+
+            root.dataset.trackablePickerReady = 'true';
+            ensureDismissedPanelVisibility(root);
+        });
+    };
+
+    if (window.initTrackablePickers) {
+        window.initTrackablePickers(document);
+        return;
+    }
+
+    window.initTrackablePickers = initTrackablePickers;
+    window.initTrackablePickers(document);
+    document.addEventListener('swipedismiss', async (event) => {
+        const trackableElement = event.target.closest('.trackable-item');
+        const root = trackableElement?.closest('[data-trackable-picker]');
+        const activeTrackables = root?.querySelector('[data-active-trackables]');
+        const dismissedTrackablesList = root?.querySelector('[data-dismissed-trackables-list]');
+        if (!trackableElement || !root || !activeTrackables || !dismissedTrackablesList) {
+            return;
+        }
+
+        const trackableId = trackableElement.dataset.trackableId;
+        const dismissedItem = createDismissedItem(trackableElement);
+        const swiped = event.target;
+
+        swiped.remove();
+        dismissedTrackablesList.appendChild(dismissedItem);
+        ensureDismissedPanelVisibility(root);
+
+        try {
+            const response = await fetch(`/trackables/${trackableId}/dismissal`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dismissed: true })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        } catch (err) {
+            console.error('Failed to save dismissal:', err);
+            dismissedItem.remove();
+            activeTrackables.appendChild(trackableElement);
+            ensureDismissedPanelVisibility(root);
+        }
+    });
+    document.body.addEventListener('htmx:afterRequest', (event) => {
+        const form = event.detail.elt.closest?.('form');
+        const root = event.detail.elt.closest?.('[data-trackable-picker]');
+        if (!root) {
+            return;
+        }
+
+        if (form?.classList?.contains?.('autosave-form')) {
+            const statusEl = form.querySelector('.save-status');
+            const isError = event.detail.xhr?.status >= 400;
+
+            if (isError) {
+                if (statusEl) {
+                    statusEl.textContent = '✗ Error';
+                }
+            } else if (statusEl) {
+                statusEl.textContent = '✓ Saved';
+                setTimeout(() => {
+                    if (statusEl.textContent === '✓ Saved') {
+                        statusEl.textContent = '';
+                    }
+                }, 2000);
+            }
+
+            if (!isError) {
+                let responseData = null;
+                try {
+                    responseData = JSON.parse(event.detail.xhr?.responseText ?? 'null');
+                } catch {
+                    responseData = null;
+                }
+                if (responseData?.entry_id) {
+                    document.body.dispatchEvent(new CustomEvent('entrytrackable:saved', {
+                        detail: responseData,
+                    }));
+                }
+            }
+        }
+
+        if (event.detail.elt?.classList?.contains?.('restore-trackable')) {
+            const isError = event.detail.xhr?.status >= 400;
+            if (!isError) {
+                window.location.reload();
+            }
+        }
+    });
+    document.body.addEventListener('htmx:afterSwap', (event) => {
+        window.initTrackablePickers(event.detail.target);
+    });
+})();
+</script>
+{{ end }}

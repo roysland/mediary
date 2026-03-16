@@ -1,0 +1,122 @@
+{{ define "trackable_add_title" }}{{ t "entry.add_trackable" }}{{ end }}
+
+{{ define "trackable_add_content" }}
+<fieldset>
+    <form action="/trackables/add" method="post">
+        <div style="display: flex; justify-content: space-between;">
+            <label for="trackable_name">{{ t "trackable.name.label" }}</label>
+
+            <label for="trackable_is-sensitive">{{ t "trackable.sensitive.label" }}
+                <input type="checkbox" id="trackable_is-sensitive" name="trackable_is-sensitive">
+            </label>
+        </div>
+        <input type="text" id="trackable_name" name="trackable_name" required>
+
+        <input type="hidden" id="presetId" name="presetId" value="">
+        {{ template "trackablePresetList" . }}
+        
+
+
+
+
+        <div>
+            <label for="trackable-private-label">{{ t "trackable.private.label" }}</label>
+            <input type="text" id="trackable-private-label" name="trackable_description" />
+        </div>
+            <label for="trackable_value-type">{{ t "trackable.value_type.label" }}</label>
+    <select id="trackable_value-type" name="trackable_value-type">
+        <option value="integer">{{ t "trackable.value_type.integer" }}</option>
+        <option value="boolean">{{ t "trackable.value_type.boolean" }}</option>
+        <option value="text">{{ t "trackable.value_type.text" }}</option>
+    </select>
+
+    <div class="custom-definition">
+
+
+    <label for="trackable_icon">{{ t "trackable.icon.label" }}</label>
+    <input type="text" id="trackable_icon" name="trackable_icon" value="💊" placeholder="{{ t "trackable.icon.placeholder" }} (e.g. '💧')">
+
+    <label for="trackable_category">{{ t "trackable.category.label"}}</label>
+        <select id="trackable_category" name="trackable_category">
+            <option value="default">{{ t "trackable.category.default" }}</option>
+            <option value="symptom">{{ t "trackable.category.symptom" }}</option>
+            <option value="activity">{{ t "trackable.category.activity" }}</option>
+            <option value="measurement">{{ t "trackable.category.measurement" }}</option>
+            <option value="state">{{ t "trackable.category.state" }}</option>
+        </select>
+    <div class="value_treshold">
+            <label for="trackable_min_value">{{ t "trackable.min_value.label" }}</label>
+            <input type="number" id="trackable_min_value" name="trackable_min_value" placeholder="{{ t "trackable.min_value.placeholder" }}">
+            <label for="trackable_max_value">{{ t "trackable.max_value.label" }}</label>
+            <input type="number" id="trackable_max_value" name="trackable_max_value" placeholder="{{ t "trackable.max_value.placeholder" }}">
+        </div>  
+    <details>
+        <summary>{{ t "trackable.advanced_options" }}</summary>
+        <label for="trackable_unit">{{ t "trackable.unit.label" }}</label>
+        <input type="text" id="trackable_unit" name="trackable_unit" placeholder="{{ t "trackable.unit.placeholder" }} (e.g. 'liters', 'hours', 'mood')">
+
+        
+
+        
+    </details>
+
+    </div>
+        
+        <button type="submit" class="primary">{{ t "save" }}</button>
+    </form>
+</fieldset>
+
+<style>
+    .custom-definition label {
+        display: block;
+        margin-top: 1rem;
+    }
+</style>
+<script>
+    const sensitiveCheckbox = document.getElementById('trackable_is-sensitive');
+    const privateLabelInput = document.getElementById('trackable-private-label');
+
+    const valueTypeSelect = document.getElementById('trackable_value-type');
+    const minMaxValueContainer = document.querySelector('.value_treshold');
+    const unitInput = document.getElementById('trackable_unit');
+
+    function clearAllInputs() {
+        document.getElementById('trackable_name').value = '';
+        document.getElementById('trackable_is-sensitive').checked = false;
+        privateLabelInput.value = '';
+        valueTypeSelect.value = 'text';
+        unitInput.value = '';
+        document.getElementById('trackable_icon').value = '💊';
+        document.getElementById('trackable_category').value = 'default';
+        document.getElementById('trackable_min_value').value = '';
+        document.getElementById('trackable_max_value').value = '';
+        updateUnitVisibility()
+    }
+
+    function updateUnitVisibility() {
+        if (valueTypeSelect.value === 'integer') {
+            unitInput.parentElement.style.display = 'block';
+            minMaxValueContainer.style.display = 'block';
+        } else {
+            unitInput.parentElement.style.display = 'none';
+            unitInput.value = '';
+            minMaxValueContainer.style.display = 'none';
+        }
+    }
+
+
+    function updatePrivateLabelVisibility() {
+        if (sensitiveCheckbox.checked) {
+            privateLabelInput.parentElement.style.display = 'block';
+        } else {
+            privateLabelInput.parentElement.style.display = 'none';
+            privateLabelInput.value = '';
+        }
+    }
+
+    sensitiveCheckbox.addEventListener('change', updatePrivateLabelVisibility);
+    valueTypeSelect.addEventListener('change', updateUnitVisibility);
+    updatePrivateLabelVisibility();
+    updateUnitVisibility();
+</script>
+{{ end }}

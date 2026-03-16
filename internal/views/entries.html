@@ -1,0 +1,243 @@
+{{ define "entries_title" }}Entries{{ end }}
+
+{{ define "entries_content" }}
+
+<nav class="card">
+<ul class="day-control">
+    {{ range .DayNavigation }}
+    <li>
+      <a href="/entries?day={{ .Date }}"
+         hx-get="/entries?day={{ .Date }}"
+                 hx-target="main.container"
+                 hx-select="main.container"
+                 hx-swap="outerHTML"
+         hx-push-url="true"
+         {{ if .IsCurrent }}aria-current="page"{{ end }}>
+        <span class="day-number">{{ .DayNumber }}</span>
+        <span class="day-name">{{ .DayName }}</span>
+      </a>
+    </li>
+    {{ end }}
+</ul>
+</nav>
+<section class="card">
+    {{ if .Entries }}
+    <ul class="entry-list">
+    {{ range .Entries }}
+        {{ template "entry_item" . }}
+    {{ end }}
+    {{ else }}
+    <p>{{ t "entry.no_entries" }}</p>
+    {{ end }}
+    </ul>
+
+</section>
+
+<dialog id="add-quick-trackable-dialog" class="sheet">
+
+</dialog>
+
+<script>
+function deleteEntry(entryId) {
+    if (!confirm("Are you sure you want to delete this entry? This action cannot be undone.")) {
+        return;
+    }
+
+    fetch(`/entry/${entryId}/delete`, {
+        method: "POST",
+        headers: {
+            "HX-Request": "true"
+        }
+    }).then(response => {
+        if (response.ok) {
+            // Remove the entry from the DOM
+            const entryElement = document.querySelector(`[data-id="entry-${entryId}"]`);
+            if (entryElement) {
+                entryElement.remove();
+            }
+        } else {
+            alert("Failed to delete entry. Please try again.");
+        }
+    }).catch(error => {
+        console.error("Error deleting entry:", error);
+        alert("An error occurred while deleting the entry. Please try again.");
+    });
+}
+
+function scrollDayControl() {
+    const el = document.querySelector('.day-control');
+    if (el) el.scrollTo({ left: el.scrollWidth, behavior: "instant" });
+}
+
+document.addEventListener("DOMContentLoaded", scrollDayControl);
+document.body.addEventListener("htmx:afterSwap", scrollDayControl);
+
+const quickTrackableDialog = document.getElementById("add-quick-trackable-dialog");
+
+document.body.addEventListener("click", (event) => {
+    const trigger = event.target.closest(".edit-note-button");
+    if (!trigger) {
+        const deleteButton = event.target.closest(".delete-note-button");
+        if (!deleteButton) {
+            return;
+        }
+
+        const entryId = Number(deleteButton.dataset.entryId);
+        if (Number.isFinite(entryId) && entryId > 0) {
+            deleteEntry(entryId);
+        }
+        return;
+    }
+
+    const popover = trigger.closest("[popover]");
+    if (popover && typeof popover.hidePopover === "function") {
+        popover.hidePopover();
+    }
+});
+
+document.body.addEventListener("htmx:afterSwap", (event) => {
+    if (event.detail.target !== quickTrackableDialog || !quickTrackableDialog) {
+        return;
+    }
+
+    if (!quickTrackableDialog.open) {
+        quickTrackableDialog.showModal();
+    }
+});
+
+quickTrackableDialog?.addEventListener("click", (event) => {
+    if (event.target === quickTrackableDialog) {
+        quickTrackableDialog.close();
+    }
+});
+
+document.body.addEventListener("entrytrackable:saved", (event) => {
+    const entryId = Number(event.detail?.entry_id);
+    if (!Number.isFinite(entryId) || entryId <= 0 || typeof htmx === "undefined") {
+        return;
+    }
+
+    const entryElement = document.querySelector(`[data-id="entry-${entryId}"]`);
+    if (!entryElement) {
+        return;
+    }
+
+    htmx.ajax("GET", `/entry/${entryId}`, {
+        target: entryElement,
+        swap: "outerHTML"
+    });
+});
+</script>
+
+<style>
+    .entry-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .entry-list li {
+        border-bottom: 1px solid var(--color-secondary);
+        display: grid;
+        grid-template-columns: auto;
+        grid-template-rows: auto auto;
+        margin-bottom: 1rem;
+    }
+    time {
+        font-size: 0.875rem;
+        color: var(--color-secondary);
+        opacity: 0.5;
+    }
+
+    .entry-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .entry-date-note {
+        font-size: 0.75rem;
+        color: var(--color-secondary);
+    }
+
+    .entry-item--private {
+        filter: blur(1px);
+        user-select: none;
+    }
+
+    .entry-trackables {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .entry-trackables li {
+        border: 1px solid var(--color-secondary);
+        border-radius: 999px;
+        padding: 0.25rem 0.625rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin: 0;
+    }
+
+    .entry-text {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto max-content;
+        align-items: start;
+    }
+
+    .entry-text .button--more {
+        grid-column: 2;
+    }
+
+</style>
+
+{{ end }}
+
+{{ define "entry_item" }}
+<li class="entry-item {{ if .IsPrivate }}entry-item--private{{ end }}" data-id="entry-{{ .ID }}">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="entry-meta">
+            <time is="relative-time" datetime="{{ formatISO .RecordedAtUtc }}">{{ formatUnix .RecordedAtUtc }}</time>
+            {{ if ne .EntryDate (formatUnix .RecordedAtUtc | printf "%.10s") }}
+            <div class="entry-date-note">Logged for {{ .EntryDate }}</div>
+            {{ end }}
+        </div>
+        {{ if .IsPrivate }}
+        <div>
+        <img src="/static/security.svg" alt="Private entry" style="width: 1rem; height: 1rem; margin-left: 0.5rem; opacity: 0.5;">
+        <span style="font-size: 0.75rem; color: var(--color-secondary); opacity: 0.5; margin-left: 0.5rem;">{{ t "entry.private.label" }}</span>
+        </div>
+        {{ end }}
+    </div>
+    {{ if .Trackables }}
+    <ul class="entry-trackables">
+        {{ range .Trackables }}
+        <li>
+            {{ if .Icon }}<span class="icon">{{ .Icon }}</span>{{ end }}
+            <span>{{ .Name }}</span>
+            <strong>{{ .Value }}</strong>
+        </li>
+        {{ end }}
+    </ul>
+    {{ end }}
+    <div class="entry-text">{{ .NoteText.String }}
+
+        {{ if .NoteText.String }}
+        <button id="entry-{{ .ID }}-context-button" type="button" class="button--ghost button--more" popovertarget="entry-{{ .ID }}-context">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M3 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm5-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4-1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+            </svg>
+        </button>
+        <div class="entry-actions flex col" style="flex-direction: column;" popover id="entry-{{ .ID }}-context" anchor="entry-{{ .ID}}-context-button" data-placement="left">
+        <button type="button" class="button--ghost button--sm edit-note-button" data-entry-id="{{ .ID }}" hx-get="/entry/{{ .ID }}/trackables" hx-target="#add-quick-trackable-dialog" hx-swap="innerHTML">{{ t "entry.add_trackable" }}</button>
+        <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
+        </div>
+        {{ end }}
+    </div>
+</li>
+{{ end }}

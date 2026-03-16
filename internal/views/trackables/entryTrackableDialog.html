@@ -1,0 +1,31 @@
+{{ define "entry_trackable_dialog_content" }}
+<div class="entry-trackable-dialog">
+    <div class="entry-trackable-dialog__header">
+        <h2>{{ t "entry.add_trackable" }}</h2>
+        <form method="dialog">
+            <button type="submit" class="button--ghost">Close</button>
+        </form>
+    </div>
+
+    {{ template "trackable_picker_content" . }}
+</div>
+
+<style>
+.entry-trackable-dialog {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.entry-trackable-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.entry-trackable-dialog__header h2 {
+    margin: 0;
+}
+</style>
+{{ end }}
