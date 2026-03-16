@@ -39,5 +39,6 @@ data/
 
 # Development
 debug
+server
 tmp/
-/data/app.db
+data/*.db
