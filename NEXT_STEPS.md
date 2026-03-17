@@ -50,3 +50,9 @@
 	Why: `.gitignore` prevents new local artifacts from entering future diffs, but old commits can still keep repository size/noise if files like `server`, `tmp/app`, or `data/app.db` were committed earlier.
 	How: In a coordinated branch, run `git filter-repo --path server --path tmp/app --path data/app.db --invert-paths`, then force-push and have collaborators re-clone or hard-reset after the history rewrite.
 
+## Follow-ups after home quick-capture simplification
+
+- Add a browser-level test for submit-state transitions on the home quick-capture form.
+	Why: Server tests now verify that the `data-submit-state-button` hook exists, but they cannot verify the client-side loading/success visual cue behavior.
+	How: Add a Playwright test that submits the `/` form with HTMX enabled and asserts the button transitions through `data-submit-visual="loading"` to `"success"`, then returns to `"idle"` while the form input is cleared.
+

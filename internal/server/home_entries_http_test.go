@@ -21,13 +21,11 @@ import (
 	"roysland.me/symptomstracker/internal/i18n"
 )
 
-func TestHomeRendersQuickCaptureAndTodayEntries(t *testing.T) {
+func TestHomeRendersQuickCaptureOnly(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
-	today := time.Now().Format("2006-01-02")
 	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
 
-	insertEntryFixture(t, s, entryFixture{userID: 1, entryDate: today, note: "today note", recordedAtUTC: 1710000100})
 	insertEntryFixture(t, s, entryFixture{userID: 1, entryDate: yesterday, note: "yesterday note", recordedAtUTC: 1710000000})
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -43,14 +41,11 @@ func TestHomeRendersQuickCaptureAndTodayEntries(t *testing.T) {
 	if !strings.Contains(body, `action="/entry/add"`) {
 		t.Fatalf("expected quick-capture form in home page, got: %s", body)
 	}
-	if !strings.Contains(body, "/entries?day="+today) {
-		t.Fatalf("expected home link to current entries day %q", today)
-	}
-	if !strings.Contains(body, "today note") {
-		t.Fatalf("expected today's entry note to be shown on home page")
+	if !strings.Contains(body, `data-submit-state-button`) {
+		t.Fatalf("expected submit-state button in home quick-capture form")
 	}
 	if strings.Contains(body, "yesterday note") {
-		t.Fatalf("did not expect non-today entry note on home page")
+		t.Fatalf("did not expect entries list content on home page")
 	}
 }
 
