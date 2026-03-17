@@ -25,3 +25,9 @@
 - Validate query plan and indexing for optional day filter in `ListEntries`.
 	Why: The new optional predicate (`entry_date IS NULL OR e.entry_date = entry_date`) reduces SQL duplication but can lead to less predictable index usage as data grows.
 	How: Run `EXPLAIN QUERY PLAN` for day-filtered and unfiltered variants, then add or tune a composite index (for example `(user_id, entry_date, recorded_at_utc)`) if scans become expensive.
+
+## Follow-ups after baseline test coverage
+
+- Add end-to-end handler tests for `entries`, `trackable`, and `settings` routes.
+	Why: Current tests mainly cover helper and service-adjacent logic; route wiring, auth flow, and rendered HTTP behavior are still weakly covered.
+	How: Use `httptest.NewRecorder` with a test `Server` backed by in-memory SQLite and exercise GET/POST handlers, asserting status codes, redirects, and key response snippets.

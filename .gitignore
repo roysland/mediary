@@ -39,6 +39,6 @@ data/
 
 # Development
 debug
-server
+/server
 tmp/
 data/*.db
