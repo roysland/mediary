@@ -30,7 +30,7 @@ type TranscriptionWorker struct {
 }
 
 func newTranscriptionWorker(queries *db.Queries, cfg Config) *TranscriptionWorker {
-	return &TranscriptionWorker{
+	w := &TranscriptionWorker{
 		jobs:              make(chan TranscriptionJob, 20),
 		queries:           queries,
 		whisperBinaryPath: cfg.WhisperBinaryPath,
@@ -38,6 +38,17 @@ func newTranscriptionWorker(queries *db.Queries, cfg Config) *TranscriptionWorke
 		ffmpegBinaryPath:  cfg.FFmpegBinaryPath,
 		timeoutSeconds:    cfg.TranscriptionTimeoutSeconds,
 	}
+	if w.IsConfigured() {
+		log.Printf("transcription worker: enabled (binary=%s model=%s)", cfg.WhisperBinaryPath, cfg.WhisperModelPath)
+	} else {
+		log.Printf("transcription worker: disabled (set WHISPER_BINARY_PATH and WHISPER_MODEL_PATH to enable)")
+	}
+	return w
+}
+
+// IsConfigured returns true when the whisper binary and model paths are both set.
+func (w *TranscriptionWorker) IsConfigured() bool {
+	return w.whisperBinaryPath != "" && w.whisperModelPath != ""
 }
 
 // Start launches the background worker goroutine. It recovers from panics
@@ -58,9 +69,13 @@ func (w *TranscriptionWorker) Start(ctx context.Context) {
 	}()
 }
 
-// Enqueue adds a job to the queue without blocking. If the queue is full the
-// entry is immediately marked as failed so the user can see something went wrong.
+// Enqueue adds a job to the queue without blocking. Jobs are silently dropped
+// when transcription is not configured. If the queue is full the entry is
+// immediately marked as failed so the user can see something went wrong.
 func (w *TranscriptionWorker) Enqueue(ctx context.Context, job TranscriptionJob) {
+	if !w.IsConfigured() {
+		return
+	}
 	select {
 	case w.jobs <- job:
 	default:
@@ -73,8 +88,11 @@ func (w *TranscriptionWorker) Enqueue(ctx context.Context, job TranscriptionJob)
 
 // RecoverPending re-enqueues entries whose transcription was interrupted (e.g.
 // by a server restart). Should be called once at startup after the worker is
-// started.
+// started. Does nothing when transcription is not configured.
 func (w *TranscriptionWorker) RecoverPending(ctx context.Context) {
+	if !w.IsConfigured() {
+		return
+	}
 	rows, err := w.queries.ListPendingTranscriptions(ctx)
 	if err != nil {
 		log.Printf("transcription worker: failed to load pending transcriptions: %v", err)
