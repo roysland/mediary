@@ -52,7 +52,7 @@ func TestTemplateTranslationKeysAreDefined(t *testing.T) {
 
 	missing := make([]string, 0)
 	for key, source := range keySource {
-		if T(key) == key {
+		if !HasKey(DefaultLocale, key) {
 			missing = append(missing, key+" ("+source+")")
 		}
 	}
@@ -60,6 +60,20 @@ func TestTemplateTranslationKeysAreDefined(t *testing.T) {
 	if len(missing) > 0 {
 		sort.Strings(missing)
 		t.Fatalf("missing i18n keys used in templates:\n%s", strings.Join(missing, "\n"))
+	}
+}
+
+func TestRegisteredLocalesExposeSortedMetadata(t *testing.T) {
+	if got := Locales(); len(got) != 1 || got[0] != DefaultLocale {
+		t.Fatalf("expected only the default locale to be registered, got %v", got)
+	}
+
+	keys := Keys(DefaultLocale)
+	if len(keys) == 0 {
+		t.Fatal("expected default locale to expose translation keys")
+	}
+	if keys[0] != "app.title" {
+		t.Fatalf("expected sorted keys, got first key %q", keys[0])
 	}
 }
 

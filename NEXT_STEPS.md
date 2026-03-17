@@ -1,3 +1,9 @@
+## Follow-up after i18n catalog refactor
+
+- Thread the user's selected language into template rendering instead of always using the default locale.
+	Why: `internal/i18n` now supports locale-aware lookup, but `internal/server/server.go` still registers `t` as a global English-only function, so choosing Norwegian in settings has no effect on rendered UI.
+	How: Resolve the current locale per request or page view, expose a locale-bound translation helper to templates, and add a second locale catalog once real translations are available.
+
 ## Follow-ups after i18n key coverage cleanup
 
 - Localize remaining hardcoded UI strings in `internal/views/topNav.html`.
