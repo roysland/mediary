@@ -82,4 +82,12 @@ var norwegianCatalog = Catalog{
 	"trackable.value_type.integer":      "Tallrekke",
 	"trackable.value_type.label":        "Hvordan måle det?",
 	"trackable.value_type.text":         "Tekst",
+	"voice.listening":                   "Lytter...",
+	"voice.record_label":                "Stemmenotat",
+	"voice.saved_draft":                 "Stemmenotat lagret. Transkriberer...",
+	"voice.saving":                      "Lagrer...",
+	"voice.start_recording":             "Start opptak",
+	"voice.stop_recording":              "Stopp opptak",
+	"voice.tap_to_record":               "Trykk for å ta opp et stemmenotat",
+	"voice.view_entries":                "Vis oppføringer",
 }

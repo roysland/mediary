@@ -10,6 +10,58 @@ import (
 	"database/sql"
 )
 
+const createDraftEntry = `-- name: CreateDraftEntry :one
+INSERT INTO entries (
+    user_id,
+    recorded_at_utc,
+    timezone_offset_minutes,
+    entry_date,
+    note_text,
+    is_private,
+    is_draft,
+    audio_file_path,
+    transcription_status,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, NULL, 0, 1, ?, 'pending', ?)
+RETURNING id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, is_draft, audio_file_path, transcription_status, created_at_utc
+`
+
+type CreateDraftEntryParams struct {
+	UserID                int64          `json:"user_id"`
+	RecordedAtUtc         int64          `json:"recorded_at_utc"`
+	TimezoneOffsetMinutes int64          `json:"timezone_offset_minutes"`
+	EntryDate             string         `json:"entry_date"`
+	AudioFilePath         sql.NullString `json:"audio_file_path"`
+	CreatedAtUtc          int64          `json:"created_at_utc"`
+}
+
+func (q *Queries) CreateDraftEntry(ctx context.Context, arg CreateDraftEntryParams) (Entry, error) {
+	row := q.db.QueryRowContext(ctx, createDraftEntry,
+		arg.UserID,
+		arg.RecordedAtUtc,
+		arg.TimezoneOffsetMinutes,
+		arg.EntryDate,
+		arg.AudioFilePath,
+		arg.CreatedAtUtc,
+	)
+	var i Entry
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.RecordedAtUtc,
+		&i.TimezoneOffsetMinutes,
+		&i.EntryDate,
+		&i.NoteText,
+		&i.IsPrivate,
+		&i.IsDraft,
+		&i.AudioFilePath,
+		&i.TranscriptionStatus,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
 const createEntry = `-- name: CreateEntry :one
 INSERT INTO entries (
     user_id,
@@ -21,7 +73,7 @@ INSERT INTO entries (
     created_at_utc
 )
 VALUES (?, ?, ?, ?, ?, ?, ?)
-RETURNING id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, created_at_utc
+RETURNING id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, is_draft, audio_file_path, transcription_status, created_at_utc
 `
 
 type CreateEntryParams struct {
@@ -53,6 +105,9 @@ func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry
 		&i.EntryDate,
 		&i.NoteText,
 		&i.IsPrivate,
+		&i.IsDraft,
+		&i.AudioFilePath,
+		&i.TranscriptionStatus,
 		&i.CreatedAtUtc,
 	)
 	return i, err
@@ -367,7 +422,7 @@ func (q *Queries) GetAvailableTrackableTemplateByID(ctx context.Context, arg Get
 }
 
 const getEntryByID = `-- name: GetEntryByID :one
-SELECT id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, created_at_utc
+SELECT id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, is_draft, audio_file_path, transcription_status, created_at_utc
 FROM entries
 WHERE id = ? AND user_id = ?
 `
@@ -388,6 +443,9 @@ func (q *Queries) GetEntryByID(ctx context.Context, arg GetEntryByIDParams) (Ent
 		&i.EntryDate,
 		&i.NoteText,
 		&i.IsPrivate,
+		&i.IsDraft,
+		&i.AudioFilePath,
+		&i.TranscriptionStatus,
 		&i.CreatedAtUtc,
 	)
 	return i, err
@@ -402,6 +460,8 @@ SELECT
     e.entry_date,
     e.note_text,
     e.is_private,
+    e.is_draft,
+    e.transcription_status,
     e.created_at_utc,
     tv.id AS trackable_value_id,
     tv.trackable_definition_id,
@@ -437,6 +497,8 @@ type GetEntryWithTrackablesRow struct {
 	EntryDate             string         `json:"entry_date"`
 	NoteText              sql.NullString `json:"note_text"`
 	IsPrivate             int64          `json:"is_private"`
+	IsDraft               int64          `json:"is_draft"`
+	TranscriptionStatus   string         `json:"transcription_status"`
 	CreatedAtUtc          int64          `json:"created_at_utc"`
 	TrackableValueID      sql.NullInt64  `json:"trackable_value_id"`
 	TrackableDefinitionID sql.NullInt64  `json:"trackable_definition_id"`
@@ -471,6 +533,8 @@ func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTr
 			&i.EntryDate,
 			&i.NoteText,
 			&i.IsPrivate,
+			&i.IsDraft,
+			&i.TranscriptionStatus,
 			&i.CreatedAtUtc,
 			&i.TrackableValueID,
 			&i.TrackableDefinitionID,
@@ -587,6 +651,8 @@ SELECT
     e.entry_date,
     e.note_text,
     e.is_private,
+    e.is_draft,
+    e.transcription_status,
     e.created_at_utc,
     tv.id AS trackable_value_id,
     tv.trackable_definition_id,
@@ -623,6 +689,8 @@ type ListEntriesRow struct {
 	EntryDate             string         `json:"entry_date"`
 	NoteText              sql.NullString `json:"note_text"`
 	IsPrivate             int64          `json:"is_private"`
+	IsDraft               int64          `json:"is_draft"`
+	TranscriptionStatus   string         `json:"transcription_status"`
 	CreatedAtUtc          int64          `json:"created_at_utc"`
 	TrackableValueID      sql.NullInt64  `json:"trackable_value_id"`
 	TrackableDefinitionID sql.NullInt64  `json:"trackable_definition_id"`
@@ -657,6 +725,8 @@ func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Lis
 			&i.EntryDate,
 			&i.NoteText,
 			&i.IsPrivate,
+			&i.IsDraft,
+			&i.TranscriptionStatus,
 			&i.CreatedAtUtc,
 			&i.TrackableValueID,
 			&i.TrackableDefinitionID,
@@ -687,7 +757,7 @@ func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Lis
 }
 
 const listEntriesByUser = `-- name: ListEntriesByUser :many
-SELECT id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, created_at_utc
+SELECT id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, is_draft, audio_file_path, transcription_status, created_at_utc
 FROM entries
 WHERE user_id = ?
 ORDER BY recorded_at_utc DESC
@@ -710,8 +780,46 @@ func (q *Queries) ListEntriesByUser(ctx context.Context, userID int64) ([]Entry,
 			&i.EntryDate,
 			&i.NoteText,
 			&i.IsPrivate,
+			&i.IsDraft,
+			&i.AudioFilePath,
+			&i.TranscriptionStatus,
 			&i.CreatedAtUtc,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPendingTranscriptions = `-- name: ListPendingTranscriptions :many
+SELECT id, audio_file_path
+FROM entries
+WHERE transcription_status = 'pending'
+AND audio_file_path IS NOT NULL
+`
+
+type ListPendingTranscriptionsRow struct {
+	ID            int64          `json:"id"`
+	AudioFilePath sql.NullString `json:"audio_file_path"`
+}
+
+func (q *Queries) ListPendingTranscriptions(ctx context.Context) ([]ListPendingTranscriptionsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPendingTranscriptions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPendingTranscriptionsRow
+	for rows.Next() {
+		var i ListPendingTranscriptionsRow
+		if err := rows.Scan(&i.ID, &i.AudioFilePath); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1020,6 +1128,35 @@ func (q *Queries) ListWebauthnCredentialsByUser(ctx context.Context, userID int6
 		return nil, err
 	}
 	return items, nil
+}
+
+const markTranscriptionFailed = `-- name: MarkTranscriptionFailed :exec
+UPDATE entries
+SET transcription_status = 'failed'
+WHERE id = ?
+`
+
+func (q *Queries) MarkTranscriptionFailed(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, markTranscriptionFailed, id)
+	return err
+}
+
+const updateEntryTranscription = `-- name: UpdateEntryTranscription :exec
+UPDATE entries
+SET note_text = ?,
+    is_draft = 0,
+    transcription_status = 'completed'
+WHERE id = ?
+`
+
+type UpdateEntryTranscriptionParams struct {
+	NoteText sql.NullString `json:"note_text"`
+	ID       int64          `json:"id"`
+}
+
+func (q *Queries) UpdateEntryTranscription(ctx context.Context, arg UpdateEntryTranscriptionParams) error {
+	_, err := q.db.ExecContext(ctx, updateEntryTranscription, arg.NoteText, arg.ID)
+	return err
 }
 
 const updateTrackableValueInt = `-- name: UpdateTrackableValueInt :one

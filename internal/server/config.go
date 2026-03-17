@@ -2,6 +2,7 @@ package server
 
 import (
 	"os"
+	"strconv"
 )
 
 // Config holds the server configuration loaded from environment variables.
@@ -12,14 +13,33 @@ type Config struct {
 	ListenAddr string
 	// DevMode indicates whether the server is running in development mode.
 	DevMode bool
+
+	// AudioStorageDir is the directory where uploaded voice recordings are stored.
+	AudioStorageDir string
+	// WhisperBinaryPath is the path (or name on PATH) of the whisper.cpp binary.
+	// Leave empty to disable transcription.
+	WhisperBinaryPath string
+	// WhisperModelPath is the path to the ggml model file used by whisper.cpp.
+	WhisperModelPath string
+	// FFmpegBinaryPath is the path (or name on PATH) of ffmpeg, used to convert
+	// browser audio to the WAV format that whisper.cpp requires.
+	FFmpegBinaryPath string
+	// TranscriptionTimeoutSeconds is the maximum time allowed for a single
+	// transcription job (ffmpeg + whisper). Defaults to 120.
+	TranscriptionTimeoutSeconds int
 }
 
 // LoadConfig loads configuration from environment variables with sensible defaults.
 func LoadConfig() Config {
 	cfg := Config{
-		DBPath:     getEnv("DB_PATH", "data/app.db"),
-		ListenAddr: getEnv("LISTEN_ADDR", ":8080"),
-		DevMode:    os.Getenv("APP_ENV") != "production",
+		DBPath:                      getEnv("DB_PATH", "data/app.db"),
+		ListenAddr:                  getEnv("LISTEN_ADDR", ":8080"),
+		DevMode:                     os.Getenv("APP_ENV") != "production",
+		AudioStorageDir:             getEnv("AUDIO_STORAGE_DIR", "data/audio"),
+		WhisperBinaryPath:           getEnv("WHISPER_BINARY_PATH", ""),
+		WhisperModelPath:            getEnv("WHISPER_MODEL_PATH", ""),
+		FFmpegBinaryPath:            getEnv("FFMPEG_BINARY_PATH", "ffmpeg"),
+		TranscriptionTimeoutSeconds: getEnvInt("TRANSCRIPTION_TIMEOUT_SECONDS", 120),
 	}
 	return cfg
 }
@@ -28,6 +48,16 @@ func LoadConfig() Config {
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+// getEnvInt returns an environment variable parsed as int, or a default if not set or invalid.
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if i, err := strconv.Atoi(value); err == nil {
+			return i
+		}
 	}
 	return defaultValue
 }

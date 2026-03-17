@@ -82,4 +82,12 @@ var englishCatalog = Catalog{
 	"trackable.value_type.integer":      "Integer",
 	"trackable.value_type.label":        "Value type",
 	"trackable.value_type.text":         "Text",
+	"voice.listening":                   "Listening...",
+	"voice.record_label":                "Voice note",
+	"voice.saved_draft":                 "Voice note saved. Transcribing...",
+	"voice.saving":                      "Saving...",
+	"voice.start_recording":             "Start recording",
+	"voice.stop_recording":              "Stop recording",
+	"voice.tap_to_record":               "Tap to record a voice note",
+	"voice.view_entries":                "View entries",
 }

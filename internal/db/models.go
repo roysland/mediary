@@ -16,6 +16,9 @@ type Entry struct {
 	EntryDate             string         `json:"entry_date"`
 	NoteText              sql.NullString `json:"note_text"`
 	IsPrivate             int64          `json:"is_private"`
+	IsDraft               int64          `json:"is_draft"`
+	AudioFilePath         sql.NullString `json:"audio_file_path"`
+	TranscriptionStatus   string         `json:"transcription_status"`
 	CreatedAtUtc          int64          `json:"created_at_utc"`
 }
 

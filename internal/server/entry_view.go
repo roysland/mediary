@@ -13,47 +13,53 @@ type entryTrackableValueView struct {
 }
 
 type entryView struct {
-	ID            int64
-	RecordedAtUtc int64
-	EntryDate     string
-	NoteText      sql.NullString
-	IsPrivate     int64
-	Trackables    []entryTrackableValueView
+	ID                  int64
+	RecordedAtUtc       int64
+	EntryDate           string
+	NoteText            sql.NullString
+	IsPrivate           int64
+	IsDraft             bool
+	TranscriptionStatus string
+	Trackables          []entryTrackableValueView
 }
 
 type entryWithTrackableRow struct {
-	ID                 int64
-	RecordedAtUtc      int64
-	EntryDate          string
-	NoteText           sql.NullString
-	IsPrivate          int64
-	TrackableValueID   sql.NullInt64
-	TrackableName      sql.NullString
-	TrackableIcon      sql.NullString
-	TrackableValueType sql.NullString
-	ValueInt           sql.NullInt64
-	ValueBool          sql.NullInt64
-	ValueText          sql.NullString
-	TrackableUnit      sql.NullString
+	ID                  int64
+	RecordedAtUtc       int64
+	EntryDate           string
+	NoteText            sql.NullString
+	IsPrivate           int64
+	IsDraft             int64
+	TranscriptionStatus string
+	TrackableValueID    sql.NullInt64
+	TrackableName       sql.NullString
+	TrackableIcon       sql.NullString
+	TrackableValueType  sql.NullString
+	ValueInt            sql.NullInt64
+	ValueBool           sql.NullInt64
+	ValueText           sql.NullString
+	TrackableUnit       sql.NullString
 }
 
 func buildEntryViews(rows []db.ListEntriesRow) []entryView {
 	viewRows := make([]entryWithTrackableRow, 0, len(rows))
 	for _, row := range rows {
 		viewRows = append(viewRows, entryWithTrackableRow{
-			ID:                 row.ID,
-			RecordedAtUtc:      row.RecordedAtUtc,
-			EntryDate:          row.EntryDate,
-			NoteText:           row.NoteText,
-			IsPrivate:          row.IsPrivate,
-			TrackableValueID:   row.TrackableValueID,
-			TrackableName:      row.TrackableName,
-			TrackableIcon:      row.TrackableIcon,
-			TrackableValueType: row.TrackableValueType,
-			ValueInt:           row.ValueInt,
-			ValueBool:          row.ValueBool,
-			ValueText:          row.ValueText,
-			TrackableUnit:      row.TrackableUnit,
+			ID:                  row.ID,
+			RecordedAtUtc:       row.RecordedAtUtc,
+			EntryDate:           row.EntryDate,
+			NoteText:            row.NoteText,
+			IsPrivate:           row.IsPrivate,
+			IsDraft:             row.IsDraft,
+			TranscriptionStatus: row.TranscriptionStatus,
+			TrackableValueID:    row.TrackableValueID,
+			TrackableName:       row.TrackableName,
+			TrackableIcon:       row.TrackableIcon,
+			TrackableValueType:  row.TrackableValueType,
+			ValueInt:            row.ValueInt,
+			ValueBool:           row.ValueBool,
+			ValueText:           row.ValueText,
+			TrackableUnit:       row.TrackableUnit,
 		})
 	}
 
@@ -64,19 +70,21 @@ func buildEntryView(rows []db.GetEntryWithTrackablesRow) (entryView, bool) {
 	viewRows := make([]entryWithTrackableRow, 0, len(rows))
 	for _, row := range rows {
 		viewRows = append(viewRows, entryWithTrackableRow{
-			ID:                 row.ID,
-			RecordedAtUtc:      row.RecordedAtUtc,
-			EntryDate:          row.EntryDate,
-			NoteText:           row.NoteText,
-			IsPrivate:          row.IsPrivate,
-			TrackableValueID:   row.TrackableValueID,
-			TrackableName:      row.TrackableName,
-			TrackableIcon:      row.TrackableIcon,
-			TrackableValueType: row.TrackableValueType,
-			ValueInt:           row.ValueInt,
-			ValueBool:          row.ValueBool,
-			ValueText:          row.ValueText,
-			TrackableUnit:      row.TrackableUnit,
+			ID:                  row.ID,
+			RecordedAtUtc:       row.RecordedAtUtc,
+			EntryDate:           row.EntryDate,
+			NoteText:            row.NoteText,
+			IsPrivate:           row.IsPrivate,
+			IsDraft:             row.IsDraft,
+			TranscriptionStatus: row.TranscriptionStatus,
+			TrackableValueID:    row.TrackableValueID,
+			TrackableName:       row.TrackableName,
+			TrackableIcon:       row.TrackableIcon,
+			TrackableValueType:  row.TrackableValueType,
+			ValueInt:            row.ValueInt,
+			ValueBool:           row.ValueBool,
+			ValueText:           row.ValueText,
+			TrackableUnit:       row.TrackableUnit,
 		})
 	}
 
@@ -95,11 +103,13 @@ func buildEntryViewsFromRows(rows []entryWithTrackableRow) []entryView {
 		index, exists := entryIndex[row.ID]
 		if !exists {
 			entries = append(entries, entryView{
-				ID:            row.ID,
-				RecordedAtUtc: row.RecordedAtUtc,
-				EntryDate:     row.EntryDate,
-				NoteText:      row.NoteText,
-				IsPrivate:     row.IsPrivate,
+				ID:                  row.ID,
+				RecordedAtUtc:       row.RecordedAtUtc,
+				EntryDate:           row.EntryDate,
+				NoteText:            row.NoteText,
+				IsPrivate:           row.IsPrivate,
+				IsDraft:             row.IsDraft == 1,
+				TranscriptionStatus: row.TranscriptionStatus,
 			})
 			index = len(entries) - 1
 			entryIndex[row.ID] = index

@@ -83,7 +83,12 @@
     {{ end }}
     <div class="entry-text">{{ .NoteText.String }}
 
-        {{ if .NoteText.String }}
+        {{ if .IsDraft }}
+        <span class="voice-draft-badge">
+          {{ if eq .TranscriptionStatus "pending" }}🎙️ Transcribing...{{ end }}
+          {{ if eq .TranscriptionStatus "failed" }}🎙️ Transcription failed{{ end }}
+        </span>
+        {{ else if .NoteText.String }}
         <button id="entry-{{ .ID }}-context-button" type="button" class="button--ghost button--more" popovertarget="entry-{{ .ID }}-context">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M3 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm5-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4-1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
