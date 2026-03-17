@@ -37,3 +37,9 @@
 - Decide whether editing preset-populated fields should clear `trackable_template_id` automatically.
 	Why: The server now persists `template_id` when present, but the current client behavior only clears it when the name input changes, not when other preset-populated fields are edited.
 	How: Either keep `template_id` sticky for all edits (explicitly treating presets as source templates) or clear it on changes to icon/type/category/min/max/unit/private-label for fully custom derivatives.
+
+## Follow-ups after runtime artifact ignore cleanup
+
+- Consider purging previously committed binaries/runtime files from git history using `git-filter-repo`.
+	Why: `.gitignore` prevents new local artifacts from entering future diffs, but old commits can still keep repository size/noise if files like `server`, `tmp/app`, or `data/app.db` were committed earlier.
+	How: In a coordinated branch, run `git filter-repo --path server --path tmp/app --path data/app.db --invert-paths`, then force-push and have collaborators re-clone or hard-reset after the history rewrite.

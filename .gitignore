@@ -18,11 +18,14 @@ go.work
 # Dependency directories
 vendor/
 
-# Build artifacts
+# Build/runtime artifacts
+/server
 /cmd/server/server
+/tmp/
+debug
 
-# Database
-data/
+# Local runtime database files
+/data/
 *.db
 
 # Environment variables
@@ -36,9 +39,3 @@ data/
 *.swo
 *~
 .DS_Store
-
-# Development
-debug
-/server
-tmp/
-data/*.db

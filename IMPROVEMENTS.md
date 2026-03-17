@@ -675,29 +675,22 @@ Context needed before implementation:
 - Confirm which binaries and DB files are intentionally committed and which are local-only.
 
 ## 26. Add a deletion strategy for entries or remove the unfinished UI
+✅ **COMPLETED**
 
-Problem:
+**Implementation details:**
 
-- The entries template exposes deletion behavior via JavaScript, but the backend route is missing.
+- Route: `POST /entry/{id}/delete` (registered in `internal/server/routers.go`)
+- Handler: `deleteEntry()` in `internal/server/entries.go` - validates user ownership via `requireUserID()`
+- Database: `DeleteEntry` query in `db/queries.sql` 
+- Cascade handling: SQLite foreign key constraints with `ON DELETE CASCADE` automatically remove related `trackable_values`
+- JavaScript: `deleteEntry()` function in `web/static/entries.js` - confirms deletion and updates DOM on success
+- UI: `.delete-note-button` in `internal/views/entries.html` - user-facing trigger
 
-Why this matters:
+**Strategy chosen:**
 
-- Users can trigger a feature that cannot succeed.
-
-Files to edit:
-
-- `internal/views/entries.html`
-- `internal/server/routers.go`
-- `internal/server/entries.go`
-- `db/queries.sql`
-
-Possible new files:
-
-- None required.
-
-Context needed before implementation:
-
-- Decide whether deleting an entry should also delete all trackable values by cascade, and whether a soft-delete model is needed.
+- Hard delete of entries (not soft delete)
+- Automatic cascade deletion of all associated trackable values
+- This is the correct approach for this domain (deletion is permanent and complete)
 
 ## 27. Replace switch-based i18n when translation surface grows
 
@@ -722,6 +715,7 @@ Possible new files:
 Context needed before implementation:
 
 - Decide whether localization should remain compile-time Go data or move to external translation files.
+User input: It's fine to add a third party i18 library for this purpose.
 
 ## 28. Revisit page composition and reuse of home vs entries flows
 
