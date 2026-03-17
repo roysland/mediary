@@ -8,9 +8,9 @@ function initTrackableFormOptions(scope = document) {
       return;
     }
 
-    const sensitiveCheckbox = form.querySelector("#trackable_is-sensitive");
-    const privateLabelInput = form.querySelector("#trackable-private-label");
-    const valueTypeSelect = form.querySelector("#trackable_value-type");
+    const sensitiveCheckbox = form.querySelector("#trackable_is_sensitive, #trackable_is-sensitive");
+    const privateLabelInput = form.querySelector("#trackable_private_label, #trackable-private-label");
+    const valueTypeSelect = form.querySelector("#trackable_value_type, #trackable_value-type");
     const minMaxValueContainer = form.querySelector(".value_treshold");
     const unitInput = form.querySelector("#trackable_unit");
 

@@ -45,7 +45,7 @@ function updateFieldsFromPreset(form, preset) {
   }
 
   const nameInput = form.querySelector("#trackable_name");
-  const hiddenPresetIdInput = form.querySelector("#presetId");
+  const hiddenPresetIdInput = form.querySelector("#trackable_template_id, #presetId");
   const iconInput = form.querySelector("#trackable_icon");
   const valueTypeInput = form.querySelector("#trackable_value_type, #trackable_value-type");
   const categoryInput = form.querySelector("#trackable_category");
@@ -76,6 +76,19 @@ function updateFieldsFromPreset(form, preset) {
   }
 }
 
+function findPreset(presets, button) {
+  const templateIDRaw = button.dataset.templateId ?? "";
+  if (templateIDRaw !== "") {
+    const templateID = Number(templateIDRaw);
+    if (!Number.isNaN(templateID)) {
+      return presets.find((item) => Number(item?.id) === templateID) ?? null;
+    }
+  }
+
+  const presetName = button.dataset.name || "";
+  return presets.find((item) => item?.name === presetName) ?? null;
+}
+
 function initTrackablePresets(scope = document) {
   const lists = scope instanceof Element && scope.matches(".trackablePresetList")
     ? [scope]
@@ -92,7 +105,7 @@ function initTrackablePresets(scope = document) {
     }
 
     const presets = parsePresetList(list);
-    const hiddenPresetIdInput = form.querySelector("#presetId");
+    const hiddenPresetIdInput = form.querySelector("#trackable_template_id, #presetId");
     const trackableNameInput = form.querySelector("#trackable_name");
 
     list.dataset.presetReady = "true";
@@ -103,8 +116,7 @@ function initTrackablePresets(scope = document) {
         return;
       }
 
-      const presetName = button.dataset.name || "";
-      const preset = presets.find((item) => item?.name === presetName);
+      const preset = findPreset(presets, button);
       updateFieldsFromPreset(form, preset);
 
       if (trackableNameInput instanceof HTMLInputElement) {

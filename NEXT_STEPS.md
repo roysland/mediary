@@ -31,3 +31,9 @@
 - Add end-to-end handler tests for `entries`, `trackable`, and `settings` routes.
 	Why: Current tests mainly cover helper and service-adjacent logic; route wiring, auth flow, and rendered HTTP behavior are still weakly covered.
 	How: Use `httptest.NewRecorder` with a test `Server` backed by in-memory SQLite and exercise GET/POST handlers, asserting status codes, redirects, and key response snippets.
+
+## Follow-ups after preset flow cleanup
+
+- Decide whether editing preset-populated fields should clear `trackable_template_id` automatically.
+	Why: The server now persists `template_id` when present, but the current client behavior only clears it when the name input changes, not when other preset-populated fields are edited.
+	How: Either keep `template_id` sticky for all edits (explicitly treating presets as source templates) or clear it on changes to icon/type/category/min/max/unit/private-label for fully custom derivatives.

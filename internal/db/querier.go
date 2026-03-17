@@ -15,6 +15,7 @@ type Querier interface {
 	DeleteEntry(ctx context.Context, arg DeleteEntryParams) error
 	FindEntryTrackableValue(ctx context.Context, arg FindEntryTrackableValueParams) (TrackableValue, error)
 	FindRecentTrackableValue(ctx context.Context, arg FindRecentTrackableValueParams) (TrackableValue, error)
+	GetAvailableTrackableTemplateByID(ctx context.Context, arg GetAvailableTrackableTemplateByIDParams) (TrackableTemplate, error)
 	GetEntryByID(ctx context.Context, arg GetEntryByIDParams) (Entry, error)
 	GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTrackablesParams) ([]GetEntryWithTrackablesRow, error)
 	GetTrackableById(ctx context.Context, arg GetTrackableByIdParams) (TrackableDefinition, error)

@@ -52,26 +52,37 @@ func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	formValueWithFallback := func(primary string, fallbacks ...string) string {
+		value := strings.TrimSpace(r.FormValue(primary))
+		if value != "" {
+			return value
+		}
+		for _, fallback := range fallbacks {
+			value = strings.TrimSpace(r.FormValue(fallback))
+			if value != "" {
+				return value
+			}
+		}
+		return ""
+	}
+
 	now := time.Now()
-	name, err := requireNonEmpty(r.FormValue("trackable_name"), "trackable_name")
+	name, err := requireNonEmpty(formValueWithFallback("trackable_name"), "trackable_name")
 	if err != nil {
 		respondBadRequest(w, r, err.Error())
 		return
 	}
 
-	valueType, err := requireOneOf(r.FormValue("trackable_value-type"), "trackable_value-type", "integer", "boolean", "text")
+	valueTypeRaw := formValueWithFallback("trackable_value_type", "trackable_value-type")
+	valueType, err := requireOneOf(valueTypeRaw, "trackable_value_type", "integer", "boolean", "text")
 	if err != nil {
 		respondBadRequest(w, r, err.Error())
 		return
 	}
 
-	icon := strings.TrimSpace(r.FormValue("trackable_icon"))
-	unit := strings.TrimSpace(r.FormValue("trackable_unit"))
-	privateLabel := strings.TrimSpace(r.FormValue("trackable_private-label"))
-	if privateLabel == "" {
-		// Accept legacy field name used by the current template.
-		privateLabel = strings.TrimSpace(r.FormValue("trackable_description"))
-	}
+	icon := formValueWithFallback("trackable_icon")
+	unit := formValueWithFallback("trackable_unit")
+	privateLabel := formValueWithFallback("trackable_private_label", "trackable_private-label", "trackable_description")
 
 	toNullString := func(s string) sql.NullString {
 		if s == "" {
@@ -84,19 +95,20 @@ func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
 	unitVal := toNullString(unit)
 	privateLabelVal := toNullString(privateLabel)
 
-	isSensitive, err := checkboxToInt64(r.FormValue("trackable_is-sensitive"), "trackable_is-sensitive")
+	isSensitiveRaw := formValueWithFallback("trackable_is_sensitive", "trackable_is-sensitive")
+	isSensitive, err := checkboxToInt64(isSensitiveRaw, "trackable_is_sensitive")
 	if err != nil {
 		respondBadRequest(w, r, err.Error())
 		return
 	}
 
-	minVal, err := optionalInt64(r.FormValue("trackable_min_value"), "trackable_min_value")
+	minVal, err := optionalInt64(formValueWithFallback("trackable_min_value"), "trackable_min_value")
 	if err != nil {
 		respondBadRequest(w, r, err.Error())
 		return
 	}
 
-	maxVal, err := optionalInt64(r.FormValue("trackable_max_value"), "trackable_max_value")
+	maxVal, err := optionalInt64(formValueWithFallback("trackable_max_value"), "trackable_max_value")
 	if err != nil {
 		respondBadRequest(w, r, err.Error())
 		return
@@ -107,7 +119,33 @@ func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	category := strings.TrimSpace(r.FormValue("trackable_category"))
+	templateIDRaw := formValueWithFallback("trackable_template_id", "presetId")
+	templateID, err := optionalInt64(templateIDRaw, "trackable_template_id")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+	if templateID.Valid {
+		if templateID.Int64 <= 0 {
+			respondBadRequest(w, r, "trackable_template_id must be positive")
+			return
+		}
+
+		_, err = s.queries.GetAvailableTrackableTemplateByID(r.Context(), db.GetAvailableTrackableTemplateByIDParams{
+			UserID: userID,
+			ID:     templateID.Int64,
+		})
+		if err == sql.ErrNoRows {
+			respondBadRequest(w, r, "Invalid or unavailable trackable preset")
+			return
+		}
+		if err != nil {
+			respondInternalError(w, r, "Failed to validate trackable preset")
+			return
+		}
+	}
+
+	category := formValueWithFallback("trackable_category")
 	if category == "" {
 		category = "default"
 	}
@@ -127,6 +165,7 @@ func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
 
 	_, err = s.queries.CreateTrackableDefinition(r.Context(), db.CreateTrackableDefinitionParams{
 		UserID:       userID,
+		TemplateID:   templateID,
 		Name:         name,
 		ValueType:    valueType,
 		Icon:         iconVal,

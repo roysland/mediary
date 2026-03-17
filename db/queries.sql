@@ -89,6 +89,15 @@ LEFT JOIN trackable_definitions td
      AND td.user_id = ?
 WHERE td.id IS NULL;
 
+-- name: GetAvailableTrackableTemplateByID :one
+SELECT tt.*
+FROM trackable_templates tt
+LEFT JOIN trackable_definitions td
+        ON td.template_id = tt.id
+     AND td.user_id = ?
+WHERE tt.id = ?
+    AND td.id IS NULL;
+
 -- name: CreateTrackableDefinition :one
 INSERT INTO trackable_definitions (
     user_id,

@@ -6,13 +6,13 @@
         <div class="trackable-form__header">
             <label for="trackable_name">{{ t "trackable.name.label" }}</label>
 
-            <label for="trackable_is-sensitive">{{ t "trackable.sensitive.label" }}
-                <input type="checkbox" id="trackable_is-sensitive" name="trackable_is-sensitive">
+            <label for="trackable_is_sensitive">{{ t "trackable.sensitive.label" }}
+                <input type="checkbox" id="trackable_is_sensitive" name="trackable_is_sensitive">
             </label>
         </div>
         <input type="text" id="trackable_name" name="trackable_name" required>
 
-        <input type="hidden" id="presetId" name="presetId" value="">
+        <input type="hidden" id="trackable_template_id" name="trackable_template_id" value="">
         {{ template "trackablePresetList" . }}
         
 
@@ -20,11 +20,11 @@
 
 
         <div>
-            <label for="trackable-private-label">{{ t "trackable.private.label" }}</label>
-            <input type="text" id="trackable-private-label" name="trackable_description" />
+            <label for="trackable_private_label">{{ t "trackable.private.label" }}</label>
+            <input type="text" id="trackable_private_label" name="trackable_private_label" />
         </div>
-            <label for="trackable_value-type">{{ t "trackable.value_type.label" }}</label>
-    <select id="trackable_value-type" name="trackable_value-type">
+            <label for="trackable_value_type">{{ t "trackable.value_type.label" }}</label>
+    <select id="trackable_value_type" name="trackable_value_type">
         <option value="integer">{{ t "trackable.value_type.integer" }}</option>
         <option value="boolean">{{ t "trackable.value_type.boolean" }}</option>
         <option value="text">{{ t "trackable.value_type.text" }}</option>

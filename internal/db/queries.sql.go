@@ -262,6 +262,41 @@ func (q *Queries) FindRecentTrackableValue(ctx context.Context, arg FindRecentTr
 	return i, err
 }
 
+const getAvailableTrackableTemplateByID = `-- name: GetAvailableTrackableTemplateByID :one
+SELECT tt.id, tt.name, tt.value_type, tt.unit, tt.min_value, tt.max_value, tt.icon, tt.is_sensitive, tt.private_label, tt.custom_control_type, tt.category, tt.created_at_utc
+FROM trackable_templates tt
+LEFT JOIN trackable_definitions td
+        ON td.template_id = tt.id
+     AND td.user_id = ?
+WHERE tt.id = ?
+    AND td.id IS NULL
+`
+
+type GetAvailableTrackableTemplateByIDParams struct {
+	UserID int64 `json:"user_id"`
+	ID     int64 `json:"id"`
+}
+
+func (q *Queries) GetAvailableTrackableTemplateByID(ctx context.Context, arg GetAvailableTrackableTemplateByIDParams) (TrackableTemplate, error) {
+	row := q.db.QueryRowContext(ctx, getAvailableTrackableTemplateByID, arg.UserID, arg.ID)
+	var i TrackableTemplate
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.ValueType,
+		&i.Unit,
+		&i.MinValue,
+		&i.MaxValue,
+		&i.Icon,
+		&i.IsSensitive,
+		&i.PrivateLabel,
+		&i.CustomControlType,
+		&i.Category,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
 const getEntryByID = `-- name: GetEntryByID :one
 SELECT id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, created_at_utc
 FROM entries
