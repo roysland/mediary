@@ -445,13 +445,7 @@ Files to edit:
 
 - `internal/views/layout.html`
 
-Possible new files:
-
-- None required.
-
-Context needed before implementation:
-
-- Decide whether this debug aid should only exist in development mode.
+This debug aid should only exist in development mode.
 
 ## 17. Simplify and normalize handler structure
 

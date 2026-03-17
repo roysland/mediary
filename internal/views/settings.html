@@ -1,4 +1,4 @@
-{{ define "settings_title" }}Settings{{ end }}
+{{ define "settings_title" }}{{ t "settings.title" }}{{ end }}
 
 {{ define "settings_content" }}
 <section>
@@ -45,14 +45,14 @@
 <fieldset>
     <legend>{{ t "settings.danger_zone" }}</legend>
     
-        <h3>Danger zone</h3>
+        <h3>{{ t "settings.danger_zone" }}</h3>
         <button class="button--danger"  type="button" popovertarget="sample-popover" class="danger">{{ t "settings.clear_data" }}</button>
 
     <form>
-        <div id="sample-popover" popover anchor="popover-trigger" role="region" aria-label="Sample popover">
-          <p>This will delete everything. It cannot be undone.</p>
+                <div id="sample-popover" popover anchor="popover-trigger" role="region" aria-label="{{ t "settings.clear_data_popover_label" }}">
+                    <p>{{ t "settings.clear_data_warning" }}</p>
           <button type="button" popovertarget="sample-popover" popovertargetaction="hide">
-            Cancel
+                        {{ t "common.cancel" }}
           </button>
             <button type="button" class="button--danger" id="delete_everything" data-confirm-message="{{ t "settings.clear_data_confirm" }}">{{ t "settings.clear_data" }}</button>
         </div>

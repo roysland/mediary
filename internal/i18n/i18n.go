@@ -22,6 +22,18 @@ func T(key string) string {
 	case "entry.private.label":
 		return "Private/Sensitive."
 
+	case "entry.private_entry_alt":
+		return "Private entry"
+
+	case "entry.logged_for":
+		return "Logged for"
+
+	case "entry.no_entries":
+		return "No entries for this day."
+
+	case "entry.delete_note":
+		return "Delete note"
+
 	case "entry.add_trackable":
 		return "Add trackable"
 
@@ -43,6 +55,24 @@ func T(key string) string {
 	case "nav.trackables":
 		return "Trackables"
 
+	case "nav.aria_label":
+		return "Main navigation"
+
+	case "entries.title":
+		return "Entries"
+
+	case "settings.title":
+		return "Settings"
+
+	case "common.close":
+		return "Close"
+
+	case "common.restore":
+		return "Restore"
+
+	case "common.cancel":
+		return "Cancel"
+
 	case "settings.language.label":
 		return "Language"
 
@@ -52,6 +82,9 @@ func T(key string) string {
 	case "settings.language.norwegian":
 		return "Norwegian"
 
+	case "settings.general":
+		return "General"
+
 	case "settings.clear_data":
 		return "Clear all data"
 
@@ -60,6 +93,15 @@ func T(key string) string {
 
 	case "settings.clear_data_confirm":
 		return "Are you sure you want to clear all data? This action cannot be undone."
+
+	case "settings.clear_data_warning":
+		return "This will delete everything. It cannot be undone."
+
+	case "settings.clear_data_popover_label":
+		return "Clear data confirmation"
+
+	case "trackable.dismissed_for_today":
+		return "Dismissed for today"
 
 	case "settings.theme.label":
 		return "Theme"

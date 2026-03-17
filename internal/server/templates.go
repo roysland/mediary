@@ -8,9 +8,10 @@ import (
 )
 
 type pageTemplate struct {
-	Title   string
-	Content template.HTML
-	Data    any
+	Title             string
+	Content           template.HTML
+	Data              any
+	DebugTemplateData bool
 }
 
 func (s *Server) activeTemplates() (*template.Template, error) {
@@ -47,9 +48,10 @@ func (s *Server) renderPage(w http.ResponseWriter, r *http.Request, titleTemplat
 	}
 
 	err = tmpl.ExecuteTemplate(w, "layout", pageTemplate{
-		Title:   strings.TrimSpace(titleBuf.String()),
-		Content: template.HTML(contentBuf.String()),
-		Data:    data,
+		Title:             strings.TrimSpace(titleBuf.String()),
+		Content:           template.HTML(contentBuf.String()),
+		Data:              data,
+		DebugTemplateData: s.devMode,
 	})
 	if err != nil {
 		respondInternalError(w, r, err.Error())

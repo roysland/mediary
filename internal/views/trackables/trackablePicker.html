@@ -1,5 +1,5 @@
 {{ define "trackable_picker_content" }}
-<section class="trackable-picker" data-trackable-picker data-picker-id="{{ .PickerID }}" data-restore-label="Restore">
+<section class="trackable-picker" data-trackable-picker data-picker-id="{{ .PickerID }}" data-restore-label="{{ t "common.restore" }}">
     {{ if .ShowAddTrackableLink }}
     <div>
         <a class="button" href="/trackables/add">{{ t "entry.add_trackable_link" }}</a>
@@ -50,7 +50,7 @@
     </section>
 
     <details class="dismissed-trackables" data-dismissed-trackables-panel {{ if .DismissedTrackables }}{{ else }}hidden{{ end }}>
-        <summary>Dismissed for today</summary>
+        <summary>{{ t "trackable.dismissed_for_today" }}</summary>
         <ul class="dismissed-trackables-list" data-dismissed-trackables-list>
             {{ range .DismissedTrackables }}
             <li class="dismissed-trackable" data-trackable-id="{{ .ID }}">
@@ -60,7 +60,7 @@
                 </div>
                 <form method="POST" action="/trackables/{{ .ID }}/dismissal" class="dismissed-trackable__form">
                     <input type="hidden" name="dismissed" value="false">
-                    <button type="submit" class="restore-trackable" hx-post="/trackables/{{ .ID }}/dismissal" hx-trigger="click" hx-swap="none">Restore</button>
+                    <button type="submit" class="restore-trackable" hx-post="/trackables/{{ .ID }}/dismissal" hx-trigger="click" hx-swap="none">{{ t "common.restore" }}</button>
                 </form>
             </li>
             {{ end }}

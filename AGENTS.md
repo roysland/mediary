@@ -31,3 +31,6 @@ If you find errors in /web/static/dist/mecfs.css or /web/static/dist/mecfs.js, y
 ## Pitfalls
 - Current auth is a development stub in `internal/auth/auth.go` that always returns user ID `1`.
 - SQLite DB path is currently `data/app.db` in `internal/server/server.go`.
+
+# After task is complete
+If you find any potential issues or improvements, add them to NEXT_STEPS.md. Explain why it's needed and how to do it. 

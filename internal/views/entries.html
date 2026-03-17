@@ -1,4 +1,4 @@
-{{ define "entries_title" }}Entries{{ end }}
+{{ define "entries_title" }}{{ t "entries.title" }}{{ end }}
 
 {{ define "entries_content" }}
 
@@ -45,12 +45,12 @@
         <div class="entry-meta">
             <time is="relative-time" datetime="{{ formatISO .RecordedAtUtc }}">{{ formatUnix .RecordedAtUtc }}</time>
             {{ if ne .EntryDate (formatUnix .RecordedAtUtc | printf "%.10s") }}
-            <div class="entry-date-note">Logged for {{ .EntryDate }}</div>
+            <div class="entry-date-note">{{ t "entry.logged_for" }} {{ .EntryDate }}</div>
             {{ end }}
         </div>
         {{ if .IsPrivate }}
         <div class="entry-private-indicator">
-        <img src="/static/security.svg" alt="Private entry" class="entry-private-indicator__icon">
+        <img src="/static/security.svg" alt="{{ t "entry.private_entry_alt" }}" class="entry-private-indicator__icon">
         <span class="entry-private-indicator__label">{{ t "entry.private.label" }}</span>
         </div>
         {{ end }}
