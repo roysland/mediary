@@ -1,5 +1,11 @@
 {{ define "entries_add_title" }}Add Entry{{ end }}
 
+{{ define "entries_add_content" }}
+<section class="card">
+  {{ template "add_entry_content" . }}
+</section>
+{{ end }}
+
 {{ define "add_entry_content" }}
 <fieldset>
 

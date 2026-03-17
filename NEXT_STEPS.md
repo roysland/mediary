@@ -49,3 +49,4 @@
 - Consider purging previously committed binaries/runtime files from git history using `git-filter-repo`.
 	Why: `.gitignore` prevents new local artifacts from entering future diffs, but old commits can still keep repository size/noise if files like `server`, `tmp/app`, or `data/app.db` were committed earlier.
 	How: In a coordinated branch, run `git filter-repo --path server --path tmp/app --path data/app.db --invert-paths`, then force-push and have collaborators re-clone or hard-reset after the history rewrite.
+

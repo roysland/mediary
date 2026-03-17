@@ -1,11 +1,21 @@
-{{ define "home_title" }}Home{{ end }}
+{{ define "home_title" }}{{ t "nav.home" }}{{ end }}
 
 {{ define "home_content" }}
+<section class="card">
+	{{ template "add_entry_content" . }}
+</section>
+
 <section>
-
-{{ template "add_entry_content" . }}
-
-
+	<div class="flex between align-center" style="margin: 0 0 0.75rem 0;">
+		<h2 style="margin: 0;">{{ t "entries.title" }}</h2>
+		<a href="/entries?day={{ .TodayStr }}"
+			 hx-get="/entries?day={{ .TodayStr }}"
+			 hx-target="main.container"
+			 hx-select="main.container"
+			 hx-swap="outerHTML"
+			 hx-push-url="true">{{ t "nav.entries" }}</a>
+	</div>
+	{{ template "entries_list_content" . }}
 </section>
 
 {{ end }}

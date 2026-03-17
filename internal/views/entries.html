@@ -1,37 +1,44 @@
 {{ define "entries_title" }}{{ t "entries.title" }}{{ end }}
 
-{{ define "entries_content" }}
-
+{{ define "entries_day_navigation" }}
 <nav class="card">
-<ul class="day-control">
-    {{ range .DayNavigation }}
-    <li>
-      <a href="/entries?day={{ .Date }}"
-         hx-get="/entries?day={{ .Date }}"
+    <ul class="day-control">
+        {{ range .DayNavigation }}
+        <li>
+            <a href="/entries?day={{ .Date }}"
+                 hx-get="/entries?day={{ .Date }}"
                  hx-target="main.container"
                  hx-select="main.container"
                  hx-swap="outerHTML"
-         hx-push-url="true"
-         {{ if .IsCurrent }}aria-current="page"{{ end }}>
-        <span class="day-number">{{ .DayNumber }}</span>
-        <span class="day-name">{{ .DayName }}</span>
-      </a>
-    </li>
-    {{ end }}
-</ul>
+                 hx-push-url="true"
+                 {{ if .IsCurrent }}aria-current="page"{{ end }}>
+                <span class="day-number">{{ .DayNumber }}</span>
+                <span class="day-name">{{ .DayName }}</span>
+            </a>
+        </li>
+        {{ end }}
+    </ul>
 </nav>
+{{ end }}
+
+{{ define "entries_list_content" }}
 <section class="card">
     {{ if .Entries }}
     <ul class="entry-list">
-    {{ range .Entries }}
-        {{ template "entry_item" . }}
-    {{ end }}
+        {{ range .Entries }}
+            {{ template "entry_item" . }}
+        {{ end }}
+    </ul>
     {{ else }}
     <p>{{ t "entry.no_entries" }}</p>
     {{ end }}
-    </ul>
-
 </section>
+{{ end }}
+
+{{ define "entries_content" }}
+
+{{ template "entries_day_navigation" . }}
+{{ template "entries_list_content" . }}
 
 <dialog id="add-quick-trackable-dialog" class="sheet">
 
