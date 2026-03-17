@@ -114,7 +114,7 @@ func (s *Server) saveTrackableValueForUser(ctx context.Context, userID int64, in
 	}
 
 	if trackable.ValueType != "boolean" {
-		cutoff := nowUnix - 30
+		cutoff := now.Add(-recentTrackableValueWindow).UTC().Unix()
 		recent, findErr := s.queries.FindRecentTrackableValue(ctx, db.FindRecentTrackableValueParams{
 			TrackableDefinitionID: input.TrackableID,
 			UserID:                userID,

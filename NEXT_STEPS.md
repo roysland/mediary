@@ -13,3 +13,9 @@
 - Extend `requireMethod`, `requirePathInt64`, and `requireParsedForm` usage to remaining server handlers for full consistency.
 	Why: Task 17 now normalizes `entries`, `trackable`, and `settings`, but other handlers still use mixed direct checks and parsing styles.
 	How: Audit `internal/server/*.go` for direct `r.Method`, `r.ParseForm`, and `strconv.ParseInt(r.PathValue(...))` patterns and migrate them to shared helpers where behavior matches.
+
+## Follow-ups after constants cleanup
+
+- Replace repeated date layout literals with shared constants.
+	Why: Values like `"2006-01-02"` and related time formats are still duplicated across handlers/services and can drift over time.
+	How: Add date/time layout constants in `internal/server/constants.go` and update parsing/formatting call sites to use them.

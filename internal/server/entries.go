@@ -156,7 +156,9 @@ func (s *Server) addEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Created entry: %+v", entry)
-	time.Sleep(500 * time.Millisecond)
+	if s.devMode {
+		time.Sleep(devAddEntryDelay)
+	}
 	req := classifyRequest(r)
 	if req.IsHTMX {
 		w.WriteHeader(http.StatusNoContent)

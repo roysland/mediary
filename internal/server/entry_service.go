@@ -27,8 +27,8 @@ func parseSelectedDay(dayStr string, now time.Time) (time.Time, error) {
 
 func buildDayNavigation(selectedDay time.Time) []dayNav {
 	selectedDayStr := selectedDay.Format("2006-01-02")
-	navigation := make([]dayNav, 0, 6)
-	for offset := -4; offset <= 1; offset++ {
+	navigation := make([]dayNav, 0, dayNavigationPastDays+dayNavigationFutureDays+1)
+	for offset := -dayNavigationPastDays; offset <= dayNavigationFutureDays; offset++ {
 		d := selectedDay.AddDate(0, 0, offset)
 		dateStr := d.Format("2006-01-02")
 		navigation = append(navigation, dayNav{
@@ -51,7 +51,7 @@ func (s *Server) createEntry(
 	return s.queries.CreateEntry(ctx, db.CreateEntryParams{
 		UserID:                userID,
 		RecordedAtUtc:         now.UTC().Unix(),
-		TimezoneOffsetMinutes: 0,
+		TimezoneOffsetMinutes: defaultTimezoneOffsetMinutes,
 		EntryDate:             now.Format("2006-01-02"),
 		NoteText:              note,
 		IsPrivate:             isPrivate,
