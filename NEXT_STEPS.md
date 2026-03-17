@@ -7,3 +7,9 @@
 - Localize client-side confirmation/error strings in `web/static/entries.js` and fallback message in `web/static/settings.js`.
 	Why: Delete and confirmation flows still show hardcoded English browser dialogs.
 	How: Pass translated strings through data attributes from templates and read those values in JavaScript instead of inline literals.
+
+## Follow-ups after handler normalization
+
+- Extend `requireMethod`, `requirePathInt64`, and `requireParsedForm` usage to remaining server handlers for full consistency.
+	Why: Task 17 now normalizes `entries`, `trackable`, and `settings`, but other handlers still use mixed direct checks and parsing styles.
+	How: Audit `internal/server/*.go` for direct `r.Method`, `r.ParseForm`, and `strconv.ParseInt(r.PathValue(...))` patterns and migrate them to shared helpers where behavior matches.

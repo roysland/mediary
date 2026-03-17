@@ -5,13 +5,21 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"roysland.me/symptomstracker/internal/db"
 )
 
 func (s *Server) entries(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+
 	now := time.Now()
 	selectedDay, err := parseSelectedDay(r.URL.Query().Get("day"), now)
 	if err != nil {
@@ -22,11 +30,6 @@ func (s *Server) entries(w http.ResponseWriter, r *http.Request) {
 
 	selectedDayStr := selectedDay.Format("2006-01-02")
 	todayStr := now.Format("2006-01-02")
-
-	userID, ok := requireUserID(w, r)
-	if !ok {
-		return
-	}
 
 	entries, err := s.listEntryViewsByDay(r.Context(), userID, selectedDayStr)
 	if err != nil {
@@ -57,14 +60,12 @@ func (s *Server) entries(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) entryItem(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		respondMethodNotAllowed(w, r)
+	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
 
-	entryID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-	if err != nil || entryID <= 0 {
-		respondBadRequest(w, r, "Invalid entry ID")
+	entryID, ok := requirePathInt64(w, r, "id", "entry ID")
+	if !ok {
 		return
 	}
 
@@ -88,14 +89,12 @@ func (s *Server) entryItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deleteEntry(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		respondMethodNotAllowed(w, r)
+	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
 
-	entryID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-	if err != nil || entryID <= 0 {
-		respondBadRequest(w, r, "Invalid entry ID")
+	entryID, ok := requirePathInt64(w, r, "id", "entry ID")
+	if !ok {
 		return
 	}
 
@@ -104,7 +103,7 @@ func (s *Server) deleteEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.queries.DeleteEntry(r.Context(), db.DeleteEntryParams{
+	err := s.queries.DeleteEntry(r.Context(), db.DeleteEntryParams{
 		ID:     entryID,
 		UserID: userID,
 	})
@@ -118,50 +117,50 @@ func (s *Server) deleteEntry(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) addEntry(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		s.renderPage(w, r, "entries_add_title", "entries_add_content", nil)
-	case http.MethodPost:
-		userID, ok := requireUserID(w, r)
-		if !ok {
-			return
-		}
-
-		if err := r.ParseForm(); err != nil {
-			respondBadRequest(w, r, "Invalid form data")
-			return
-		}
-
-		now := time.Now()
-		note, err := requireNonEmpty(r.FormValue("entry_input"), "entry_input")
-		if err != nil {
-			respondBadRequest(w, r, err.Error())
-			return
-		}
-
-		isPrivate, err := checkboxToInt64(r.FormValue("is_private_entry"), "is_private_entry")
-		if err != nil {
-			respondBadRequest(w, r, err.Error())
-			return
-		}
-		noteText := sql.NullString{String: note, Valid: note != ""}
-
-		entry, err := s.createEntry(r.Context(), userID, now, noteText, isPrivate)
-		if err != nil {
-			log.Printf("Failed to create entry: %v", err)
-			respondInternalError(w, r, "Failed to save entry")
-			return
-		}
-		log.Printf("Created entry: %+v", entry)
-		time.Sleep(500 * time.Millisecond)
-		req := classifyRequest(r)
-		if req.IsHTMX {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		http.Redirect(w, r, "/entries", http.StatusSeeOther)
-	default:
-		respondMethodNotAllowed(w, r)
-
+	if !requireMethod(w, r, http.MethodGet, http.MethodPost) {
+		return
 	}
+
+	if r.Method == http.MethodGet {
+		s.renderPage(w, r, "entries_add_title", "entries_add_content", nil)
+		return
+	}
+
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+
+	if !requireParsedForm(w, r) {
+		return
+	}
+
+	now := time.Now()
+	note, err := requireNonEmpty(r.FormValue("entry_input"), "entry_input")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	isPrivate, err := checkboxToInt64(r.FormValue("is_private_entry"), "is_private_entry")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+	noteText := sql.NullString{String: note, Valid: note != ""}
+
+	entry, err := s.createEntry(r.Context(), userID, now, noteText, isPrivate)
+	if err != nil {
+		log.Printf("Failed to create entry: %v", err)
+		respondInternalError(w, r, "Failed to save entry")
+		return
+	}
+	log.Printf("Created entry: %+v", entry)
+	time.Sleep(500 * time.Millisecond)
+	req := classifyRequest(r)
+	if req.IsHTMX {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	http.Redirect(w, r, "/entries", http.StatusSeeOther)
 }

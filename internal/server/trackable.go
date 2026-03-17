@@ -23,13 +23,16 @@ type trackablePickerViewData struct {
 }
 
 func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodGet, http.MethodPost) {
+		return
+	}
+
 	userID, ok := requireUserID(w, r)
 	if !ok {
 		return
 	}
 
-	switch r.Method {
-	case http.MethodGet:
+	if r.Method == http.MethodGet {
 		trackableTemplate, err := s.queries.GetTrackableTemplates(r.Context(), userID)
 		if err != nil {
 			respondInternalError(w, r, "Failed to fetch trackable templates")
@@ -42,112 +45,114 @@ func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
 			TrackablePresets: trackableTemplate,
 		}
 		s.renderPage(w, r, "trackable_add_title", "trackable_add_content", data)
-	case http.MethodPost:
-		if err := r.ParseForm(); err != nil {
-			respondBadRequest(w, r, "Invalid form data")
-			return
-		}
-
-		now := time.Now()
-		name, err := requireNonEmpty(r.FormValue("trackable_name"), "trackable_name")
-		if err != nil {
-			respondBadRequest(w, r, err.Error())
-			return
-		}
-
-		valueType, err := requireOneOf(r.FormValue("trackable_value-type"), "trackable_value-type", "integer", "boolean", "text")
-		if err != nil {
-			respondBadRequest(w, r, err.Error())
-			return
-		}
-
-		icon := strings.TrimSpace(r.FormValue("trackable_icon"))
-		unit := strings.TrimSpace(r.FormValue("trackable_unit"))
-		privateLabel := strings.TrimSpace(r.FormValue("trackable_private-label"))
-		if privateLabel == "" {
-			// Accept legacy field name used by the current template.
-			privateLabel = strings.TrimSpace(r.FormValue("trackable_description"))
-		}
-
-		toNullString := func(s string) sql.NullString {
-			if s == "" {
-				return sql.NullString{}
-			}
-			return sql.NullString{String: s, Valid: true}
-		}
-
-		iconVal := toNullString(icon)
-		unitVal := toNullString(unit)
-		privateLabelVal := toNullString(privateLabel)
-
-		isSensitive, err := checkboxToInt64(r.FormValue("trackable_is-sensitive"), "trackable_is-sensitive")
-		if err != nil {
-			respondBadRequest(w, r, err.Error())
-			return
-		}
-
-		minVal, err := optionalInt64(r.FormValue("trackable_min_value"), "trackable_min_value")
-		if err != nil {
-			respondBadRequest(w, r, err.Error())
-			return
-		}
-
-		maxVal, err := optionalInt64(r.FormValue("trackable_max_value"), "trackable_max_value")
-		if err != nil {
-			respondBadRequest(w, r, err.Error())
-			return
-		}
-
-		if minVal.Valid && maxVal.Valid && minVal.Int64 > maxVal.Int64 {
-			respondBadRequest(w, r, "trackable_min_value must be less than or equal to trackable_max_value")
-			return
-		}
-
-		category := strings.TrimSpace(r.FormValue("trackable_category"))
-		if category == "" {
-			category = "default"
-		}
-		category, err = requireOneOf(category, "trackable_category", "default", "symptom", "activity", "measurement", "state")
-		if err != nil {
-			respondBadRequest(w, r, err.Error())
-			return
-		}
-
-		if valueType != "integer" {
-			// Integer-only fields should not be persisted for non-integer trackables.
-			minVal = sql.NullInt64{}
-			maxVal = sql.NullInt64{}
-			unit = ""
-			unitVal = sql.NullString{}
-		}
-
-		_, err = s.queries.CreateTrackableDefinition(r.Context(), db.CreateTrackableDefinitionParams{
-			UserID:       userID,
-			Name:         name,
-			ValueType:    valueType,
-			Icon:         iconVal,
-			Unit:         unitVal,
-			MinValue:     minVal,
-			MaxValue:     maxVal,
-			IsSensitive:  isSensitive,
-			Category:     category,
-			PrivateLabel: privateLabelVal,
-			CreatedAtUtc: now.UTC().Unix(),
-		})
-		if err != nil {
-			fmt.Printf("Failed to create trackable definition: %v\n", err)
-			respondInternalError(w, r, "Failed to create trackable")
-			return
-		}
-
-		http.Redirect(w, r, "/trackables", http.StatusSeeOther)
-	default:
-		respondMethodNotAllowed(w, r)
+		return
 	}
+
+	if !requireParsedForm(w, r) {
+		return
+	}
+
+	now := time.Now()
+	name, err := requireNonEmpty(r.FormValue("trackable_name"), "trackable_name")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	valueType, err := requireOneOf(r.FormValue("trackable_value-type"), "trackable_value-type", "integer", "boolean", "text")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	icon := strings.TrimSpace(r.FormValue("trackable_icon"))
+	unit := strings.TrimSpace(r.FormValue("trackable_unit"))
+	privateLabel := strings.TrimSpace(r.FormValue("trackable_private-label"))
+	if privateLabel == "" {
+		// Accept legacy field name used by the current template.
+		privateLabel = strings.TrimSpace(r.FormValue("trackable_description"))
+	}
+
+	toNullString := func(s string) sql.NullString {
+		if s == "" {
+			return sql.NullString{}
+		}
+		return sql.NullString{String: s, Valid: true}
+	}
+
+	iconVal := toNullString(icon)
+	unitVal := toNullString(unit)
+	privateLabelVal := toNullString(privateLabel)
+
+	isSensitive, err := checkboxToInt64(r.FormValue("trackable_is-sensitive"), "trackable_is-sensitive")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	minVal, err := optionalInt64(r.FormValue("trackable_min_value"), "trackable_min_value")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	maxVal, err := optionalInt64(r.FormValue("trackable_max_value"), "trackable_max_value")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	if minVal.Valid && maxVal.Valid && minVal.Int64 > maxVal.Int64 {
+		respondBadRequest(w, r, "trackable_min_value must be less than or equal to trackable_max_value")
+		return
+	}
+
+	category := strings.TrimSpace(r.FormValue("trackable_category"))
+	if category == "" {
+		category = "default"
+	}
+	category, err = requireOneOf(category, "trackable_category", "default", "symptom", "activity", "measurement", "state")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	if valueType != "integer" {
+		// Integer-only fields should not be persisted for non-integer trackables.
+		minVal = sql.NullInt64{}
+		maxVal = sql.NullInt64{}
+		unit = ""
+		unitVal = sql.NullString{}
+	}
+
+	_, err = s.queries.CreateTrackableDefinition(r.Context(), db.CreateTrackableDefinitionParams{
+		UserID:       userID,
+		Name:         name,
+		ValueType:    valueType,
+		Icon:         iconVal,
+		Unit:         unitVal,
+		MinValue:     minVal,
+		MaxValue:     maxVal,
+		IsSensitive:  isSensitive,
+		Category:     category,
+		PrivateLabel: privateLabelVal,
+		CreatedAtUtc: now.UTC().Unix(),
+	})
+	if err != nil {
+		fmt.Printf("Failed to create trackable definition: %v\n", err)
+		respondInternalError(w, r, "Failed to create trackable")
+		return
+	}
+
+	http.Redirect(w, r, "/trackables", http.StatusSeeOther)
 
 }
 
 func (s *Server) listTrackables(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+
 	userID, ok := requireUserID(w, r)
 	if !ok {
 		return
@@ -162,14 +167,12 @@ func (s *Server) listTrackables(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) entryTrackablesDialog(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		respondMethodNotAllowed(w, r)
+	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
 
-	entryID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-	if err != nil || entryID <= 0 {
-		respondBadRequest(w, r, "Invalid entry ID")
+	entryID, ok := requirePathInt64(w, r, "id", "entry ID")
+	if !ok {
 		return
 	}
 
@@ -178,7 +181,7 @@ func (s *Server) entryTrackablesDialog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s.queries.GetEntryByID(r.Context(), db.GetEntryByIDParams{
+	_, err := s.queries.GetEntryByID(r.Context(), db.GetEntryByIDParams{
 		ID:     entryID,
 		UserID: userID,
 	})
@@ -201,16 +204,17 @@ func (s *Server) entryTrackablesDialog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) registerTrackable(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+
 	userID, ok := requireUserID(w, r)
 	if !ok {
 		return
 	}
 
-	// Extract trackable ID from URL
-	idStr := strings.TrimPrefix(r.URL.Path, "/trackable/")
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		respondBadRequest(w, r, "Invalid trackable ID")
+	id, ok := requirePathInt64(w, r, "id", "trackable ID")
+	if !ok {
 		return
 	}
 
@@ -231,15 +235,12 @@ func (s *Server) registerTrackable(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) saveTrackableValue(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		respondMethodNotAllowed(w, r)
+	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
 
-	idStr := r.PathValue("id")
-	trackableID, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil || trackableID <= 0 {
-		respondBadRequest(w, r, "Invalid trackable ID")
+	trackableID, ok := requirePathInt64(w, r, "id", "trackable ID")
+	if !ok {
 		return
 	}
 
@@ -269,8 +270,7 @@ func (s *Server) saveTrackableValue(w http.ResponseWriter, r *http.Request) {
 		}
 		rawValue = body["value"]
 	} else {
-		if err := r.ParseForm(); err != nil {
-			respondBadRequest(w, r, "Invalid form data")
+		if !requireParsedForm(w, r) {
 			return
 		}
 	}
@@ -374,15 +374,12 @@ func (s *Server) saveTrackableValue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) saveTrackableDismissal(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		respondMethodNotAllowed(w, r)
+	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
 
-	idStr := r.PathValue("id")
-	trackableID, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil || trackableID <= 0 {
-		respondBadRequest(w, r, "Invalid trackable ID")
+	trackableID, ok := requirePathInt64(w, r, "id", "trackable ID")
+	if !ok {
 		return
 	}
 
@@ -400,8 +397,7 @@ func (s *Server) saveTrackableDismissal(w http.ResponseWriter, r *http.Request) 
 			dismissed = *body.Dismissed
 		}
 	} else {
-		if err := r.ParseForm(); err != nil {
-			respondBadRequest(w, r, "Invalid form data")
+		if !requireParsedForm(w, r) {
 			return
 		}
 		if raw := strings.TrimSpace(r.FormValue("dismissed")); raw != "" {
