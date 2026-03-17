@@ -258,23 +258,57 @@ func (s *Server) saveUserSettings(ctx context.Context, userID int64, settings Us
 }
 
 func (s *Server) deleteAllUserData(ctx context.Context, userID int64) error {
-	if err := s.queries.DeleteTrackableValuesByUser(ctx, userID); err != nil {
-		return err
+	if s.dbConn == nil {
+		if err := s.queries.DeleteTrackableValuesByUser(ctx, userID); err != nil {
+			return err
+		}
+		if err := s.queries.DeleteTrackableDailyDismissalsByUser(ctx, userID); err != nil {
+			return err
+		}
+		if err := s.queries.DeleteEntriesByUser(ctx, userID); err != nil {
+			return err
+		}
+		if err := s.queries.DeleteTrackableDefinitionsByUser(ctx, userID); err != nil {
+			return err
+		}
+		if err := s.queries.DeleteSettingsByUser(ctx, userID); err != nil {
+			return err
+		}
+		return s.queries.DeleteWebauthnCredentialsByUser(ctx, userID)
 	}
-	if err := s.queries.DeleteTrackableDailyDismissalsByUser(ctx, userID); err != nil {
-		return err
-	}
-	if err := s.queries.DeleteEntriesByUser(ctx, userID); err != nil {
-		return err
-	}
-	if err := s.queries.DeleteTrackableDefinitionsByUser(ctx, userID); err != nil {
-		return err
-	}
-	if err := s.queries.DeleteSettingsByUser(ctx, userID); err != nil {
+
+	tx, err := s.dbConn.BeginTx(ctx, nil)
+	if err != nil {
 		return err
 	}
 
-	return s.queries.DeleteWebauthnCredentialsByUser(ctx, userID)
+	qtx := s.queries.WithTx(tx)
+	if err := qtx.DeleteTrackableValuesByUser(ctx, userID); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := qtx.DeleteTrackableDailyDismissalsByUser(ctx, userID); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := qtx.DeleteEntriesByUser(ctx, userID); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := qtx.DeleteTrackableDefinitionsByUser(ctx, userID); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := qtx.DeleteSettingsByUser(ctx, userID); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := qtx.DeleteWebauthnCredentialsByUser(ctx, userID); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (s *Server) buildUserDataExport(ctx context.Context, userID int64) (userDataExport, error) {

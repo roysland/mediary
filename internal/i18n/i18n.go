@@ -11,7 +11,8 @@ const (
 type Catalog map[string]string
 
 var catalogs = map[string]Catalog{
-	LocaleEnglish: englishCatalog,
+	LocaleEnglish:   englishCatalog,
+	LocaleNorwegian: norwegianCatalog,
 }
 
 func T(key string) string {
@@ -68,4 +69,9 @@ func Keys(locale string) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func IsSupportedLocale(locale string) bool {
+	_, ok := catalogs[locale]
+	return ok
 }

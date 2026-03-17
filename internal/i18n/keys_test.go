@@ -64,8 +64,9 @@ func TestTemplateTranslationKeysAreDefined(t *testing.T) {
 }
 
 func TestRegisteredLocalesExposeSortedMetadata(t *testing.T) {
-	if got := Locales(); len(got) != 1 || got[0] != DefaultLocale {
-		t.Fatalf("expected only the default locale to be registered, got %v", got)
+	got := Locales()
+	if len(got) != 2 || got[0] != LocaleEnglish || got[1] != LocaleNorwegian {
+		t.Fatalf("expected English and Norwegian locales, got %v", got)
 	}
 
 	keys := Keys(DefaultLocale)

@@ -29,7 +29,7 @@ type trackableSaveResult struct {
 }
 
 func (s *Server) buildTrackablePickerData(ctx context.Context, userID, entryID int64, hasEntryID bool, pickerID string, showAddTrackableLink bool) (trackablePickerViewData, error) {
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().Format(dateLayoutISO)
 	trackableDefinitions, err := s.queries.ListTrackableDefinitionsWithDismissal(ctx, db.ListTrackableDefinitionsWithDismissalParams{
 		DismissalDate: today,
 		UserID:        userID,
@@ -193,7 +193,7 @@ func (s *Server) saveTrackableDismissalForUser(ctx context.Context, userID, trac
 	return s.queries.UpsertTrackableDailyDismissal(ctx, db.UpsertTrackableDailyDismissalParams{
 		UserID:                userID,
 		TrackableDefinitionID: trackableID,
-		DismissalDate:         now.Format("2006-01-02"),
+		DismissalDate:         now.Format(dateLayoutISO),
 		Dismissed:             boolToInt64(dismissed),
 		CreatedAtUtc:          now.UTC().Unix(),
 		UpdatedAtUtc:          now.UTC().Unix(),

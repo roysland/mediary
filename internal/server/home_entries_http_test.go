@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -79,6 +78,135 @@ func TestEntriesRendersDayNavigationAndFiltersBySelectedDay(t *testing.T) {
 	}
 }
 
+func TestTrackablesRouteRendersPicker(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/trackables", nil)
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	if !strings.Contains(rr.Body.String(), `data-trackable-picker`) {
+		t.Fatalf("expected trackable picker content in /trackables response")
+	}
+}
+
+func TestSettingsPostRedirectsAndPersists(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	body := strings.NewReader("language=no&theme=dark&screen_lock=300&share_timer=600")
+	req := httptest.NewRequest(http.MethodPost, "/settings", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d: %s", rr.Code, rr.Body.String())
+	}
+	if got := rr.Header().Get("Location"); got != "/settings" {
+		t.Fatalf("expected redirect to /settings, got %q", got)
+	}
+
+	settings, err := s.loadUserSettings(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("loadUserSettings failed: %v", err)
+	}
+	if settings.Language != "no" || settings.Theme != "dark" || settings.ScreenLock != "300" || settings.ShareTimer != "600" {
+		t.Fatalf("unexpected persisted settings: %+v", settings)
+	}
+}
+
+func TestSettingsPostInvalidLanguageReturnsBadRequest(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	body := strings.NewReader("language=xx&theme=dark&screen_lock=300&share_timer=600")
+	req := httptest.NewRequest(http.MethodPost, "/settings", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestBottomNavActiveStateByRoute(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	tests := []struct {
+		path         string
+		expectedHref string
+	}{
+		{path: "/", expectedHref: "/"},
+		{path: "/entries", expectedHref: "/entries"},
+		{path: "/trackables", expectedHref: "/trackables"},
+		{path: "/settings", expectedHref: "/settings"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
+			rr := httptest.NewRecorder()
+			s.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Fatalf("expected 200, got %d: %s", rr.Code, rr.Body.String())
+			}
+
+			body := rr.Body.String()
+			hrefs := []string{"/", "/entries", "/trackables", "/settings"}
+			for _, href := range hrefs {
+				snippet := `href="` + href + `" class="bottom-nav__link" aria-current="page"`
+				if href == tt.expectedHref {
+					if !strings.Contains(body, snippet) {
+						t.Fatalf("expected active nav link %q in body", href)
+					}
+					continue
+				}
+				if strings.Contains(body, snippet) {
+					t.Fatalf("did not expect active nav link %q for path %q", href, tt.path)
+				}
+			}
+		})
+	}
+}
+
+func TestTemplatesUseSavedUserLocale(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	err := s.saveUserSettings(context.Background(), 1, UserSettings{
+		Language:   "no",
+		Theme:      "system",
+		ScreenLock: "none",
+		ShareTimer: "300",
+	}, 1710000000)
+	if err != nil {
+		t.Fatalf("saveUserSettings failed: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/settings", nil)
+	rr := httptest.NewRecorder()
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	body := rr.Body.String()
+	if !strings.Contains(body, `<html lang="no"`) {
+		t.Fatalf("expected html lang to match user locale, body: %s", body)
+	}
+	if !strings.Contains(body, "Innstillinger") {
+		t.Fatalf("expected Norwegian translation in response body")
+	}
+}
+
 type entryFixture struct {
 	userID        int64
 	entryDate     string
@@ -110,16 +238,27 @@ func newHomeEntriesHTTPTestServer(t *testing.T) *Server {
 		t.Fatalf("seed test user: %v", err)
 	}
 
-	tmpl, err := parseTemplatesFromRoot(root)
+	tmpl, err := parseTemplatesFromRoot(root, i18n.DefaultLocale)
 	if err != nil {
 		t.Fatalf("parse templates: %v", err)
 	}
 
+	templatesByLocale := make(map[string]*template.Template)
+	for _, locale := range i18n.Locales() {
+		localized, err := parseTemplatesFromRoot(root, locale)
+		if err != nil {
+			t.Fatalf("parse templates for locale %q: %v", locale, err)
+		}
+		templatesByLocale[locale] = localized
+	}
+
 	s := &Server{
-		mux:       http.NewServeMux(),
-		templates: tmpl,
-		devMode:   false,
-		queries:   db.New(conn),
+		mux:               http.NewServeMux(),
+		templates:         tmpl,
+		templatesByLocale: templatesByLocale,
+		dbConn:            conn,
+		devMode:           false,
+		queries:           db.New(conn),
 	}
 	s.routes()
 
@@ -143,23 +282,8 @@ func insertEntryFixture(t *testing.T, s *Server, f entryFixture) {
 	}
 }
 
-func parseTemplatesFromRoot(root string) (*template.Template, error) {
-	tmpl := template.New("").Funcs(template.FuncMap{
-		"t": i18n.T,
-		"formatUnix": func(ts int64) string {
-			return time.Unix(ts, 0).UTC().Format("2006-01-02 15:04:05")
-		},
-		"formatISO": func(ts int64) string {
-			return time.Unix(ts, 0).UTC().Format(time.RFC3339)
-		},
-		"json": func(v any) template.JS {
-			b, err := json.Marshal(v)
-			if err != nil {
-				return template.JS("null")
-			}
-			return template.JS(b)
-		},
-	})
+func parseTemplatesFromRoot(root, locale string) (*template.Template, error) {
+	tmpl := template.New("").Funcs(templateFuncMap(locale))
 
 	viewsDir := filepath.Join(root, "internal", "views")
 	var files []string

@@ -17,10 +17,12 @@ import (
 )
 
 type Server struct {
-	mux       *http.ServeMux
-	templates *template.Template
-	devMode   bool
-	queries   *db.Queries
+	mux               *http.ServeMux
+	templates         *template.Template
+	templatesByLocale map[string]*template.Template
+	devMode           bool
+	queries           *db.Queries
+	dbConn            *sql.DB
 }
 
 func New(cfg Config) *Server {
@@ -39,17 +41,22 @@ func New(cfg Config) *Server {
 	queries := db.New(conn)
 
 	s := &Server{
-		mux:     http.NewServeMux(),
-		devMode: cfg.DevMode,
-		queries: queries,
+		mux:               http.NewServeMux(),
+		devMode:           cfg.DevMode,
+		queries:           queries,
+		dbConn:            conn,
+		templatesByLocale: make(map[string]*template.Template),
 	}
 
 	if !s.devMode {
-		tmpl, err := s.loadTemplates()
-		if err != nil {
-			log.Fatal(err)
+		for _, locale := range i18n.Locales() {
+			tmpl, err := s.loadTemplates(locale)
+			if err != nil {
+				log.Fatal(err)
+			}
+			s.templatesByLocale[locale] = tmpl
 		}
-		s.templates = tmpl
+		s.templates = s.templatesByLocale[i18n.DefaultLocale]
 	}
 
 	s.routes()
@@ -57,11 +64,13 @@ func New(cfg Config) *Server {
 	return s
 }
 
-func (s *Server) loadTemplates() (*template.Template, error) {
-	tmpl := template.New("").Funcs(template.FuncMap{
-		"t": i18n.T,
+func templateFuncMap(locale string) template.FuncMap {
+	return template.FuncMap{
+		"t": func(key string) string {
+			return i18n.TForLocale(locale, key)
+		},
 		"formatUnix": func(ts int64) string {
-			return time.Unix(ts, 0).UTC().Format("2006-01-02 15:04:05")
+			return time.Unix(ts, 0).UTC().Format(dateTimeLayoutUTC)
 		},
 		"formatISO": func(ts int64) string {
 			return time.Unix(ts, 0).UTC().Format(time.RFC3339)
@@ -73,7 +82,11 @@ func (s *Server) loadTemplates() (*template.Template, error) {
 			}
 			return template.JS(b)
 		},
-	})
+	}
+}
+
+func (s *Server) loadTemplates(locale string) (*template.Template, error) {
+	tmpl := template.New("").Funcs(templateFuncMap(locale))
 
 	var files []string
 	err := filepath.WalkDir("internal/views", func(path string, d fs.DirEntry, err error) error {

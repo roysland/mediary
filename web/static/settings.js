@@ -13,7 +13,7 @@ function initSettingsDangerZone() {
   clearDataForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    const message = deleteButton.dataset.confirmMessage || "Are you sure?";
+    const message = deleteButton.dataset.confirmMessage || deleteButton.dataset.confirmFallback || "Are you sure?";
     if (window.confirm(message)) {
       clearDataForm.submit();
     }

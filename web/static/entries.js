@@ -1,5 +1,24 @@
+function getEntriesMessages() {
+  const i18n = document.getElementById("entries-i18n");
+  if (!(i18n instanceof HTMLElement)) {
+    return {
+      deleteConfirm: "Are you sure you want to delete this entry? This action cannot be undone.",
+      deleteFailed: "Failed to delete entry. Please try again.",
+      deleteError: "An error occurred while deleting the entry. Please try again.",
+    };
+  }
+
+  return {
+    deleteConfirm:
+      i18n.dataset.deleteConfirm || "Are you sure you want to delete this entry? This action cannot be undone.",
+    deleteFailed: i18n.dataset.deleteFailed || "Failed to delete entry. Please try again.",
+    deleteError: i18n.dataset.deleteError || "An error occurred while deleting the entry. Please try again.",
+  };
+}
+
 function deleteEntry(entryId) {
-  const confirmed = window.confirm("Are you sure you want to delete this entry? This action cannot be undone.");
+  const messages = getEntriesMessages();
+  const confirmed = window.confirm(messages.deleteConfirm);
   if (!confirmed) {
     return;
   }
@@ -12,7 +31,7 @@ function deleteEntry(entryId) {
   })
     .then((response) => {
       if (!response.ok) {
-        window.alert("Failed to delete entry. Please try again.");
+        window.alert(messages.deleteFailed);
         return;
       }
 
@@ -23,7 +42,7 @@ function deleteEntry(entryId) {
     })
     .catch((error) => {
       console.error("Error deleting entry:", error);
-      window.alert("An error occurred while deleting the entry. Please try again.");
+      window.alert(messages.deleteError);
     });
 }
 

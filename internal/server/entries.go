@@ -28,8 +28,8 @@ func (s *Server) entries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedDayStr := selectedDay.Format("2006-01-02")
-	todayStr := now.Format("2006-01-02")
+	selectedDayStr := selectedDay.Format(dateLayoutISO)
+	todayStr := now.Format(dateLayoutISO)
 
 	entries, err := s.listEntryViewsByDay(r.Context(), userID, selectedDayStr)
 	if err != nil {

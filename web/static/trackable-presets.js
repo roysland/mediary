@@ -107,6 +107,33 @@ function initTrackablePresets(scope = document) {
     const presets = parsePresetList(list);
     const hiddenPresetIdInput = form.querySelector("#trackable_template_id, #presetId");
     const trackableNameInput = form.querySelector("#trackable_name");
+    const presetManagedInputs = Array.from(
+      form.querySelectorAll(
+        "#trackable_name, #trackable_icon, #trackable_value_type, #trackable_value-type, #trackable_category, #trackable_min_value, #trackable_max_value",
+      ),
+    );
+    let applyingPreset = false;
+
+    const clearPresetLink = () => {
+      if (applyingPreset) {
+        return;
+      }
+      if (hiddenPresetIdInput instanceof HTMLInputElement) {
+        hiddenPresetIdInput.value = "";
+      }
+    };
+
+    const filterPresetList = () => {
+      if (!(trackableNameInput instanceof HTMLInputElement)) {
+        return;
+      }
+      const inputValue = trackableNameInput.value.toLowerCase();
+      const listItems = list.querySelectorAll("li[data-name]");
+      listItems.forEach((listItem) => {
+        const name = (listItem.getAttribute("data-name") || "").toLowerCase();
+        listItem.style.display = name.includes(inputValue) ? "" : "none";
+      });
+    };
 
     list.dataset.presetReady = "true";
 
@@ -117,26 +144,19 @@ function initTrackablePresets(scope = document) {
       }
 
       const preset = findPreset(presets, button);
+      applyingPreset = true;
       updateFieldsFromPreset(form, preset);
+      filterPresetList();
+      applyingPreset = false;
+    });
 
-      if (trackableNameInput instanceof HTMLInputElement) {
-        trackableNameInput.dispatchEvent(new Event("input", { bubbles: true }));
-      }
+    presetManagedInputs.forEach((input) => {
+      input.addEventListener("input", clearPresetLink);
+      input.addEventListener("change", clearPresetLink);
     });
 
     if (trackableNameInput instanceof HTMLInputElement) {
-      trackableNameInput.addEventListener("input", () => {
-        if (hiddenPresetIdInput instanceof HTMLInputElement) {
-          hiddenPresetIdInput.value = "";
-        }
-
-        const inputValue = trackableNameInput.value.toLowerCase();
-        const listItems = list.querySelectorAll("li[data-name]");
-        listItems.forEach((listItem) => {
-          const name = (listItem.getAttribute("data-name") || "").toLowerCase();
-          listItem.style.display = name.includes(inputValue) ? "" : "none";
-        });
-      });
+      trackableNameInput.addEventListener("input", filterPresetList);
     }
   });
 }

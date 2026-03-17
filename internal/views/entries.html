@@ -37,6 +37,14 @@
 
 {{ define "entries_content" }}
 
+<div
+    id="entries-i18n"
+    data-delete-confirm="{{ t "entries.delete.confirm" }}"
+    data-delete-failed="{{ t "entries.delete.failed" }}"
+    data-delete-error="{{ t "entries.delete.error" }}"
+    hidden
+></div>
+
 {{ template "entries_day_navigation" . }}
 {{ template "entries_list_content" . }}
 

@@ -15,7 +15,7 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().Format(dateLayoutISO)
 	s.renderPage(w, r, "home_title", "home_content", map[string]interface{}{
 		"SelectedDay": today,
 		"TodayStr":    today,

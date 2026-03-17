@@ -54,7 +54,7 @@
             <button type="button" popovertarget="clear-data-popover" popovertargetaction="hide">
                 {{ t "common.cancel" }}
             </button>
-            <button type="submit" class="button--danger" id="delete_everything" data-confirm-message="{{ t "settings.clear_data_confirm" }}">{{ t "settings.clear_data" }}</button>
+            <button type="submit" class="button--danger" id="delete_everything" data-confirm-message="{{ t "settings.clear_data_confirm" }}" data-confirm-fallback="{{ t "settings.confirm.generic" }}">{{ t "settings.clear_data" }}</button>
         </div>
     </form>
 </fieldset>

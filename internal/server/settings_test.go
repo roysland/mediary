@@ -85,5 +85,5 @@ func newTestServerWithSettingsDB(t *testing.T) *Server {
 		}
 	}
 
-	return &Server{queries: db.New(conn)}
+	return &Server{queries: db.New(conn), dbConn: conn}
 }

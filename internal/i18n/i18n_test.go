@@ -18,8 +18,12 @@ func TestTReturnsExpectedValuesForKnownKeys(t *testing.T) {
 }
 
 func TestTForLocaleFallsBackToDefaultLocale(t *testing.T) {
-	const key = "entries.title"
-	if got := TForLocale(LocaleNorwegian, key); got != "Entries" {
+	const key = "this.key.only.exists.in.default"
+	if got := TForLocale(LocaleNorwegian, key); got != key {
+		t.Fatalf("expected missing key to return key itself, got %q", got)
+	}
+
+	if got := TForLocale("xx", "entries.title"); got != "Entries" {
 		t.Fatalf("expected default locale fallback, got %q", got)
 	}
 }
