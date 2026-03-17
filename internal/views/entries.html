@@ -41,7 +41,7 @@
 {{ template "entries_list_content" . }}
 
 <dialog id="add-quick-trackable-dialog" class="sheet">
-
+    {{ template "entry_trackable_dialog_content" .EntryTrackableDialogData }}
 </dialog>
 
 {{ end }}
@@ -82,9 +82,11 @@
             </svg>
         </button>
         <div class="entry-actions entry-actions--column flex col" popover id="entry-{{ .ID }}-context" anchor="entry-{{ .ID}}-context-button" data-placement="left">
-        <button type="button" class="button--ghost button--sm edit-note-button" data-entry-id="{{ .ID }}" hx-get="/entry/{{ .ID }}/trackables" hx-target="#add-quick-trackable-dialog" hx-swap="innerHTML">{{ t "entry.add_trackable" }}</button>
+        <button type="button" class="button--ghost button--sm edit-note-button" data-entry-id="{{ .ID }}">{{ t "entry.add_trackable" }}</button>
         <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
         </div>
+        {{ else }}
+        <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
         {{ end }}
     </div>
 </li>

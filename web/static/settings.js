@@ -1,20 +1,21 @@
 function initSettingsDangerZone() {
+  const clearDataForm = document.getElementById("clear_data_form");
   const deleteButton = document.getElementById("delete_everything");
-  if (!(deleteButton instanceof HTMLButtonElement)) {
+  if (!(clearDataForm instanceof HTMLFormElement) || !(deleteButton instanceof HTMLButtonElement)) {
     return;
   }
 
-  if (deleteButton.dataset.confirmReady === "true") {
+  if (clearDataForm.dataset.confirmReady === "true") {
     return;
   }
 
-  deleteButton.dataset.confirmReady = "true";
-  deleteButton.addEventListener("click", (event) => {
+  clearDataForm.dataset.confirmReady = "true";
+  clearDataForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const message = deleteButton.dataset.confirmMessage || "Are you sure?";
     if (window.confirm(message)) {
-      // Clear-data flow is not implemented yet.
+      clearDataForm.submit();
     }
   });
 }

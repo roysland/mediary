@@ -1,5 +1,5 @@
 {{ define "layout" }}<!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en"{{ if ne .Theme "system" }} data-theme="{{ .Theme }}"{{ end }}>
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,7 +11,7 @@
 <body>
 <mecfs-app-shell>
 <!-- {{ template "topNav" .Data }} -->
-{{ template "bottomNav" .Data }}
+{{ template "bottomNav" . }}
 <main class="container">
 	{{ .Content }}
 </main>

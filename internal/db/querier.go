@@ -12,7 +12,13 @@ type Querier interface {
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error)
 	CreateTrackableDefinition(ctx context.Context, arg CreateTrackableDefinitionParams) (TrackableDefinition, error)
 	CreateTrackableValue(ctx context.Context, arg CreateTrackableValueParams) (TrackableValue, error)
+	DeleteEntriesByUser(ctx context.Context, userID int64) error
 	DeleteEntry(ctx context.Context, arg DeleteEntryParams) error
+	DeleteSettingsByUser(ctx context.Context, userID int64) error
+	DeleteTrackableDailyDismissalsByUser(ctx context.Context, userID int64) error
+	DeleteTrackableDefinitionsByUser(ctx context.Context, userID int64) error
+	DeleteTrackableValuesByUser(ctx context.Context, targetUserID int64) error
+	DeleteWebauthnCredentialsByUser(ctx context.Context, userID int64) error
 	FindEntryTrackableValue(ctx context.Context, arg FindEntryTrackableValueParams) (TrackableValue, error)
 	FindRecentTrackableValue(ctx context.Context, arg FindRecentTrackableValueParams) (TrackableValue, error)
 	GetAvailableTrackableTemplateByID(ctx context.Context, arg GetAvailableTrackableTemplateByIDParams) (TrackableTemplate, error)
@@ -21,9 +27,13 @@ type Querier interface {
 	GetTrackableById(ctx context.Context, arg GetTrackableByIdParams) (TrackableDefinition, error)
 	GetTrackableTemplates(ctx context.Context, userID int64) ([]TrackableTemplate, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
+	ListEntriesByUser(ctx context.Context, userID int64) ([]Entry, error)
 	ListSettings(ctx context.Context, userID int64) ([]Setting, error)
+	ListTrackableDailyDismissalsByUser(ctx context.Context, userID int64) ([]TrackableDailyDismissal, error)
 	ListTrackableDefinitions(ctx context.Context, userID int64) ([]TrackableDefinition, error)
 	ListTrackableDefinitionsWithDismissal(ctx context.Context, arg ListTrackableDefinitionsWithDismissalParams) ([]ListTrackableDefinitionsWithDismissalRow, error)
+	ListTrackableValuesByUser(ctx context.Context, userID int64) ([]TrackableValue, error)
+	ListWebauthnCredentialsByUser(ctx context.Context, userID int64) ([]WebauthnCredential, error)
 	UpdateTrackableValueInt(ctx context.Context, arg UpdateTrackableValueIntParams) (TrackableValue, error)
 	UpdateTrackableValueText(ctx context.Context, arg UpdateTrackableValueTextParams) (TrackableValue, error)
 	UpsertSetting(ctx context.Context, arg UpsertSettingParams) error

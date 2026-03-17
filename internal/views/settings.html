@@ -44,17 +44,17 @@
 
 <fieldset>
     <legend>{{ t "settings.danger_zone" }}</legend>
-    
-        <h3>{{ t "settings.danger_zone" }}</h3>
-        <button class="button--danger"  type="button" popovertarget="sample-popover" class="danger">{{ t "settings.clear_data" }}</button>
+    <h3>{{ t "settings.danger_zone" }}</h3>
+    <a class="button--ghost" href="/settings/export-data" download>{{ t "settings.export_data" }}</a>
+    <button id="clear-data-trigger" class="button--danger" type="button" popovertarget="clear-data-popover">{{ t "settings.clear_data" }}</button>
 
-    <form>
-                <div id="sample-popover" popover anchor="popover-trigger" role="region" aria-label="{{ t "settings.clear_data_popover_label" }}">
-                    <p>{{ t "settings.clear_data_warning" }}</p>
-          <button type="button" popovertarget="sample-popover" popovertargetaction="hide">
-                        {{ t "common.cancel" }}
-          </button>
-            <button type="button" class="button--danger" id="delete_everything" data-confirm-message="{{ t "settings.clear_data_confirm" }}">{{ t "settings.clear_data" }}</button>
+    <form id="clear_data_form" method="post" action="/settings/clear-data">
+        <div id="clear-data-popover" popover role="region" aria-label="{{ t "settings.clear_data_popover_label" }}">
+            <p>{{ t "settings.clear_data_warning" }}</p>
+            <button type="button" popovertarget="clear-data-popover" popovertargetaction="hide">
+                {{ t "common.cancel" }}
+            </button>
+            <button type="submit" class="button--danger" id="delete_everything" data-confirm-message="{{ t "settings.clear_data_confirm" }}">{{ t "settings.clear_data" }}</button>
         </div>
     </form>
 </fieldset>

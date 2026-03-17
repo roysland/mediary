@@ -38,24 +38,19 @@ func (s *Server) entries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get all tracked trackables
-	trackables, err := s.queries.ListTrackableDefinitions(r.Context(), userID)
+	entryTrackableDialogData, err := s.buildTrackablePickerData(r.Context(), userID, 0, false, "entries-dialog", true)
 	if err != nil {
-		log.Printf("Failed to list trackables: %v", err)
+		log.Printf("Failed to build trackable picker data: %v", err)
 		respondInternalError(w, r, "Failed to load trackables")
 		return
 	}
-	trackableMap := make(map[int64]db.TrackableDefinition)
-	for _, t := range trackables {
-		trackableMap[t.ID] = t
-	}
 
 	s.renderPage(w, r, "entries_title", "entries_content", map[string]interface{}{
-		"Entries":       entries,
-		"Trackables":    trackableMap,
-		"SelectedDay":   selectedDayStr,
-		"TodayStr":      todayStr,
-		"DayNavigation": buildDayNavigation(selectedDay),
+		"Entries":                  entries,
+		"SelectedDay":              selectedDayStr,
+		"TodayStr":                 todayStr,
+		"DayNavigation":            buildDayNavigation(selectedDay),
+		"EntryTrackableDialogData": entryTrackableDialogData,
 	})
 }
 

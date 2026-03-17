@@ -233,7 +233,7 @@ func (s *Server) entryTrackablesDialog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := s.buildTrackablePickerData(r.Context(), userID, entryID, true, fmt.Sprintf("entry-%d", entryID), false)
+	data, err := s.buildTrackablePickerData(r.Context(), userID, entryID, true, fmt.Sprintf("entry-%d", entryID), true)
 	if err != nil {
 		respondInternalError(w, r, "Failed to fetch trackables")
 		return

@@ -175,6 +175,16 @@ func (q *Queries) CreateTrackableValue(ctx context.Context, arg CreateTrackableV
 	return i, err
 }
 
+const deleteEntriesByUser = `-- name: DeleteEntriesByUser :exec
+DELETE FROM entries
+WHERE user_id = ?
+`
+
+func (q *Queries) DeleteEntriesByUser(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteEntriesByUser, userID)
+	return err
+}
+
 const deleteEntry = `-- name: DeleteEntry :exec
 DELETE FROM entries
 WHERE id = ? AND user_id = ?
@@ -187,6 +197,65 @@ type DeleteEntryParams struct {
 
 func (q *Queries) DeleteEntry(ctx context.Context, arg DeleteEntryParams) error {
 	_, err := q.db.ExecContext(ctx, deleteEntry, arg.ID, arg.UserID)
+	return err
+}
+
+const deleteSettingsByUser = `-- name: DeleteSettingsByUser :exec
+DELETE FROM settings
+WHERE user_id = ?
+`
+
+func (q *Queries) DeleteSettingsByUser(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteSettingsByUser, userID)
+	return err
+}
+
+const deleteTrackableDailyDismissalsByUser = `-- name: DeleteTrackableDailyDismissalsByUser :exec
+DELETE FROM trackable_daily_dismissals
+WHERE user_id = ?
+`
+
+func (q *Queries) DeleteTrackableDailyDismissalsByUser(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteTrackableDailyDismissalsByUser, userID)
+	return err
+}
+
+const deleteTrackableDefinitionsByUser = `-- name: DeleteTrackableDefinitionsByUser :exec
+DELETE FROM trackable_definitions
+WHERE user_id = ?
+`
+
+func (q *Queries) DeleteTrackableDefinitionsByUser(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteTrackableDefinitionsByUser, userID)
+	return err
+}
+
+const deleteTrackableValuesByUser = `-- name: DeleteTrackableValuesByUser :exec
+DELETE FROM trackable_values
+WHERE entry_id IN (
+    SELECT id
+    FROM entries
+    WHERE entries.user_id = ?1
+)
+OR trackable_definition_id IN (
+    SELECT id
+    FROM trackable_definitions
+    WHERE trackable_definitions.user_id = ?1
+)
+`
+
+func (q *Queries) DeleteTrackableValuesByUser(ctx context.Context, targetUserID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteTrackableValuesByUser, targetUserID)
+	return err
+}
+
+const deleteWebauthnCredentialsByUser = `-- name: DeleteWebauthnCredentialsByUser :exec
+DELETE FROM webauthn_credentials
+WHERE user_id = ?
+`
+
+func (q *Queries) DeleteWebauthnCredentialsByUser(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteWebauthnCredentialsByUser, userID)
 	return err
 }
 
@@ -617,6 +686,45 @@ func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Lis
 	return items, nil
 }
 
+const listEntriesByUser = `-- name: ListEntriesByUser :many
+SELECT id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, created_at_utc
+FROM entries
+WHERE user_id = ?
+ORDER BY recorded_at_utc DESC
+`
+
+func (q *Queries) ListEntriesByUser(ctx context.Context, userID int64) ([]Entry, error) {
+	rows, err := q.db.QueryContext(ctx, listEntriesByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Entry
+	for rows.Next() {
+		var i Entry
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.RecordedAtUtc,
+			&i.TimezoneOffsetMinutes,
+			&i.EntryDate,
+			&i.NoteText,
+			&i.IsPrivate,
+			&i.CreatedAtUtc,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSettings = `-- name: ListSettings :many
 SELECT id, user_id, settings_key, settings_value, created_at_utc
 FROM settings
@@ -638,6 +746,44 @@ func (q *Queries) ListSettings(ctx context.Context, userID int64) ([]Setting, er
 			&i.SettingsKey,
 			&i.SettingsValue,
 			&i.CreatedAtUtc,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTrackableDailyDismissalsByUser = `-- name: ListTrackableDailyDismissalsByUser :many
+SELECT id, user_id, trackable_definition_id, dismissal_date, dismissed, created_at_utc, updated_at_utc
+FROM trackable_daily_dismissals
+WHERE user_id = ?
+ORDER BY dismissal_date DESC
+`
+
+func (q *Queries) ListTrackableDailyDismissalsByUser(ctx context.Context, userID int64) ([]TrackableDailyDismissal, error) {
+	rows, err := q.db.QueryContext(ctx, listTrackableDailyDismissalsByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TrackableDailyDismissal
+	for rows.Next() {
+		var i TrackableDailyDismissal
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.TrackableDefinitionID,
+			&i.DismissalDate,
+			&i.Dismissed,
+			&i.CreatedAtUtc,
+			&i.UpdatedAtUtc,
 		); err != nil {
 			return nil, err
 		}
@@ -770,6 +916,98 @@ func (q *Queries) ListTrackableDefinitionsWithDismissal(ctx context.Context, arg
 			&i.Active,
 			&i.CreatedAtUtc,
 			&i.DismissedToday,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTrackableValuesByUser = `-- name: ListTrackableValuesByUser :many
+SELECT
+    tv.id,
+    tv.entry_id,
+    tv.trackable_definition_id,
+    tv.value_int,
+    tv.value_bool,
+    tv.value_text,
+    tv.location_text,
+    tv.note_text,
+    tv.entry_date,
+    tv.created_at_utc,
+    tv.updated_at_utc
+FROM trackable_values tv
+JOIN entries e ON e.id = tv.entry_id
+WHERE e.user_id = ?
+ORDER BY tv.created_at_utc DESC
+`
+
+func (q *Queries) ListTrackableValuesByUser(ctx context.Context, userID int64) ([]TrackableValue, error) {
+	rows, err := q.db.QueryContext(ctx, listTrackableValuesByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TrackableValue
+	for rows.Next() {
+		var i TrackableValue
+		if err := rows.Scan(
+			&i.ID,
+			&i.EntryID,
+			&i.TrackableDefinitionID,
+			&i.ValueInt,
+			&i.ValueBool,
+			&i.ValueText,
+			&i.LocationText,
+			&i.NoteText,
+			&i.EntryDate,
+			&i.CreatedAtUtc,
+			&i.UpdatedAtUtc,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listWebauthnCredentialsByUser = `-- name: ListWebauthnCredentialsByUser :many
+SELECT id, user_id, credential_id, public_key, sign_count, transports, created_at_utc
+FROM webauthn_credentials
+WHERE user_id = ?
+ORDER BY created_at_utc DESC
+`
+
+func (q *Queries) ListWebauthnCredentialsByUser(ctx context.Context, userID int64) ([]WebauthnCredential, error) {
+	rows, err := q.db.QueryContext(ctx, listWebauthnCredentialsByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []WebauthnCredential
+	for rows.Next() {
+		var i WebauthnCredential
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.CredentialID,
+			&i.PublicKey,
+			&i.SignCount,
+			&i.Transports,
+			&i.CreatedAtUtc,
 		); err != nil {
 			return nil, err
 		}

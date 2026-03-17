@@ -216,6 +216,42 @@ SELECT *
 FROM settings
 WHERE user_id = ?;
 
+-- name: ListEntriesByUser :many
+SELECT *
+FROM entries
+WHERE user_id = ?
+ORDER BY recorded_at_utc DESC;
+
+-- name: ListTrackableValuesByUser :many
+SELECT
+    tv.id,
+    tv.entry_id,
+    tv.trackable_definition_id,
+    tv.value_int,
+    tv.value_bool,
+    tv.value_text,
+    tv.location_text,
+    tv.note_text,
+    tv.entry_date,
+    tv.created_at_utc,
+    tv.updated_at_utc
+FROM trackable_values tv
+JOIN entries e ON e.id = tv.entry_id
+WHERE e.user_id = ?
+ORDER BY tv.created_at_utc DESC;
+
+-- name: ListTrackableDailyDismissalsByUser :many
+SELECT *
+FROM trackable_daily_dismissals
+WHERE user_id = ?
+ORDER BY dismissal_date DESC;
+
+-- name: ListWebauthnCredentialsByUser :many
+SELECT *
+FROM webauthn_credentials
+WHERE user_id = ?
+ORDER BY created_at_utc DESC;
+
 -- name: UpsertSetting :exec
 INSERT INTO settings (
     user_id,
@@ -226,4 +262,37 @@ INSERT INTO settings (
 VALUES (?, ?, ?, ?)
 ON CONFLICT(user_id, settings_key)
 DO UPDATE SET settings_value = excluded.settings_value;
+
+-- name: DeleteTrackableValuesByUser :exec
+DELETE FROM trackable_values
+WHERE entry_id IN (
+    SELECT id
+    FROM entries
+    WHERE entries.user_id = sqlc.arg(target_user_id)
+)
+OR trackable_definition_id IN (
+    SELECT id
+    FROM trackable_definitions
+    WHERE trackable_definitions.user_id = sqlc.arg(target_user_id)
+);
+
+-- name: DeleteTrackableDailyDismissalsByUser :exec
+DELETE FROM trackable_daily_dismissals
+WHERE user_id = ?;
+
+-- name: DeleteEntriesByUser :exec
+DELETE FROM entries
+WHERE user_id = ?;
+
+-- name: DeleteTrackableDefinitionsByUser :exec
+DELETE FROM trackable_definitions
+WHERE user_id = ?;
+
+-- name: DeleteSettingsByUser :exec
+DELETE FROM settings
+WHERE user_id = ?;
+
+-- name: DeleteWebauthnCredentialsByUser :exec
+DELETE FROM webauthn_credentials
+WHERE user_id = ?;
 

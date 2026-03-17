@@ -5,13 +5,32 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+
+	"roysland.me/symptomstracker/internal/auth"
 )
 
 type pageTemplate struct {
 	Title             string
 	Content           template.HTML
 	Data              any
+	Theme             string
+	ActiveNav         string
 	DebugTemplateData bool
+}
+
+func activeNavFromPath(path string) string {
+	switch {
+	case path == "/":
+		return "home"
+	case path == "/entries" || strings.HasPrefix(path, "/entry/"):
+		return "entries"
+	case strings.HasPrefix(path, "/trackables"):
+		return "trackables"
+	case strings.HasPrefix(path, "/settings"):
+		return "settings"
+	default:
+		return ""
+	}
 }
 
 func (s *Server) activeTemplates() (*template.Template, error) {
@@ -47,14 +66,42 @@ func (s *Server) renderPage(w http.ResponseWriter, r *http.Request, titleTemplat
 		return
 	}
 
+	theme := s.resolveTheme(r)
+
 	err = tmpl.ExecuteTemplate(w, "layout", pageTemplate{
 		Title:             strings.TrimSpace(titleBuf.String()),
 		Content:           template.HTML(contentBuf.String()),
 		Data:              data,
+		Theme:             theme,
+		ActiveNav:         activeNavFromPath(r.URL.Path),
 		DebugTemplateData: s.devMode,
 	})
 	if err != nil {
 		respondInternalError(w, r, err.Error())
+	}
+}
+
+func (s *Server) resolveTheme(r *http.Request) string {
+	settings := defaultUserSettings()
+	if s.queries == nil {
+		return settings.Theme
+	}
+
+	user := auth.CurrentUser(r)
+	if user == nil || user.ID <= 0 {
+		return settings.Theme
+	}
+
+	loaded, err := s.loadUserSettings(r.Context(), user.ID)
+	if err != nil {
+		return settings.Theme
+	}
+
+	switch loaded.Theme {
+	case "light", "dark", "system":
+		return loaded.Theme
+	default:
+		return settings.Theme
 	}
 }
 

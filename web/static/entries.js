@@ -30,8 +30,25 @@ function deleteEntry(entryId) {
 function scrollDayControl() {
   const el = document.querySelector(".day-control");
   if (el) {
-    el.scrollTo({ left: el.scrollWidth, behavior: "instant" });
+    // Keep this compatible across browsers; "instant" is not universally supported.
+    el.scrollLeft = el.scrollWidth;
   }
+}
+
+function setDialogEntryId(dialog, entryId) {
+  const forms = dialog.querySelectorAll(".trackable-picker .autosave-form");
+  forms.forEach((form) => {
+    const existingInput = form.querySelector("input[name='entry_id']");
+    if (existingInput) {
+      existingInput.remove();
+    }
+
+    const entryInput = document.createElement("input");
+    entryInput.type = "hidden";
+    entryInput.name = "entry_id";
+    entryInput.value = String(entryId);
+    form.append(entryInput);
+  });
 }
 
 function initEntriesInteractions() {
@@ -45,6 +62,11 @@ function initEntriesInteractions() {
         return;
       }
 
+      const popover = deleteButton.closest("[popover]");
+      if (popover && typeof popover.hidePopover === "function") {
+        popover.hidePopover();
+      }
+
       const entryId = Number(deleteButton.dataset.entryId);
       if (Number.isFinite(entryId) && entryId > 0) {
         deleteEntry(entryId);
@@ -56,16 +78,14 @@ function initEntriesInteractions() {
     if (popover && typeof popover.hidePopover === "function") {
       popover.hidePopover();
     }
-  });
 
-  document.body.addEventListener("htmx:afterSwap", (event) => {
-    scrollDayControl();
-
+    const entryId = Number(trigger.dataset.entryId);
     const quickTrackableDialog = document.getElementById("add-quick-trackable-dialog");
-    if (!quickTrackableDialog || event.detail.target !== quickTrackableDialog) {
+    if (!quickTrackableDialog || !Number.isFinite(entryId) || entryId <= 0) {
       return;
     }
 
+    setDialogEntryId(quickTrackableDialog, entryId);
     if (!quickTrackableDialog.open) {
       quickTrackableDialog.showModal();
     }

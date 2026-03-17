@@ -28,6 +28,7 @@ var englishCatalog = Catalog{
 	"settings.clear_data_popover_label": "Clear data confirmation",
 	"settings.clear_data_warning":       "This will delete everything. It cannot be undone.",
 	"settings.danger_zone":              "Danger zone",
+	"settings.export_data":              "Export all data",
 	"settings.general":                  "General",
 	"settings.language.english":         "English",
 	"settings.language.label":           "Language",

@@ -56,3 +56,21 @@
 	Why: Server tests now verify that the `data-submit-state-button` hook exists, but they cannot verify the client-side loading/success visual cue behavior.
 	How: Add a Playwright test that submits the `/` form with HTMX enabled and asserts the button transitions through `data-submit-visual="loading"` to `"success"`, then returns to `"idle"` while the form input is cleared.
 
+## Follow-ups after entries list context actions fix
+
+- Add a browser-level regression test for entries context menu actions.
+	Why: The add-trackable sheet and delete-confirm flows are JavaScript-driven and can silently break from browser API differences.
+	How: Add a Playwright test that opens `/entries`, triggers the context menu, verifies the `.sheet` dialog opens for add-trackable, and confirms an entry is removed from the DOM only after accepting the native delete confirmation.
+
+## Follow-ups after settings clear-data implementation
+
+- Wrap `deleteAllUserData` in a DB transaction.
+	Why: The current clear-data flow executes several delete queries sequentially, so a mid-sequence failure can leave partial user data behind.
+	How: Store the base `*sql.DB` on `Server`, run `BeginTx`, execute the delete queries through `queries.WithTx(tx)`, and commit/rollback as a unit.
+
+## Follow-ups after bottom nav accessibility fix
+
+- Add a render-level regression test for active bottom nav state.
+	Why: The nav now depends on path-to-section mapping and `aria-current="page"`; a route refactor could silently break active-state visibility/accessibility.
+	How: Add a template/HTTP test that requests `/`, `/entries`, `/trackables`, and `/settings`, then assert the matching bottom-nav link has `aria-current="page"`.
+
