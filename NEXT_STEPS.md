@@ -19,3 +19,9 @@
 - Replace repeated date layout literals with shared constants.
 	Why: Values like `"2006-01-02"` and related time formats are still duplicated across handlers/services and can drift over time.
 	How: Add date/time layout constants in `internal/server/constants.go` and update parsing/formatting call sites to use them.
+
+## Follow-ups after query deduplication
+
+- Validate query plan and indexing for optional day filter in `ListEntries`.
+	Why: The new optional predicate (`entry_date IS NULL OR e.entry_date = entry_date`) reduces SQL duplication but can lead to less predictable index usage as data grows.
+	How: Run `EXPLAIN QUERY PLAN` for day-filtered and unfiltered variants, then add or tune a composite index (for example `(user_id, entry_date, recorded_at_utc)`) if scans become expensive.

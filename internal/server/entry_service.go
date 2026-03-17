@@ -60,7 +60,7 @@ func (s *Server) createEntry(
 }
 
 func (s *Server) listEntryViewsByDay(ctx context.Context, userID int64, day string) ([]entryView, error) {
-	rows, err := s.queries.ListEntriesByDay(ctx, db.ListEntriesByDayParams{
+	rows, err := s.queries.ListEntries(ctx, db.ListEntriesParams{
 		UserID:    userID,
 		EntryDate: day,
 	})

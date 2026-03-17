@@ -501,9 +501,15 @@ SELECT
 FROM entries e
 LEFT JOIN trackable_values tv ON tv.entry_id = e.id
 LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
-WHERE e.user_id = ?
+WHERE e.user_id = ?1
+    AND (CAST(?2 AS TEXT) = '' OR e.entry_date = CAST(?2 AS TEXT))
 ORDER BY e.recorded_at_utc DESC, tv.created_at_utc ASC
 `
+
+type ListEntriesParams struct {
+	UserID    int64  `json:"user_id"`
+	EntryDate string `json:"entry_date"`
+}
 
 type ListEntriesRow struct {
 	ID                    int64          `json:"id"`
@@ -530,8 +536,8 @@ type ListEntriesRow struct {
 	TrackableUnit         sql.NullString `json:"trackable_unit"`
 }
 
-func (q *Queries) ListEntries(ctx context.Context, userID int64) ([]ListEntriesRow, error) {
-	rows, err := q.db.QueryContext(ctx, listEntries, userID)
+func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listEntries, arg.UserID, arg.EntryDate)
 	if err != nil {
 		return nil, err
 	}
@@ -539,113 +545,6 @@ func (q *Queries) ListEntries(ctx context.Context, userID int64) ([]ListEntriesR
 	var items []ListEntriesRow
 	for rows.Next() {
 		var i ListEntriesRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.RecordedAtUtc,
-			&i.TimezoneOffsetMinutes,
-			&i.EntryDate,
-			&i.NoteText,
-			&i.IsPrivate,
-			&i.CreatedAtUtc,
-			&i.TrackableValueID,
-			&i.TrackableDefinitionID,
-			&i.ValueInt,
-			&i.ValueBool,
-			&i.ValueText,
-			&i.LocationText,
-			&i.TrackableNoteText,
-			&i.TrackableEntryDate,
-			&i.TrackableCreatedAtUtc,
-			&i.TrackableUpdatedAtUtc,
-			&i.TrackableName,
-			&i.TrackableIcon,
-			&i.TrackableValueType,
-			&i.TrackableUnit,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEntriesByDay = `-- name: ListEntriesByDay :many
-SELECT
-    e.id,
-    e.user_id,
-    e.recorded_at_utc,
-    e.timezone_offset_minutes,
-    e.entry_date,
-    e.note_text,
-    e.is_private,
-    e.created_at_utc,
-    tv.id AS trackable_value_id,
-    tv.trackable_definition_id,
-    tv.value_int,
-    tv.value_bool,
-    tv.value_text,
-    tv.location_text,
-    tv.note_text AS trackable_note_text,
-    tv.entry_date AS trackable_entry_date,
-    tv.created_at_utc AS trackable_created_at_utc,
-    tv.updated_at_utc AS trackable_updated_at_utc,
-    td.name AS trackable_name,
-    td.icon AS trackable_icon,
-    td.value_type AS trackable_value_type,
-    td.unit AS trackable_unit
-FROM entries e
-LEFT JOIN trackable_values tv ON tv.entry_id = e.id
-LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
-WHERE e.user_id = ? AND e.entry_date = ?
-ORDER BY e.recorded_at_utc DESC, tv.created_at_utc ASC
-`
-
-type ListEntriesByDayParams struct {
-	UserID    int64  `json:"user_id"`
-	EntryDate string `json:"entry_date"`
-}
-
-type ListEntriesByDayRow struct {
-	ID                    int64          `json:"id"`
-	UserID                int64          `json:"user_id"`
-	RecordedAtUtc         int64          `json:"recorded_at_utc"`
-	TimezoneOffsetMinutes int64          `json:"timezone_offset_minutes"`
-	EntryDate             string         `json:"entry_date"`
-	NoteText              sql.NullString `json:"note_text"`
-	IsPrivate             int64          `json:"is_private"`
-	CreatedAtUtc          int64          `json:"created_at_utc"`
-	TrackableValueID      sql.NullInt64  `json:"trackable_value_id"`
-	TrackableDefinitionID sql.NullInt64  `json:"trackable_definition_id"`
-	ValueInt              sql.NullInt64  `json:"value_int"`
-	ValueBool             sql.NullInt64  `json:"value_bool"`
-	ValueText             sql.NullString `json:"value_text"`
-	LocationText          sql.NullString `json:"location_text"`
-	TrackableNoteText     sql.NullString `json:"trackable_note_text"`
-	TrackableEntryDate    sql.NullString `json:"trackable_entry_date"`
-	TrackableCreatedAtUtc sql.NullInt64  `json:"trackable_created_at_utc"`
-	TrackableUpdatedAtUtc sql.NullInt64  `json:"trackable_updated_at_utc"`
-	TrackableName         sql.NullString `json:"trackable_name"`
-	TrackableIcon         sql.NullString `json:"trackable_icon"`
-	TrackableValueType    sql.NullString `json:"trackable_value_type"`
-	TrackableUnit         sql.NullString `json:"trackable_unit"`
-}
-
-func (q *Queries) ListEntriesByDay(ctx context.Context, arg ListEntriesByDayParams) ([]ListEntriesByDayRow, error) {
-	rows, err := q.db.QueryContext(ctx, listEntriesByDay, arg.UserID, arg.EntryDate)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListEntriesByDayRow
-	for rows.Next() {
-		var i ListEntriesByDayRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,

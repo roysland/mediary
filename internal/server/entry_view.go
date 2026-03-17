@@ -37,7 +37,7 @@ type entryWithTrackableRow struct {
 	TrackableUnit      sql.NullString
 }
 
-func buildEntryViews(rows []db.ListEntriesByDayRow) []entryView {
+func buildEntryViews(rows []db.ListEntriesRow) []entryView {
 	viewRows := make([]entryWithTrackableRow, 0, len(rows))
 	for _, row := range rows {
 		viewRows = append(viewRows, entryWithTrackableRow{

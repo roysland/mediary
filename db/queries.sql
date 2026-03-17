@@ -38,37 +38,8 @@ SELECT
 FROM entries e
 LEFT JOIN trackable_values tv ON tv.entry_id = e.id
 LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
-WHERE e.user_id = ?
-ORDER BY e.recorded_at_utc DESC, tv.created_at_utc ASC;
-
--- name: ListEntriesByDay :many
-SELECT
-    e.id,
-    e.user_id,
-    e.recorded_at_utc,
-    e.timezone_offset_minutes,
-    e.entry_date,
-    e.note_text,
-    e.is_private,
-    e.created_at_utc,
-    tv.id AS trackable_value_id,
-    tv.trackable_definition_id,
-    tv.value_int,
-    tv.value_bool,
-    tv.value_text,
-    tv.location_text,
-    tv.note_text AS trackable_note_text,
-    tv.entry_date AS trackable_entry_date,
-    tv.created_at_utc AS trackable_created_at_utc,
-    tv.updated_at_utc AS trackable_updated_at_utc,
-    td.name AS trackable_name,
-    td.icon AS trackable_icon,
-    td.value_type AS trackable_value_type,
-    td.unit AS trackable_unit
-FROM entries e
-LEFT JOIN trackable_values tv ON tv.entry_id = e.id
-LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
-WHERE e.user_id = ? AND e.entry_date = ?
+WHERE e.user_id = sqlc.arg(user_id)
+    AND (CAST(sqlc.arg(entry_date) AS TEXT) = '' OR e.entry_date = CAST(sqlc.arg(entry_date) AS TEXT))
 ORDER BY e.recorded_at_utc DESC, tv.created_at_utc ASC;
 
 -- name: GetEntryByID :one
