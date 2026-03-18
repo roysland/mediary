@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"roysland.me/symptomstracker/internal/db"
@@ -190,7 +191,19 @@ func (s *Server) deleteEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := s.queries.DeleteEntry(r.Context(), db.DeleteEntryParams{
+	// Fetch the entry to get its audio file path, if it exists.
+	entry, err := s.queries.GetEntryByID(r.Context(), db.GetEntryByIDParams{
+		ID:     entryID,
+		UserID: userID,
+	})
+	if err != nil {
+		log.Printf("Failed to fetch entry %d: %v", entryID, err)
+		respondInternalError(w, r, "Failed to delete entry")
+		return
+	}
+
+	// Delete the entry from the database.
+	err = s.queries.DeleteEntry(r.Context(), db.DeleteEntryParams{
 		ID:     entryID,
 		UserID: userID,
 	})
@@ -198,6 +211,14 @@ func (s *Server) deleteEntry(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to delete entry %d: %v", entryID, err)
 		respondInternalError(w, r, "Failed to delete entry")
 		return
+	}
+
+	// If the entry had an audio file, delete it.
+	if entry.AudioFilePath.Valid && entry.AudioFilePath.String != "" {
+		if err := os.Remove(entry.AudioFilePath.String); err != nil {
+			log.Printf("Warning: failed to delete audio file %s: %v", entry.AudioFilePath.String, err)
+			// Don't fail the response; the database delete was successful.
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
