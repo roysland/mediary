@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"roysland.me/symptomstracker/internal/db"
@@ -109,6 +111,14 @@ func (s *Server) addVoiceEntry(w http.ResponseWriter, r *http.Request) {
 // isAllowedAudioContentType returns true for content-types that browsers send
 // when recording via MediaRecorder. The list is intentionally restrictive.
 func isAllowedAudioContentType(ct string) bool {
+	baseType := strings.TrimSpace(strings.ToLower(ct))
+	if baseType != "" {
+		parsed, _, err := mime.ParseMediaType(baseType)
+		if err == nil {
+			baseType = parsed
+		}
+	}
+
 	allowed := []string{
 		"audio/webm",
 		"audio/ogg",
@@ -119,7 +129,7 @@ func isAllowedAudioContentType(ct string) bool {
 		"",                         // some browsers omit the header
 	}
 	for _, a := range allowed {
-		if ct == a {
+		if baseType == a {
 			return true
 		}
 	}

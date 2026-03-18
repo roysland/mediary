@@ -9,6 +9,7 @@ func (s *Server) routes() {
 	s.mux.Handle("/static/", http.StripPrefix("/static/", fs))
 	s.mux.HandleFunc("/", s.home)
 	s.mux.HandleFunc("/entries", s.entries)
+	s.mux.HandleFunc("/api/entries", s.entriesAPI)
 	s.mux.HandleFunc("/entry/add", s.addEntry)
 	s.mux.HandleFunc("/entry/voice", s.addVoiceEntry)
 	s.mux.HandleFunc("/entry/{id}/delete", s.deleteEntry)

@@ -108,6 +108,12 @@ function initVoiceRecorder() {
       const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
       audioChunks = [];
 
+      // If the user stops immediately, the recorder may not have emitted data yet.
+      if (blob.size === 0) {
+        showError("Recording was too short. Please try again and speak for at least a moment.");
+        return;
+      }
+
       setState("uploading");
       await uploadAudio(blob, mediaRecorder.mimeType);
     });

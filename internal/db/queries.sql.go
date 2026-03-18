@@ -461,6 +461,7 @@ SELECT
     e.note_text,
     e.is_private,
     e.is_draft,
+    e.audio_file_path,
     e.transcription_status,
     e.created_at_utc,
     tv.id AS trackable_value_id,
@@ -498,6 +499,7 @@ type GetEntryWithTrackablesRow struct {
 	NoteText              sql.NullString `json:"note_text"`
 	IsPrivate             int64          `json:"is_private"`
 	IsDraft               int64          `json:"is_draft"`
+	AudioFilePath         sql.NullString `json:"audio_file_path"`
 	TranscriptionStatus   string         `json:"transcription_status"`
 	CreatedAtUtc          int64          `json:"created_at_utc"`
 	TrackableValueID      sql.NullInt64  `json:"trackable_value_id"`
@@ -534,6 +536,7 @@ func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTr
 			&i.NoteText,
 			&i.IsPrivate,
 			&i.IsDraft,
+			&i.AudioFilePath,
 			&i.TranscriptionStatus,
 			&i.CreatedAtUtc,
 			&i.TrackableValueID,
@@ -652,6 +655,7 @@ SELECT
     e.note_text,
     e.is_private,
     e.is_draft,
+    e.audio_file_path,
     e.transcription_status,
     e.created_at_utc,
     tv.id AS trackable_value_id,
@@ -690,6 +694,7 @@ type ListEntriesRow struct {
 	NoteText              sql.NullString `json:"note_text"`
 	IsPrivate             int64          `json:"is_private"`
 	IsDraft               int64          `json:"is_draft"`
+	AudioFilePath         sql.NullString `json:"audio_file_path"`
 	TranscriptionStatus   string         `json:"transcription_status"`
 	CreatedAtUtc          int64          `json:"created_at_utc"`
 	TrackableValueID      sql.NullInt64  `json:"trackable_value_id"`
@@ -726,6 +731,7 @@ func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Lis
 			&i.NoteText,
 			&i.IsPrivate,
 			&i.IsDraft,
+			&i.AudioFilePath,
 			&i.TranscriptionStatus,
 			&i.CreatedAtUtc,
 			&i.TrackableValueID,

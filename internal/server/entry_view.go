@@ -19,6 +19,7 @@ type entryView struct {
 	NoteText            sql.NullString
 	IsPrivate           int64
 	IsDraft             bool
+	AudioFilePath       sql.NullString
 	TranscriptionStatus string
 	Trackables          []entryTrackableValueView
 }
@@ -30,6 +31,7 @@ type entryWithTrackableRow struct {
 	NoteText            sql.NullString
 	IsPrivate           int64
 	IsDraft             int64
+	AudioFilePath       sql.NullString
 	TranscriptionStatus string
 	TrackableValueID    sql.NullInt64
 	TrackableName       sql.NullString
@@ -51,6 +53,7 @@ func buildEntryViews(rows []db.ListEntriesRow) []entryView {
 			NoteText:            row.NoteText,
 			IsPrivate:           row.IsPrivate,
 			IsDraft:             row.IsDraft,
+			AudioFilePath:       row.AudioFilePath,
 			TranscriptionStatus: row.TranscriptionStatus,
 			TrackableValueID:    row.TrackableValueID,
 			TrackableName:       row.TrackableName,
@@ -76,6 +79,7 @@ func buildEntryView(rows []db.GetEntryWithTrackablesRow) (entryView, bool) {
 			NoteText:            row.NoteText,
 			IsPrivate:           row.IsPrivate,
 			IsDraft:             row.IsDraft,
+			AudioFilePath:       row.AudioFilePath,
 			TranscriptionStatus: row.TranscriptionStatus,
 			TrackableValueID:    row.TrackableValueID,
 			TrackableName:       row.TrackableName,
@@ -109,6 +113,7 @@ func buildEntryViewsFromRows(rows []entryWithTrackableRow) []entryView {
 				NoteText:            row.NoteText,
 				IsPrivate:           row.IsPrivate,
 				IsDraft:             row.IsDraft == 1,
+				AudioFilePath:       row.AudioFilePath,
 				TranscriptionStatus: row.TranscriptionStatus,
 			})
 			index = len(entries) - 1
