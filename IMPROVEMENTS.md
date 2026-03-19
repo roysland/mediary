@@ -21,11 +21,6 @@ There is no XSS guards. Are they needed?
 # Goose migrations
 Current migration method is clunky. We can surely benefit from a third party library here?
 
-
-
-# Trackable presets translation
-Since the name is defined in database, there are no translation lookup for it.
-
 # Third party libraries
 
 ## High Priority

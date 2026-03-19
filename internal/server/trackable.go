@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"roysland.me/symptomstracker/internal/db"
+	"roysland.me/symptomstracker/internal/i18n"
 )
 
 type trackablePickerViewData struct {
@@ -39,10 +40,15 @@ func (s *Server) addTrackable(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		locale := s.resolveUserSettings(r).Language
+		if !i18n.IsSupportedLocale(locale) {
+			locale = i18n.DefaultLocale
+		}
+
 		data := struct {
 			TrackablePresets []db.TrackableTemplate
 		}{
-			TrackablePresets: trackableTemplate,
+			TrackablePresets: localizeTrackableTemplates(locale, trackableTemplate),
 		}
 		s.renderPage(w, r, "trackable_add_title", "trackable_add_content", data)
 		return
