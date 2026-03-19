@@ -13,6 +13,14 @@ func (s *Server) routes() {
 	s.mux.Handle("/data/audio/", http.StripPrefix("/data/audio/", audioFS))
 
 	s.mux.HandleFunc("/", s.home)
+	s.mux.HandleFunc("/auth", s.authPage)
+	s.mux.HandleFunc("/webauthn/register/options", s.beginRegistration)
+	s.mux.HandleFunc("/webauthn/register/verify", s.finishRegistration)
+	s.mux.HandleFunc("/webauthn/login/options", s.beginLogin)
+	s.mux.HandleFunc("/webauthn/login/verify", s.finishLogin)
+	s.mux.HandleFunc("/webauthn/passkeys/options", s.beginAddPasskey)
+	s.mux.HandleFunc("/webauthn/passkeys/verify", s.finishAddPasskey)
+	s.mux.HandleFunc("/auth/logout", s.logout)
 	s.mux.HandleFunc("/entries", s.entries)
 	s.mux.HandleFunc("/api/entries", s.entriesAPI)
 	s.mux.HandleFunc("/entry/add", s.addEntry)
@@ -30,5 +38,5 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/trackables/{id}", s.registerTrackable)
 
 	// Wrap all routes once so CSRF checks apply uniformly.
-	s.handler = withCrossOriginProtection(s.mux, s.cfg)
+	s.handler = withCrossOriginProtection(withSessionRequired(s.mux), s.cfg)
 }

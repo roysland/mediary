@@ -50,17 +50,6 @@ We need to support multi-device accounts. If a user has a passkey manager like 1
 
 ## Medium Priority
 
-### CSRF Protection
-**Library:** `net/http.CrossOriginProtection`
-**Why:** Directly addresses the "XSS/CSRF guards" question in IMPROVEMENTS.md. Since this is a health tracker, preventing cross-site hijacking of symptom logs is critical.
-Modern Defense: Unlike older libraries, this uses Fetch Metadata (Sec-Fetch-Site) and Origin checks.
-Zero-Friction: Because it doesn't use tokens, you don't have to manually inject hidden fields into every HTMX fragment or manage token-syncing between the PWA and the server.
-Privacy-Aligned: No extra CSRF cookies are needed, reducing the app's tracking footprint.
-**Cost:** Low (middleware wrapper around handlers)
-**How:** 
-1. Wrap your main http.Handler with http.NewCrossOriginProtection.
-2. Ensure all state-changing actions (Symptom logs, Auth) use POST/PUT/DELETE.
-3. Rejects any cross-origin write request with a 403 Forbidden automatically.
 
 ### Docker/OCI Build
 **Library:** Not a library, but consider adding multi-stage Dockerfile
@@ -73,14 +62,6 @@ Privacy-Aligned: No extra CSRF cookies are needed, reducing the app's tracking f
 
 ## Lower Priority (Consider Later)
 
-### Route/Handler Framework
-**Current:** `http.ServeMux` (Go standard library)
-**Alternatives:** `chi`, `echo`, `gin`
-**Assessment:** ServeMux in Go 1.22+ is quite good. Only upgrade if you need:
-- Automatic middleware chains across groups of routes
-- Structured logging throughout request pipeline
-- Built-in error handling patterns
-**Current state:** Not needed now. ServeMux handles your simple RESTful routing fine.
 
 ### Input Validation
 **Library:** `github.com/go-playground/validator`

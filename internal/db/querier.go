@@ -13,12 +13,15 @@ type Querier interface {
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error)
 	CreateTrackableDefinition(ctx context.Context, arg CreateTrackableDefinitionParams) (TrackableDefinition, error)
 	CreateTrackableValue(ctx context.Context, arg CreateTrackableValueParams) (TrackableValue, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	CreateWebauthnCredential(ctx context.Context, arg CreateWebauthnCredentialParams) (WebauthnCredential, error)
 	DeleteEntriesByUser(ctx context.Context, userID int64) error
 	DeleteEntry(ctx context.Context, arg DeleteEntryParams) error
 	DeleteSettingsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableDailyDismissalsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableDefinitionsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableValuesByUser(ctx context.Context, targetUserID int64) error
+	DeleteUser(ctx context.Context, id int64) error
 	DeleteWebauthnCredentialsByUser(ctx context.Context, userID int64) error
 	FindEntryTrackableValue(ctx context.Context, arg FindEntryTrackableValueParams) (TrackableValue, error)
 	FindRecentTrackableValue(ctx context.Context, arg FindRecentTrackableValueParams) (TrackableValue, error)
@@ -27,6 +30,8 @@ type Querier interface {
 	GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTrackablesParams) ([]GetEntryWithTrackablesRow, error)
 	GetTrackableById(ctx context.Context, arg GetTrackableByIdParams) (TrackableDefinition, error)
 	GetTrackableTemplates(ctx context.Context, userID int64) ([]TrackableTemplate, error)
+	GetUserByID(ctx context.Context, id int64) (User, error)
+	GetUserByWebauthnUserID(ctx context.Context, webauthnUserID []byte) (User, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListEntriesByUser(ctx context.Context, userID int64) ([]Entry, error)
 	ListPendingTranscriptions(ctx context.Context) ([]ListPendingTranscriptionsRow, error)
@@ -40,6 +45,7 @@ type Querier interface {
 	UpdateEntryTranscription(ctx context.Context, arg UpdateEntryTranscriptionParams) error
 	UpdateTrackableValueInt(ctx context.Context, arg UpdateTrackableValueIntParams) (TrackableValue, error)
 	UpdateTrackableValueText(ctx context.Context, arg UpdateTrackableValueTextParams) (TrackableValue, error)
+	UpdateWebauthnCredentialSignCount(ctx context.Context, arg UpdateWebauthnCredentialSignCountParams) error
 	UpsertSetting(ctx context.Context, arg UpsertSettingParams) error
 	UpsertTrackableDailyDismissal(ctx context.Context, arg UpsertTrackableDailyDismissalParams) (TrackableDailyDismissal, error)
 }

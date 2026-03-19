@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"html/template"
+	"io"
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"roysland.me/symptomstracker/internal/auth"
 	"roysland.me/symptomstracker/internal/db"
 	"roysland.me/symptomstracker/internal/i18n"
 )
@@ -28,7 +30,7 @@ func TestHomeRendersQuickCaptureOnly(t *testing.T) {
 
 	insertEntryFixture(t, s, entryFixture{userID: 1, entryDate: yesterday, note: "yesterday note", recordedAtUTC: 1710000000})
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := authedRequest(t, s, http.MethodGet, "/", nil)
 	rr := httptest.NewRecorder()
 
 	s.ServeHTTP(rr, req)
@@ -58,7 +60,7 @@ func TestEntriesRendersDayNavigationAndFiltersBySelectedDay(t *testing.T) {
 	insertEntryFixture(t, s, entryFixture{userID: 1, entryDate: today, note: "today timeline note", recordedAtUTC: 1710000200})
 	insertEntryFixture(t, s, entryFixture{userID: 1, entryDate: yesterday, note: "old timeline note", recordedAtUTC: 1710000000})
 
-	req := httptest.NewRequest(http.MethodGet, "/entries?day="+today, nil)
+	req := authedRequest(t, s, http.MethodGet, "/entries?day="+today, nil)
 	rr := httptest.NewRecorder()
 
 	s.ServeHTTP(rr, req)
@@ -98,7 +100,7 @@ func TestEntriesAPIReturnsAudioFilePath(t *testing.T) {
 		t.Fatalf("create draft entry fixture: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/api/entries?day="+today, nil)
+	req := authedRequest(t, s, http.MethodGet, "/api/entries?day="+today, nil)
 	rr := httptest.NewRecorder()
 
 	s.ServeHTTP(rr, req)
@@ -149,7 +151,7 @@ func TestEntriesAPIReturnsAudioFilePath(t *testing.T) {
 func TestTrackablesRouteRendersPicker(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
-	req := httptest.NewRequest(http.MethodGet, "/trackables", nil)
+	req := authedRequest(t, s, http.MethodGet, "/trackables", nil)
 	rr := httptest.NewRecorder()
 
 	s.ServeHTTP(rr, req)
@@ -167,7 +169,7 @@ func TestSettingsPostRedirectsAndPersists(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
 	body := strings.NewReader("language=no&theme=dark&screen_lock=300&share_timer=600")
-	req := httptest.NewRequest(http.MethodPost, "/settings", body)
+	req := authedRequest(t, s, http.MethodPost, "/settings", body)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
@@ -193,7 +195,7 @@ func TestSettingsPostInvalidLanguageReturnsBadRequest(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
 	body := strings.NewReader("language=xx&theme=dark&screen_lock=300&share_timer=600")
-	req := httptest.NewRequest(http.MethodPost, "/settings", body)
+	req := authedRequest(t, s, http.MethodPost, "/settings", body)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
@@ -208,7 +210,7 @@ func TestSettingsPostCrossSiteRejected(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
 	body := strings.NewReader("language=no&theme=dark&screen_lock=300&share_timer=600")
-	req := httptest.NewRequest(http.MethodPost, "/settings", body)
+	req := authedRequest(t, s, http.MethodPost, "/settings", body)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Sec-Fetch-Site", "cross-site")
 	req.Header.Set("Origin", "https://evil.example")
@@ -225,7 +227,7 @@ func TestSettingsPostSameOriginAllowed(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
 	body := strings.NewReader("language=no&theme=dark&screen_lock=300&share_timer=600")
-	req := httptest.NewRequest(http.MethodPost, "/settings", body)
+	req := authedRequest(t, s, http.MethodPost, "/settings", body)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Sec-Fetch-Site", "same-origin")
 	req.Header.Set("Origin", "http://example.com")
@@ -253,7 +255,7 @@ func TestBottomNavActiveStateByRoute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
+			req := authedRequest(t, s, http.MethodGet, tt.path, nil)
 			rr := httptest.NewRecorder()
 			s.ServeHTTP(rr, req)
 
@@ -292,7 +294,7 @@ func TestTemplatesUseSavedUserLocale(t *testing.T) {
 		t.Fatalf("saveUserSettings failed: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/settings", nil)
+	req := authedRequest(t, s, http.MethodGet, "/settings", nil)
 	rr := httptest.NewRecorder()
 	s.ServeHTTP(rr, req)
 
@@ -361,7 +363,17 @@ func newHomeEntriesHTTPTestServer(t *testing.T) *Server {
 		dbConn:            conn,
 		devMode:           false,
 		queries:           db.New(conn),
+		cfg: Config{
+			AuthSessionSecret: "0123456789abcdef0123456789abcdef",
+		},
+		ceremonies: make(map[string]webauthnCeremony),
 	}
+	authSessions, err := auth.NewSessionManager(s.cfg.AuthSessionSecret, false)
+	if err != nil {
+		t.Fatalf("create auth session manager: %v", err)
+	}
+	s.authSessions = authSessions
+	auth.SetDefaultSessionManager(authSessions)
 	s.routes()
 
 	return s
@@ -418,4 +430,19 @@ func projectRoot(t *testing.T) string {
 	}
 
 	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
+}
+
+func authedRequest(t *testing.T, s *Server, method, target string, body io.Reader) *http.Request {
+	t.Helper()
+	req := httptest.NewRequest(method, target, body)
+
+	rr := httptest.NewRecorder()
+	if err := s.authSessions.SetAuthenticatedUser(rr, 1); err != nil {
+		t.Fatalf("set authenticated user cookie: %v", err)
+	}
+	for _, cookie := range rr.Result().Cookies() {
+		req.AddCookie(cookie)
+	}
+
+	return req
 }

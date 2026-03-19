@@ -400,10 +400,6 @@ label {
   margin: 0;
 }
 
-.trackable-picker .textinput {
-  display: flex;
-  flex-direction: column;
-}
 
 .trackable-picker form {
   margin: 0;
@@ -532,5 +528,28 @@ label {
   to {
     transform: rotate(360deg);
   }
+}
+
+.auth-card {
+  max-width: 34rem;
+  margin: 2rem auto;
+  display: grid;
+  gap: var(--space-md);
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.auth-status {
+  min-height: 1.5rem;
+  font-size: var(--font-size-00);
+  color: var(--color-text-muted);
+}
+
+.auth-status[data-error="true"] {
+  color: var(--color-danger);
 }
 

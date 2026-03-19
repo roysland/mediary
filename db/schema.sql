@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS webauthn_credentials (
 
     sign_count INTEGER NOT NULL,
 
+    flags TEXT,
     transports TEXT,
     created_at_utc INTEGER NOT NULL,
 

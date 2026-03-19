@@ -100,6 +100,7 @@ type WebauthnCredential struct {
 	CredentialID []byte         `json:"credential_id"`
 	PublicKey    []byte         `json:"public_key"`
 	SignCount    int64          `json:"sign_count"`
+	Flags        sql.NullString `json:"flags"`
 	Transports   sql.NullString `json:"transports"`
 	CreatedAtUtc int64          `json:"created_at_utc"`
 }

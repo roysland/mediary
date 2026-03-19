@@ -43,6 +43,17 @@
 </fieldset>
 
 <fieldset>
+    <legend>{{ t "settings.passkeys.title" }}</legend>
+    <p>{{ t "settings.passkeys.description" }}</p>
+    <button type="button" class="button" data-auth-add-passkey>{{ t "settings.passkeys.add" }}</button>
+    <p class="auth-status" data-auth-passkey-status aria-live="polite"></p>
+
+    <form action="/auth/logout" method="post">
+        <button type="submit" class="button button--ghost">Log out</button>
+    </form>
+</fieldset>
+
+<fieldset>
     <legend>{{ t "settings.danger_zone" }}</legend>
     <h3>{{ t "settings.danger_zone" }}</h3>
     <a class="button--ghost" href="/settings/export-data" download>{{ t "settings.export_data" }}</a>
