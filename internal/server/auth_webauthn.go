@@ -153,11 +153,15 @@ func (s *Server) beginRegistration(w http.ResponseWriter, r *http.Request) {
 		}),
 	)
 	if err != nil {
+		// Cleanup the just-created user to avoid leaving an account without credentials.
+		_, _ = s.queries.DeleteUser(r.Context(), createdUser.ID)
 		respondInternalError(w, r, "Failed to begin passkey registration")
 		return
 	}
 
 	if err := s.startCeremony(w, ceremonyKindRegister, createdUser.ID, sessionData); err != nil {
+		// Cleanup the just-created user to avoid leaving an account without credentials.
+		_, _ = s.queries.DeleteUser(r.Context(), createdUser.ID)
 		respondInternalError(w, r, "Failed to start registration ceremony")
 		return
 	}
