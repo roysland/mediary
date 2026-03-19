@@ -252,5 +252,77 @@ function initAddPasskey() {
   });
 }
 
+function initDeviceLinkCreator() {
+  const button = document.querySelector("[data-auth-device-link-create]");
+  const panel = document.querySelector("[data-auth-device-link-panel]");
+  const qrImage = document.querySelector("[data-auth-device-link-qr]");
+  const linkEl = document.querySelector("[data-auth-device-link-url]");
+  const statusEl = document.querySelector("[data-auth-device-link-status]");
+  if (!button || !panel || !qrImage || !linkEl) {
+    return;
+  }
+
+  button.addEventListener("click", async () => {
+    try {
+      button.disabled = true;
+      setStatus(statusEl, button.dataset.messageGenerating || "Generating QR code...");
+
+      const result = await fetchJSON("/auth/device-link/create", { method: "POST", body: "{}" });
+      qrImage.src = result.qr_data_url || "";
+      linkEl.href = result.link_url || "#";
+      linkEl.textContent = result.link_url || "";
+      panel.hidden = false;
+      setStatus(statusEl, button.dataset.messageReady || "QR code ready.");
+    } catch (error) {
+      setStatus(statusEl, error.message || "Failed to generate device link", true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
+function initLinkedDeviceRegistration() {
+  const root = document.querySelector("[data-auth-link-passkey]");
+  const button = root?.querySelector("[data-auth-link-start]");
+  const statusEl = root?.querySelector("[data-auth-link-status]");
+  if (!root || !button) {
+    return;
+  }
+
+  if (!window.PublicKeyCredential || !navigator.credentials) {
+    button.disabled = true;
+    setStatus(statusEl, "Passkeys are not supported in this browser", true);
+    return;
+  }
+
+  let inProgress = false;
+  const start = async () => {
+    if (inProgress) {
+      return;
+    }
+
+    try {
+      inProgress = true;
+      button.disabled = true;
+      setStatus(statusEl, button.dataset.messageStarting || "Starting passkey registration...");
+      const result = await performRegistration("/auth/passkeys/register/options", "/auth/passkeys/register/verify");
+      setStatus(statusEl, button.dataset.messageCreated || "Passkey created. Redirecting...");
+      window.location.assign(result.redirect || "/");
+    } catch (error) {
+      setStatus(statusEl, error.message || "Failed to add this device", true);
+    } finally {
+      inProgress = false;
+      button.disabled = false;
+    }
+  };
+
+  button.addEventListener("click", start);
+  if (root.dataset.autostart === "true") {
+    void start();
+  }
+}
+
 initAuthPage();
 initAddPasskey();
+initDeviceLinkCreator();
+initLinkedDeviceRegistration();

@@ -219,6 +219,48 @@ var migrations = []migration{
 			return nil
 		},
 	},
+	{
+		id:   "007_device_link_tokens",
+		name: "add device_link_tokens table for cross-device passkey onboarding",
+		up: func(tx *sql.Tx) error {
+			hasTable, err := tableExistsTx(tx, "device_link_tokens")
+			if err != nil {
+				return err
+			}
+			if !hasTable {
+				if _, err := tx.Exec(`
+					CREATE TABLE IF NOT EXISTS device_link_tokens (
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						token_hash BLOB NOT NULL UNIQUE,
+						user_id INTEGER NOT NULL,
+						expires_at_utc INTEGER NOT NULL,
+						redeemed_at_utc INTEGER,
+						used_at_utc INTEGER,
+						created_at_utc INTEGER NOT NULL,
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+					)
+				`); err != nil {
+					return fmt.Errorf("create device_link_tokens table: %w", err)
+				}
+			}
+
+			if _, err := tx.Exec(`
+				CREATE INDEX IF NOT EXISTS idx_device_link_tokens_user
+				ON device_link_tokens(user_id)
+			`); err != nil {
+				return fmt.Errorf("create idx_device_link_tokens_user: %w", err)
+			}
+
+			if _, err := tx.Exec(`
+				CREATE INDEX IF NOT EXISTS idx_device_link_tokens_expires
+				ON device_link_tokens(expires_at_utc)
+			`); err != nil {
+				return fmt.Errorf("create idx_device_link_tokens_expires: %w", err)
+			}
+
+			return nil
+		},
+	},
 }
 
 func runMigrations(conn *sql.DB) error {

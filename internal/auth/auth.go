@@ -18,6 +18,7 @@ import (
 const (
 	SessionCookieName  = "st_session"
 	CeremonyCookieName = "st_webauthn"
+	LinkCookieName     = "st_link"
 	defaultSessionTTL  = 12 * time.Hour
 )
 
@@ -38,6 +39,17 @@ type SessionManager struct {
 type sessionPayload struct {
 	UserID  int64 `json:"uid"`
 	Expires int64 `json:"exp"`
+}
+
+type linkSessionPayload struct {
+	UserID  int64 `json:"uid"`
+	TokenID int64 `json:"tid"`
+	Expires int64 `json:"exp"`
+}
+
+type LinkSession struct {
+	UserID  int64
+	TokenID int64
 }
 
 var (
@@ -146,6 +158,61 @@ func (m *SessionManager) SetAuthenticatedUser(w http.ResponseWriter, userID int6
 
 func (m *SessionManager) ClearSession(w http.ResponseWriter) {
 	m.setCookie(w, SessionCookieName, "", -time.Hour)
+}
+
+func (m *SessionManager) SetLinkingSession(w http.ResponseWriter, userID, tokenID int64, ttl time.Duration) error {
+	if userID <= 0 {
+		return errors.New("user id must be positive")
+	}
+	if tokenID <= 0 {
+		return errors.New("token id must be positive")
+	}
+	if ttl <= 0 {
+		return errors.New("ttl must be positive")
+	}
+
+	payload, err := json.Marshal(linkSessionPayload{
+		UserID:  userID,
+		TokenID: tokenID,
+		Expires: time.Now().Add(ttl).Unix(),
+	})
+	if err != nil {
+		return fmt.Errorf("marshal linking session payload: %w", err)
+	}
+
+	signed := m.signPayload(payload)
+	m.setCookie(w, LinkCookieName, signed, ttl)
+	return nil
+}
+
+func (m *SessionManager) LinkingSessionFromRequest(r *http.Request) (LinkSession, bool) {
+	cookie, err := r.Cookie(LinkCookieName)
+	if err != nil {
+		return LinkSession{}, false
+	}
+
+	payload, err := m.verifySignedPayload(cookie.Value)
+	if err != nil {
+		return LinkSession{}, false
+	}
+
+	var session linkSessionPayload
+	if err := json.Unmarshal(payload, &session); err != nil {
+		return LinkSession{}, false
+	}
+
+	if session.UserID <= 0 || session.TokenID <= 0 {
+		return LinkSession{}, false
+	}
+	if session.Expires <= time.Now().Unix() {
+		return LinkSession{}, false
+	}
+
+	return LinkSession{UserID: session.UserID, TokenID: session.TokenID}, true
+}
+
+func (m *SessionManager) ClearLinkingSession(w http.ResponseWriter) {
+	m.setCookie(w, LinkCookieName, "", -time.Hour)
 }
 
 func (m *SessionManager) NewCeremonyID() (string, error) {

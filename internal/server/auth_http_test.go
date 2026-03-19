@@ -1,12 +1,16 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"roysland.me/symptomstracker/internal/auth"
+	"roysland.me/symptomstracker/internal/db"
 )
 
 // TestWithSessionRequired_UnauthBrowserRequestRedirects verifies that an
@@ -195,5 +199,88 @@ func TestFinishAddPasskey_MissingCeremonyCookieReturnsBadRequest(t *testing.T) {
 
 	if rr.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 when ceremony cookie is absent, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestCreateDeviceLink_UnauthenticatedReturnsUnauthorized(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/device-link/create", strings.NewReader("{}"))
+	req.Header.Set("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for unauthenticated link creation, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestCreateDeviceLink_AuthenticatedReturnsQRCodePayload(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	req := authedRequest(t, s, http.MethodPost, "/auth/device-link/create", strings.NewReader("{}"))
+	req.Header.Set("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 for device-link creation, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	var payload struct {
+		Status      string `json:"status"`
+		LinkURL     string `json:"link_url"`
+		QRDataURL   string `json:"qr_data_url"`
+		ExpiresAtUT int64  `json:"expires_at_utc"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode response payload: %v", err)
+	}
+	if payload.Status != "ok" {
+		t.Fatalf("expected status ok, got %q", payload.Status)
+	}
+	if !strings.Contains(payload.LinkURL, "/link?t=") {
+		t.Fatalf("expected link_url to include /link?t= token, got %q", payload.LinkURL)
+	}
+	if !strings.HasPrefix(payload.QRDataURL, "data:image/png;base64,") {
+		t.Fatalf("expected qr_data_url data URI, got %q", payload.QRDataURL)
+	}
+	if payload.ExpiresAtUT <= time.Now().Unix() {
+		t.Fatalf("expected future expiry timestamp, got %d", payload.ExpiresAtUT)
+	}
+}
+
+func TestRedeemDeviceLink_SetsLinkingCookie(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	rawToken := "test-device-link-token"
+	now := time.Now().Unix()
+	_, err := s.queries.CreateDeviceLinkToken(context.Background(), db.CreateDeviceLinkTokenParams{
+		TokenHash:    hashDeviceLinkToken(rawToken),
+		UserID:       1,
+		ExpiresAtUtc: now + 60,
+		CreatedAtUtc: now,
+	})
+	if err != nil {
+		t.Fatalf("seed device link token: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/link?t="+rawToken, nil)
+	rr := httptest.NewRecorder()
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 for valid link redemption, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	var hasLinkCookie bool
+	for _, cookie := range rr.Result().Cookies() {
+		if cookie.Name == auth.LinkCookieName {
+			hasLinkCookie = true
+			break
+		}
+	}
+	if !hasLinkCookie {
+		t.Fatalf("expected linking session cookie %q to be set", auth.LinkCookieName)
 	}
 }
