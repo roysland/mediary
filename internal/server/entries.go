@@ -109,7 +109,7 @@ func (s *Server) entries(w http.ResponseWriter, r *http.Request) {
 		"Entries":                  entries,
 		"SelectedDay":              selectedDayStr,
 		"TodayStr":                 todayStr,
-		"DayNavigation":            buildDayNavigation(selectedDay),
+		"DayNavigation":            buildDayNavigation(selectedDay, now),
 		"EntryTrackableDialogData": entryTrackableDialogData,
 	})
 }

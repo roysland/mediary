@@ -22,15 +22,26 @@ func parseSelectedDay(dayStr string, now time.Time) (time.Time, error) {
 	if dayStr == "" {
 		return now, nil
 	}
-	return time.Parse(dateLayoutISO, dayStr)
+	d, err := time.Parse(dateLayoutISO, dayStr)
+	if err != nil {
+		return time.Time{}, err
+	}
+	if d.Format(dateLayoutISO) > now.Format(dateLayoutISO) {
+		return now, nil
+	}
+	return d, nil
 }
 
-func buildDayNavigation(selectedDay time.Time) []dayNav {
+func buildDayNavigation(selectedDay time.Time, now time.Time) []dayNav {
+	todayStr := now.Format(dateLayoutISO)
 	selectedDayStr := selectedDay.Format(dateLayoutISO)
 	navigation := make([]dayNav, 0, dayNavigationPastDays+dayNavigationFutureDays+1)
 	for offset := -dayNavigationPastDays; offset <= dayNavigationFutureDays; offset++ {
 		d := selectedDay.AddDate(0, 0, offset)
 		dateStr := d.Format(dateLayoutISO)
+		if dateStr > todayStr {
+			break
+		}
 		navigation = append(navigation, dayNav{
 			Date:      dateStr,
 			DayNumber: d.Format("02"),

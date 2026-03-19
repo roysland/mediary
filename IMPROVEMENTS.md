@@ -1,10 +1,3 @@
-# Auth flow
-User is anonymous. The only valid way to authenticate is via passkey. Use WebAuthn.
-Prefer platform authenticator. 
-Credentials should be discoverable.
-
-We need to support multi-device accounts. If a user has a passkey manager like 1password, I guess there is no problem. But many won't, but might still need to access from another device. This can be solved by scanning a qr-code from an already authenticated device. If the user does this, then we probably need to support multiple passkeys per user. 
-
 # Onboarding
 We need to create several onboarding screens.
 * Simple explanation of how good and secure passkeys are
@@ -28,8 +21,10 @@ There is no XSS guards. Are they needed?
 # Goose migrations
 Current migration method is clunky. We can surely benefit from a third party library here?
 
-# Day navigation in entries
-It shoudn't be possible to go forward in time. Max date should be current date.
+
+
+# Trackable presets translation
+Since the name is defined in database, there are no translation lookup for it.
 
 # Third party libraries
 
@@ -42,7 +37,11 @@ It shoudn't be possible to go forward in time. Max date should be current date.
 - Understanding COSE keys, P-256 curves, and WebAuthn protocols
 - Significant security-related code that's easy to get wrong
 **Cost:** Medium to High (but significantly less than custom implementation)
-**How:** Replace `internal/auth/auth.go` stub with webauthn library integration. Add registration and authentication endpoints. Reference: https://github.com/go-webauthn/webauthn provides good examples.
+**How:** Replace `internal/auth/auth.go` stub with webauthn library integration. Add registration and authentication endpoints. Reference: https://github.com/go-webauthn/webauthn provides good examples. User is anonymous. The only valid way to authenticate is via passkey. Use WebAuthn.
+Prefer platform authenticator. 
+Credentials should be discoverable.
+
+We need to support multi-device accounts. If a user has a passkey manager like 1password, I guess there is no problem. But many won't, but might still need to access from another device. This can be solved by scanning a qr-code from an already authenticated device. If the user does this, then we probably need to support multiple passkeys per user. 
 
 ### Database Migrations
 **Library:** `github.com/pressly/goose` or `github.com/golang-migrate/migrate`
