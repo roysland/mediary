@@ -34,7 +34,7 @@ RUN mkdir -p /app/data/audio
 
 ENV APP_ENV=production \
     LISTEN_ADDR=:8080 \
-    AUDIO_STORAGE_DIR=/app/data/audio \
+    AUDIO_STORAGE_DIR=/app/data/audio
 
 EXPOSE 8080
 VOLUME ["/app/data"]
