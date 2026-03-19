@@ -34,11 +34,7 @@ RUN mkdir -p /app/data/audio
 
 ENV APP_ENV=production \
     LISTEN_ADDR=:8080 \
-    DB_PATH=/app/data/app.db \
     AUDIO_STORAGE_DIR=/app/data/audio \
-    FFMPEG_BINARY_PATH=/usr/bin/ffmpeg \
-    WHISPER_BINARY_PATH=/whisper/build/bin/main \
-    WHISPER_MODEL_PATH=/whisper/models/ggml-small.bin
 
 EXPOSE 8080
 VOLUME ["/app/data"]
