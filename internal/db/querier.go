@@ -21,6 +21,7 @@ type Querier interface {
 	DeleteTrackableDailyDismissalsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableDefinitionsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableValuesByUser(ctx context.Context, targetUserID int64) error
+	DeleteUser(ctx context.Context, id int64) error
 	DeleteWebauthnCredentialsByUser(ctx context.Context, userID int64) error
 	FindEntryTrackableValue(ctx context.Context, arg FindEntryTrackableValueParams) (TrackableValue, error)
 	FindRecentTrackableValue(ctx context.Context, arg FindRecentTrackableValueParams) (TrackableValue, error)

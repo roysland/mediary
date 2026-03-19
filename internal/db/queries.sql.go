@@ -381,6 +381,16 @@ func (q *Queries) DeleteTrackableValuesByUser(ctx context.Context, targetUserID 
 	return err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = ?
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
 const deleteWebauthnCredentialsByUser = `-- name: DeleteWebauthnCredentialsByUser :exec
 DELETE FROM webauthn_credentials
 WHERE user_id = ?
