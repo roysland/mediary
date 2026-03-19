@@ -27,4 +27,148 @@
 - Add authenticated device-link flow with QR for cross-device onboarding.
 	Why: Discoverable passkeys and multi-passkey support are now in place, but users without synced passkey managers still need a smoother way to enroll a second device from an already signed-in device.
 	How: Add a short-lived one-time linking token endpoint for authenticated users, render it as a QR code, and let the new device redeem it only to initiate `/auth/passkeys/options` for that same account before requiring passkey confirmation.
+	Flow (end-to-end)
+	1) On existing device (authenticated)
+
+	User clicks: “Add new device”
+
+	Server:
+
+	Generate random token (high entropy, e.g. 32 bytes)
+
+	Store:
+
+	token
+	user_id
+	expires_at (e.g. 2–5 minutes)
+	used = false
+
+	Render QR
+	2) On new device (QR scanned)
+
+	User opens /link?t=TOKEN
+
+	Server:
+
+	Validate token:
+
+	exists
+
+	not expired
+
+	not used
+
+	If valid:
+
+	Create temporary linking session (NOT a full auth session)
+
+	Associate it with user_id
+
+	Mark token as pending (optional)
+
+	Now show:
+
+	“Continue to add this device”
+
+	3) Start WebAuthn registration (on new device)
+
+	Call:
+
+	/auth/passkeys/register/options
+
+	But here’s the key:
+
+	Instead of creating a new user,
+
+	Use the user_id from the linking session
+
+	So:
+
+	user_id = linking_session.user_id
+	4) Complete registration
+
+	navigator.credentials.create()
+
+	Send to server
+
+	Verify
+
+	Store credential under that user_id
+
+	Now:
+
+	Mark token as used
+
+	Upgrade session → full authenticated session
+
+	Important constraints (don’t skip these)
+	1. Token must be:
+
+	single-use
+
+	short-lived (2–5 min)
+
+	high entropy (unguessable)
+
+	2. Token does NOT log the user in
+
+	It only allows:
+
+	starting registration for a specific user
+
+	If you skip this distinction, you create an account takeover vector.
+
+	3. Require user presence (WebAuthn)
+
+	The new device must:
+
+	perform biometric / PIN
+
+	generate a real credential
+
+	This is your actual security boundary.
+
+	4. Optional but strong improvement
+
+	Require confirmation on original device:
+
+	Flow:
+
+	New device scans QR
+
+	Old device shows: “Approve new device?”
+
+	Only then allow registration
+
+	This prevents someone photographing the QR and hijacking it.
+	UX notes (important for your app)
+
+	Keep it very low friction:
+
+	On existing device:
+
+	“Add device”
+
+	Show QR + short explanation
+
+	On new device:
+
+	Auto-continue after scan
+
+	One button: “Use this device”
+
+	Avoid extra steps unless necessary.
+	Subtle edge case
+
+	If user:
+
+	scans QR
+
+	waits too long
+
+	→ token expires
+
+	Handle gracefully:
+
+	“Link expired, generate a new one”
 
