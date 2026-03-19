@@ -553,3 +553,18 @@ label {
   color: var(--color-danger);
 }
 
+.device-link {
+  margin-top: var(--space-sm);
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.device-link__qr {
+  width: min(16rem, 100%);
+  height: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.15));
+  background: #fff;
+  padding: 0.5rem;
+}
+

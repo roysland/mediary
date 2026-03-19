@@ -46,7 +46,23 @@
     <legend>{{ t "settings.passkeys.title" }}</legend>
     <p>{{ t "settings.passkeys.description" }}</p>
     <button type="button" class="button" data-auth-add-passkey>{{ t "settings.passkeys.add" }}</button>
+    <button
+        type="button"
+        class="button button--ghost"
+        data-auth-device-link-create
+        data-message-generating="{{ t "settings.passkeys.generating" }}"
+        data-message-ready="{{ t "settings.passkeys.qr_ready" }}"
+    >{{ t "settings.passkeys.add_device" }}</button>
     <p class="auth-status" data-auth-passkey-status aria-live="polite"></p>
+
+    <div class="device-link" data-auth-device-link-panel hidden>
+        <p>{{ t "settings.passkeys.link_instruction" }}</p>
+        <img class="device-link__qr" data-auth-device-link-qr alt="{{ t "settings.passkeys.qr_alt" }}">
+        <p>
+            <a data-auth-device-link-url target="_blank" rel="noopener noreferrer"></a>
+        </p>
+        <p class="auth-status" data-auth-device-link-status aria-live="polite"></p>
+    </div>
 
     <form action="/auth/logout" method="post">
         <button type="submit" class="button button--ghost">Log out</button>

@@ -19,16 +19,18 @@ import (
 )
 
 const (
-	ceremonyKindRegister   = "register"
-	ceremonyKindLogin      = "login"
-	ceremonyKindAddPasskey = "add-passkey"
+	ceremonyKindRegister    = "register"
+	ceremonyKindLogin       = "login"
+	ceremonyKindAddPasskey  = "add-passkey"
+	ceremonyKindLinkPasskey = "link-passkey"
 )
 
 type webauthnCeremony struct {
-	Kind      string
-	UserID    int64
-	Session   webauthnlib.SessionData
-	CreatedAt int64
+	Kind        string
+	UserID      int64
+	LinkTokenID int64
+	Session     webauthnlib.SessionData
+	CreatedAt   int64
 }
 
 type webauthnUser struct {
@@ -159,7 +161,7 @@ func (s *Server) beginRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.startCeremony(w, ceremonyKindRegister, createdUser.ID, sessionData); err != nil {
+	if err := s.startCeremony(w, ceremonyKindRegister, createdUser.ID, 0, sessionData); err != nil {
 		// Cleanup the just-created user to avoid leaving an account without credentials.
 		_ = s.queries.DeleteUser(r.Context(), createdUser.ID)
 		respondInternalError(w, r, "Failed to start registration ceremony")
@@ -239,7 +241,7 @@ func (s *Server) beginLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.startCeremony(w, ceremonyKindLogin, 0, sessionData); err != nil {
+	if err := s.startCeremony(w, ceremonyKindLogin, 0, 0, sessionData); err != nil {
 		respondInternalError(w, r, "Failed to start login ceremony")
 		return
 	}
@@ -296,9 +298,21 @@ func (s *Server) beginAddPasskey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := requireUserID(w, r)
-	if !ok {
-		return
+	userID := int64(0)
+	linkTokenID := int64(0)
+	ceremonyKind := ceremonyKindAddPasskey
+
+	if current := auth.CurrentUser(r); current != nil && current.ID > 0 {
+		userID = current.ID
+	} else {
+		linkSession, hasLinkSession := s.authSessions.LinkingSessionFromRequest(r)
+		if !hasLinkSession {
+			respondUnauthorized(w, r)
+			return
+		}
+		userID = linkSession.UserID
+		linkTokenID = linkSession.TokenID
+		ceremonyKind = ceremonyKindLinkPasskey
 	}
 
 	user, err := s.loadWebauthnUser(r.Context(), userID)
@@ -327,7 +341,7 @@ func (s *Server) beginAddPasskey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.startCeremony(w, ceremonyKindAddPasskey, userID, sessionData); err != nil {
+	if err := s.startCeremony(w, ceremonyKind, userID, linkTokenID, sessionData); err != nil {
 		respondInternalError(w, r, "Failed to start passkey ceremony")
 		return
 	}
@@ -340,18 +354,34 @@ func (s *Server) finishAddPasskey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	state, ok := s.consumeCeremony(w, r, ceremonyKindAddPasskey)
+	state, ok := s.consumeCeremony(w, r, ceremonyKindAddPasskey, ceremonyKindLinkPasskey)
 	if !ok {
 		respondBadRequest(w, r, "Passkey ceremony is missing or expired")
 		return
 	}
 
-	requestUserID, ok := requireUserID(w, r)
-	if !ok {
-		return
-	}
-	if requestUserID != state.UserID {
-		respondForbidden(w, r, "Cannot add passkey for another account")
+	switch state.Kind {
+	case ceremonyKindAddPasskey:
+		requestUserID, ok := requireUserID(w, r)
+		if !ok {
+			return
+		}
+		if requestUserID != state.UserID {
+			respondForbidden(w, r, "Cannot add passkey for another account")
+			return
+		}
+	case ceremonyKindLinkPasskey:
+		linkSession, hasLinkSession := s.authSessions.LinkingSessionFromRequest(r)
+		if !hasLinkSession {
+			respondBadRequest(w, r, "Device link session is missing or expired")
+			return
+		}
+		if linkSession.UserID != state.UserID || linkSession.TokenID != state.LinkTokenID {
+			respondForbidden(w, r, "Invalid device link session")
+			return
+		}
+	default:
+		respondBadRequest(w, r, "Invalid passkey ceremony state")
 		return
 	}
 
@@ -369,6 +399,34 @@ func (s *Server) finishAddPasskey(w http.ResponseWriter, r *http.Request) {
 
 	if err := s.storeCredential(r.Context(), state.UserID, credential); err != nil {
 		respondInternalError(w, r, "Failed to save passkey")
+		return
+	}
+
+	if state.Kind == ceremonyKindLinkPasskey {
+		updatedRows, err := s.queries.MarkDeviceLinkTokenUsed(r.Context(), db.MarkDeviceLinkTokenUsedParams{
+			TokenID:   state.LinkTokenID,
+			UserID:    state.UserID,
+			UsedAtUtc: sql.NullInt64{Int64: time.Now().Unix(), Valid: true},
+		})
+		if err != nil {
+			respondInternalError(w, r, "Failed to complete device link")
+			return
+		}
+		if updatedRows == 0 {
+			respondBadRequest(w, r, "Device link is no longer valid")
+			return
+		}
+
+		s.authSessions.ClearLinkingSession(w)
+		if err := s.authSessions.SetAuthenticatedUser(w, state.UserID); err != nil {
+			respondInternalError(w, r, "Failed to create session")
+			return
+		}
+
+		respondJSON(w, http.StatusOK, map[string]any{
+			"status":   "ok",
+			"redirect": "/",
+		})
 		return
 	}
 
@@ -400,7 +458,7 @@ func requireAnonymous(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	return 0, true
 }
 
-func (s *Server) startCeremony(w http.ResponseWriter, kind string, userID int64, session *webauthnlib.SessionData) error {
+func (s *Server) startCeremony(w http.ResponseWriter, kind string, userID, linkTokenID int64, session *webauthnlib.SessionData) error {
 	if session == nil {
 		return errors.New("session data is nil")
 	}
@@ -418,10 +476,11 @@ func (s *Server) startCeremony(w http.ResponseWriter, kind string, userID int64,
 		}
 	}
 	s.ceremonies[id] = webauthnCeremony{
-		Kind:      kind,
-		UserID:    userID,
-		Session:   *session,
-		CreatedAt: now,
+		Kind:        kind,
+		UserID:      userID,
+		LinkTokenID: linkTokenID,
+		Session:     *session,
+		CreatedAt:   now,
 	}
 	s.ceremonyMu.Unlock()
 
@@ -429,7 +488,7 @@ func (s *Server) startCeremony(w http.ResponseWriter, kind string, userID int64,
 	return nil
 }
 
-func (s *Server) consumeCeremony(w http.ResponseWriter, r *http.Request, expectedKind string) (webauthnCeremony, bool) {
+func (s *Server) consumeCeremony(w http.ResponseWriter, r *http.Request, expectedKinds ...string) (webauthnCeremony, bool) {
 	id, ok := s.authSessions.CeremonyIDFromRequest(r)
 	if !ok {
 		return webauthnCeremony{}, false
@@ -443,11 +502,20 @@ func (s *Server) consumeCeremony(w http.ResponseWriter, r *http.Request, expecte
 	s.ceremonyMu.Unlock()
 
 	s.authSessions.ClearCeremonyID(w)
-	if !found || state.Kind != expectedKind {
+	if !found {
 		return webauthnCeremony{}, false
 	}
 
-	return state, true
+	for _, expectedKind := range expectedKinds {
+		if state.Kind == expectedKind {
+			return state, true
+		}
+	}
+
+	if len(expectedKinds) == 0 {
+		return state, true
+	}
+	return webauthnCeremony{}, false
 }
 
 func (s *Server) resolveDiscoverableUser(rawID, userHandle []byte) (webauthnlib.User, error) {

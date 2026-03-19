@@ -7,6 +7,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.34
 )
 
+require github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+
 require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect

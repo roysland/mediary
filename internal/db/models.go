@@ -8,6 +8,16 @@ import (
 	"database/sql"
 )
 
+type DeviceLinkToken struct {
+	ID            int64         `json:"id"`
+	TokenHash     []byte        `json:"token_hash"`
+	UserID        int64         `json:"user_id"`
+	ExpiresAtUtc  int64         `json:"expires_at_utc"`
+	RedeemedAtUtc sql.NullInt64 `json:"redeemed_at_utc"`
+	UsedAtUtc     sql.NullInt64 `json:"used_at_utc"`
+	CreatedAtUtc  int64         `json:"created_at_utc"`
+}
+
 type Entry struct {
 	ID                    int64          `json:"id"`
 	UserID                int64          `json:"user_id"`

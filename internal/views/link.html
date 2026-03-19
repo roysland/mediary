@@ -1,0 +1,21 @@
+{{ define "link_title" }}{{ t "link.title" }}{{ end }}
+
+{{ define "link_content" }}
+<section class="card auth-card" data-auth-link-passkey data-autostart="{{ if .AutoStart }}true{{ else }}false{{ end }}">
+    {{ if .LinkReady }}
+    <h1>{{ t "link.title" }}</h1>
+    <p>{{ t "link.ready" }}</p>
+    <button
+        type="button"
+        class="button"
+        data-auth-link-start
+        data-message-starting="{{ t "link.ready" }}"
+        data-message-created="{{ t "link.success" }}"
+    >{{ t "link.use_device" }}</button>
+    <p class="auth-status" data-auth-link-status aria-live="polite"></p>
+    {{ else }}
+    <h1>{{ t "link.expired_title" }}</h1>
+    <p>{{ t "link.expired_body" }}</p>
+    {{ end }}
+</section>
+{{ end }}

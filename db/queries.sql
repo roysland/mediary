@@ -333,6 +333,33 @@ UPDATE webauthn_credentials
 SET sign_count = ?
 WHERE credential_id = ?;
 
+-- name: CreateDeviceLinkToken :one
+INSERT INTO device_link_tokens (
+        token_hash,
+        user_id,
+        expires_at_utc,
+        created_at_utc
+)
+VALUES (?, ?, ?, ?)
+RETURNING *;
+
+-- name: RedeemDeviceLinkToken :one
+UPDATE device_link_tokens
+SET redeemed_at_utc = sqlc.arg(redeemed_at_utc)
+WHERE token_hash = sqlc.arg(token_hash)
+    AND expires_at_utc > sqlc.arg(now_utc)
+    AND redeemed_at_utc IS NULL
+    AND used_at_utc IS NULL
+RETURNING *;
+
+-- name: MarkDeviceLinkTokenUsed :execrows
+UPDATE device_link_tokens
+SET used_at_utc = sqlc.arg(used_at_utc)
+WHERE id = sqlc.arg(token_id)
+    AND user_id = sqlc.arg(user_id)
+    AND redeemed_at_utc IS NOT NULL
+    AND used_at_utc IS NULL;
+
 -- name: UpsertSetting :exec
 INSERT INTO settings (
     user_id,
