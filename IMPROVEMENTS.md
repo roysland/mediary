@@ -51,13 +51,16 @@ We need to support multi-device accounts. If a user has a passkey manager like 1
 ## Medium Priority
 
 ### CSRF Protection
-**Library:** `github.com/gorilla/csrf` or `github.com/justinas/nosurf`
-**Why:** IMPROVEMENTS.md already asks "Are there XSS guards? Are they needed?" Since you have form submissions and HTMX requests:
-- GET requests seem protected by being read-only
-- POST/PUT/DELETE handlers should validate CSRF tokens to prevent cross-site form hijacking
-- Especially important if auth eventually uses cookies (simpler than header-based auth)
+**Library:** `net/http.CrossOriginProtection`
+**Why:** Directly addresses the "XSS/CSRF guards" question in IMPROVEMENTS.md. Since this is a health tracker, preventing cross-site hijacking of symptom logs is critical.
+Modern Defense: Unlike older libraries, this uses Fetch Metadata (Sec-Fetch-Site) and Origin checks.
+Zero-Friction: Because it doesn't use tokens, you don't have to manually inject hidden fields into every HTMX fragment or manage token-syncing between the PWA and the server.
+Privacy-Aligned: No extra CSRF cookies are needed, reducing the app's tracking footprint.
 **Cost:** Low (middleware wrapper around handlers)
-**How:** Add CSRF token middleware to all POST/PUT/DELETE routes. Include token in forms and CSRF headers for AJAX.
+**How:** 
+1. Wrap your main http.Handler with http.NewCrossOriginProtection.
+2. Ensure all state-changing actions (Symptom logs, Auth) use POST/PUT/DELETE.
+3. Rejects any cross-origin write request with a 403 Forbidden automatically.
 
 ### Docker/OCI Build
 **Library:** Not a library, but consider adding multi-stage Dockerfile
