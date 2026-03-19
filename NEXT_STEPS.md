@@ -23,3 +23,4 @@
 - Guard against duplicate voice-recorder event listeners after HTMX swaps.
 	Why: `initVoiceRecorder` is called on every `htmx:afterSwap` and currently attaches new click listeners each time for the same DOM nodes, which can trigger multiple recorder/upload flows from one click.
 	How: Make initialization idempotent by marking the section as bound (for example with `data-voice-bound="1"`) or by removing/replacing existing listeners before adding new ones.
+

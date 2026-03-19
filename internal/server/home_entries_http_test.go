@@ -204,6 +204,40 @@ func TestSettingsPostInvalidLanguageReturnsBadRequest(t *testing.T) {
 	}
 }
 
+func TestSettingsPostCrossSiteRejected(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	body := strings.NewReader("language=no&theme=dark&screen_lock=300&share_timer=600")
+	req := httptest.NewRequest(http.MethodPost, "/settings", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Sec-Fetch-Site", "cross-site")
+	req.Header.Set("Origin", "https://evil.example")
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestSettingsPostSameOriginAllowed(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	body := strings.NewReader("language=no&theme=dark&screen_lock=300&share_timer=600")
+	req := httptest.NewRequest(http.MethodPost, "/settings", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	req.Header.Set("Origin", "http://example.com")
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
 func TestBottomNavActiveStateByRoute(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
