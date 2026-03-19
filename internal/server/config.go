@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -114,4 +116,55 @@ func getEnvCSVWithDefault(key string, fallback []string) []string {
 	}
 
 	return values
+}
+
+func validateWebAuthnConfig(cfg Config) error {
+	rpID := strings.TrimSpace(cfg.WebAuthnRPID)
+	if rpID == "" {
+		return fmt.Errorf("WEBAUTHN_RP_ID must not be empty")
+	}
+
+	if len(cfg.WebAuthnRPOrigins) == 0 {
+		return fmt.Errorf("WEBAUTHN_RP_ORIGINS must include at least one origin")
+	}
+
+	for _, rawOrigin := range cfg.WebAuthnRPOrigins {
+		origin := strings.TrimSpace(rawOrigin)
+		if origin == "" {
+			continue
+		}
+
+		parsed, err := url.Parse(origin)
+		if err != nil {
+			return fmt.Errorf("invalid WEBAUTHN_RP_ORIGINS value %q: %w", origin, err)
+		}
+
+		if parsed.Scheme == "" || parsed.Host == "" {
+			return fmt.Errorf("WEBAUTHN_RP_ORIGINS value %q must include scheme and host", origin)
+		}
+
+		if parsed.Path != "" && parsed.Path != "/" {
+			return fmt.Errorf("WEBAUTHN_RP_ORIGINS value %q must not include a path", origin)
+		}
+
+		if parsed.RawQuery != "" || parsed.Fragment != "" {
+			return fmt.Errorf("WEBAUTHN_RP_ORIGINS value %q must not include query params or fragments", origin)
+		}
+
+		hostname := strings.TrimSpace(parsed.Hostname())
+		if hostname == "" {
+			return fmt.Errorf("WEBAUTHN_RP_ORIGINS value %q must include a valid host", origin)
+		}
+
+		// Per WebAuthn requirements, RP ID must equal the origin hostname or be its registrable suffix.
+		if hostname != rpID && !strings.HasSuffix(hostname, "."+rpID) {
+			return fmt.Errorf("WEBAUTHN_RP_ORIGINS host %q does not match WEBAUTHN_RP_ID %q", hostname, rpID)
+		}
+
+		if !cfg.DevMode && parsed.Scheme != "https" {
+			return fmt.Errorf("WEBAUTHN_RP_ORIGINS value %q must use https in production", origin)
+		}
+	}
+
+	return nil
 }

@@ -266,7 +266,14 @@ func (s *Server) finishLogin(w http.ResponseWriter, r *http.Request) {
 		r,
 	)
 	if err != nil {
-		log.Printf("webauthn login failed: %v", err)
+		log.Printf(
+			"webauthn login failed: %v (origin=%q host=%q rp_id=%q rp_origins=%v)",
+			err,
+			r.Header.Get("Origin"),
+			r.Host,
+			s.cfg.WebAuthnRPID,
+			s.cfg.WebAuthnRPOrigins,
+		)
 		respondBadRequest(w, r, "Invalid login response")
 		return
 	}

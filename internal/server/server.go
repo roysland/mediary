@@ -67,6 +67,10 @@ func New(cfg Config) *Server {
 	}
 	auth.SetDefaultSessionManager(authSessions)
 
+	if err := validateWebAuthnConfig(cfg); err != nil {
+		log.Fatalf("invalid WebAuthn configuration: %v", err)
+	}
+
 	webauthn, err := webauthnlib.New(&webauthnlib.Config{
 		RPID:          cfg.WebAuthnRPID,
 		RPDisplayName: cfg.WebAuthnRPDisplayName,

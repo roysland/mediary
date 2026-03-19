@@ -1,5 +1,9 @@
 ## Remaining Follow-ups
 
+- Add structured diagnostics/metrics for WebAuthn ceremony failures.
+	Why: `/webauthn/login/verify` currently returns a generic 400 for many error modes; logs now include origin/RPID context, but operators still need easy aggregation by failure reason.
+	How: Add counters and structured logs for categories like missing ceremony cookie, origin mismatch, RP ID mismatch, sign-counter mismatch, and credential not found. Surface these in deployment dashboards/alerts.
+
 - Add production deployment docs for Docker on VPS.
 	Why: The project now has a Dockerfile, but operators still need a canonical deploy recipe (volume mapping, env vars, restart policy, reverse-proxy/HTTPS expectations).
 	How: Add a concise section in `readme.md` (or `docs/deployment.md`) with `docker build`, `docker run`, required env vars (`AUTH_SESSION_SECRET`, `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_ORIGINS`), and an example behind Caddy/Nginx.

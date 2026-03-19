@@ -52,3 +52,41 @@ func TestLoadConfigDefaultWebAuthnOrigins(t *testing.T) {
 		t.Fatalf("unexpected default WebAuthnRPOrigins: got %#v want %#v", cfg.WebAuthnRPOrigins, want)
 	}
 }
+
+func TestValidateWebAuthnConfig_AcceptsMatchingOrigins(t *testing.T) {
+	cfg := Config{
+		DevMode:           false,
+		WebAuthnRPID:      "airberry.no",
+		WebAuthnRPOrigins: []string{"https://diary.airberry.no", "https://airberry.no"},
+	}
+
+	if err := validateWebAuthnConfig(cfg); err != nil {
+		t.Fatalf("expected valid config, got error: %v", err)
+	}
+}
+
+func TestValidateWebAuthnConfig_RejectsMismatchedHost(t *testing.T) {
+	cfg := Config{
+		DevMode:           false,
+		WebAuthnRPID:      "airberry.no",
+		WebAuthnRPOrigins: []string{"https://example.com"},
+	}
+
+	err := validateWebAuthnConfig(cfg)
+	if err == nil {
+		t.Fatal("expected mismatched host validation error, got nil")
+	}
+}
+
+func TestValidateWebAuthnConfig_RejectsHTTPInProduction(t *testing.T) {
+	cfg := Config{
+		DevMode:           false,
+		WebAuthnRPID:      "localhost",
+		WebAuthnRPOrigins: []string{"http://localhost:8080"},
+	}
+
+	err := validateWebAuthnConfig(cfg)
+	if err == nil {
+		t.Fatal("expected http origin validation error in production, got nil")
+	}
+}
