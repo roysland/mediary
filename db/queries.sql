@@ -301,6 +301,10 @@ INSERT INTO users (
 VALUES (?, ?, ?)
 RETURNING *;
 
+-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = ?;
+
 -- name: GetUserByID :one
 SELECT *
 FROM users
