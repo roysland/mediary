@@ -14,12 +14,12 @@ func (s *Server) routes() {
 
 	s.mux.HandleFunc("/", s.home)
 	s.mux.HandleFunc("/auth", s.authPage)
-	s.mux.HandleFunc("/auth/register/options", s.beginRegistration)
-	s.mux.HandleFunc("/auth/register/verify", s.finishRegistration)
-	s.mux.HandleFunc("/auth/login/options", s.beginLogin)
-	s.mux.HandleFunc("/auth/login/verify", s.finishLogin)
-	s.mux.HandleFunc("/auth/passkeys/options", s.beginAddPasskey)
-	s.mux.HandleFunc("/auth/passkeys/verify", s.finishAddPasskey)
+	s.mux.HandleFunc("/webauthn/register/options", s.beginRegistration)
+	s.mux.HandleFunc("/webauthn/register/verify", s.finishRegistration)
+	s.mux.HandleFunc("/webauthn/login/options", s.beginLogin)
+	s.mux.HandleFunc("/webauthn/login/verify", s.finishLogin)
+	s.mux.HandleFunc("/webauthn/passkeys/options", s.beginAddPasskey)
+	s.mux.HandleFunc("/webauthn/passkeys/verify", s.finishAddPasskey)
 	s.mux.HandleFunc("/auth/logout", s.logout)
 	s.mux.HandleFunc("/entries", s.entries)
 	s.mux.HandleFunc("/api/entries", s.entriesAPI)
@@ -38,5 +38,5 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/trackables/{id}", s.registerTrackable)
 
 	// Wrap all routes once so CSRF checks apply uniformly.
-	s.handler = withCrossOriginProtection(s.mux, s.cfg)
+	s.handler = withCrossOriginProtection(withSessionRequired(s.mux), s.cfg)
 }

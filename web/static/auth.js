@@ -102,8 +102,12 @@ function setStatus(target, message, isError = false) {
   target.dataset.error = isError ? "true" : "false";
 }
 
-async function performRegistration(statusEl, beginURL, finishURL) {
-  const options = await fetchJSON(beginURL, { method: "POST", body: "{}" });
+async function performRegistration(beginURL, finishURL, displayName = "") {
+  const payload = {
+    device_name: displayName,
+    display_name: displayName,
+  };
+  const options = await fetchJSON(beginURL, { method: "POST", body: JSON.stringify(payload) });
   const credential = await navigator.credentials.create(normalizeCreationOptions(options));
   if (!credential) {
     throw new Error("Passkey creation was cancelled");
@@ -117,14 +121,20 @@ async function performRegistration(statusEl, beginURL, finishURL) {
   return result;
 }
 
-async function performLogin(statusEl) {
-  const options = await fetchJSON("/auth/login/options", { method: "POST", body: "{}" });
-  const assertion = await navigator.credentials.get(normalizeRequestOptions(options));
+async function performLogin({ conditional = false } = {}) {
+  const options = await fetchJSON(`/webauthn/login/options${conditional ? "?conditional=1" : ""}`, { method: "POST", body: "{}" });
+  const normalized = normalizeRequestOptions(options);
+  const getOptions = { publicKey: normalized.publicKey };
+  if (conditional) {
+    getOptions.mediation = "conditional";
+  }
+
+  const assertion = await navigator.credentials.get(getOptions);
   if (!assertion) {
     throw new Error("Passkey sign-in was cancelled");
   }
 
-  const result = await fetchJSON("/auth/login/verify", {
+  const result = await fetchJSON("/webauthn/login/verify", {
     method: "POST",
     body: JSON.stringify(serializeCredential(assertion)),
   });
@@ -141,6 +151,7 @@ function initAuthPage() {
   const registerBtn = root.querySelector("[data-auth-register]");
   const loginBtn = root.querySelector("[data-auth-login]");
   const statusEl = root.querySelector("[data-auth-status]");
+  const deviceNameInput = root.querySelector("[data-auth-device-name]");
 
   if (!window.PublicKeyCredential || !navigator.credentials) {
     setStatus(statusEl, "Passkeys are not supported in this browser", true);
@@ -154,8 +165,9 @@ function initAuthPage() {
       registerBtn.disabled = true;
       loginBtn.disabled = true;
       setStatus(statusEl, "Creating passkey...");
+      const deviceName = deviceNameInput?.value?.trim() || "";
 
-      const result = await performRegistration(statusEl, "/auth/register/options", "/auth/register/verify");
+      const result = await performRegistration("/webauthn/register/options", "/webauthn/register/verify", deviceName);
       setStatus(statusEl, "Passkey created. Redirecting...");
       window.location.assign(result.redirect || "/");
     } catch (error) {
@@ -172,7 +184,7 @@ function initAuthPage() {
       loginBtn.disabled = true;
       setStatus(statusEl, "Waiting for your passkey...");
 
-      const result = await performLogin(statusEl);
+      const result = await performLogin();
       setStatus(statusEl, "Signed in. Redirecting...");
       window.location.assign(result.redirect || "/");
     } catch (error) {
@@ -182,6 +194,30 @@ function initAuthPage() {
       loginBtn.disabled = false;
     }
   });
+
+  maybeStartConditionalLogin(statusEl, registerBtn, loginBtn);
+}
+
+async function maybeStartConditionalLogin(statusEl, registerBtn, loginBtn) {
+  if (typeof window.PublicKeyCredential?.isConditionalMediationAvailable !== "function") {
+    return;
+  }
+
+  try {
+    const supported = await window.PublicKeyCredential.isConditionalMediationAvailable();
+    if (!supported) {
+      return;
+    }
+
+    setStatus(statusEl, "Looking for saved passkeys...");
+    const result = await performLogin({ conditional: true });
+    setStatus(statusEl, "Signed in. Redirecting...");
+    window.location.assign(result.redirect || "/");
+  } catch (error) {
+    // Conditional mediation can fail silently; keep manual buttons available.
+    registerBtn.disabled = false;
+    loginBtn.disabled = false;
+  }
 }
 
 function initAddPasskey() {
@@ -201,7 +237,7 @@ function initAddPasskey() {
     try {
       button.disabled = true;
       setStatus(statusEl, "Registering another passkey...");
-      await performRegistration(statusEl, "/auth/passkeys/options", "/auth/passkeys/verify");
+      await performRegistration("/webauthn/passkeys/options", "/webauthn/passkeys/verify");
       setStatus(statusEl, "Additional passkey registered.");
     } catch (error) {
       setStatus(statusEl, error.message || "Failed to register passkey", true);

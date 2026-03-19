@@ -18,7 +18,7 @@ import (
 const (
 	SessionCookieName  = "st_session"
 	CeremonyCookieName = "st_webauthn"
-	defaultSessionTTL  = 30 * 24 * time.Hour
+	defaultSessionTTL  = 12 * time.Hour
 )
 
 type User struct {
@@ -81,6 +81,22 @@ func CurrentUser(r *http.Request) *User {
 	}
 
 	return &User{ID: uid}
+}
+
+func RefreshCurrentSession(w http.ResponseWriter, r *http.Request) bool {
+	defaultSessionManagerMu.RLock()
+	mgr := defaultSessionManager
+	defaultSessionManagerMu.RUnlock()
+	if mgr == nil {
+		return false
+	}
+
+	uid, ok := mgr.UserIDFromRequest(r)
+	if !ok {
+		return false
+	}
+
+	return mgr.SetAuthenticatedUser(w, uid) == nil
 }
 
 func (m *SessionManager) UserIDFromRequest(r *http.Request) (int64, bool) {

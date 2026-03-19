@@ -104,12 +104,16 @@ func (s *Server) beginRegistration(w http.ResponseWriter, r *http.Request) {
 
 	var body struct {
 		DisplayName string `json:"display_name"`
+		DeviceName  string `json:"device_name"`
 	}
 	if r.Body != nil {
 		_ = json.NewDecoder(r.Body).Decode(&body)
 	}
 
 	displayName := strings.TrimSpace(body.DisplayName)
+	if displayName == "" {
+		displayName = strings.TrimSpace(body.DeviceName)
+	}
 	if displayName == "" {
 		displayName = "Anonymous"
 	}
@@ -203,13 +207,27 @@ func (s *Server) beginLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	assertion, sessionData, err := s.webauthn.BeginDiscoverableLogin(
+	conditional := r.URL.Query().Get("conditional") == "1"
+
+	var (
+		assertion   *protocol.CredentialAssertion
+		sessionData *webauthnlib.SessionData
+		err         error
+	)
+
+	loginOptions := []webauthnlib.LoginOption{
 		webauthnlib.WithUserVerification(protocol.VerificationPreferred),
 		webauthnlib.WithAssertionPublicKeyCredentialHints([]protocol.PublicKeyCredentialHints{
 			protocol.PublicKeyCredentialHintClientDevice,
 			protocol.PublicKeyCredentialHintHybrid,
 		}),
-	)
+	}
+
+	if conditional {
+		assertion, sessionData, err = s.webauthn.BeginDiscoverableMediatedLogin(protocol.MediationConditional, loginOptions...)
+	} else {
+		assertion, sessionData, err = s.webauthn.BeginDiscoverableLogin(loginOptions...)
+	}
 	if err != nil {
 		respondInternalError(w, r, "Failed to begin passkey login")
 		return

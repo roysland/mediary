@@ -4,9 +4,12 @@
 <section class="card auth-card" data-auth-passkey>
 	<h1>{{ t "auth.title" }}</h1>
 	<p>{{ t "auth.subtitle" }}</p>
+	<p>{{ t "auth.explainer" }}</p>
+	<label for="device_name">{{ t "auth.device_name" }}</label>
+	<input id="device_name" name="device_name" type="text" autocomplete="nickname" placeholder="{{ t "auth.device_name_placeholder" }}" data-auth-device-name>
 	<div class="auth-actions">
-		<button type="button" class="button" data-auth-register>{{ t "auth.create_passkey" }}</button>
-		<button type="button" class="button button--ghost" data-auth-login>{{ t "auth.sign_in" }}</button>
+		<button type="button" class="button" data-auth-login>{{ t "auth.continue" }}</button>
+		<button type="button" class="button button--ghost" data-auth-register>{{ t "auth.new_user" }}</button>
 	</div>
 	<p class="auth-status" data-auth-status aria-live="polite"></p>
 </section>
