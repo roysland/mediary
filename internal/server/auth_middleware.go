@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"strings"
 
 	"roysland.me/symptomstracker/internal/auth"
 )
@@ -15,6 +16,17 @@ func withSessionRequired(next http.Handler) http.Handler {
 
 		user := auth.CurrentUser(r)
 		if user == nil || user.ID <= 0 {
+			// For normal browser GET requests, redirect to the auth page.
+			// For API/HTMX/XHR/JSON requests (or non-GET methods), respond with 401.
+			isHTMX := r.Header.Get("HX-Request") == "true"
+			isXHR := r.Header.Get("X-Requested-With") == "XMLHttpRequest"
+			acceptsJSON := strings.Contains(r.Header.Get("Accept"), "application/json")
+
+			if r.Method != http.MethodGet || isHTMX || isXHR || acceptsJSON {
+				respondUnauthorized(w, r)
+				return
+			}
+
 			http.Redirect(w, r, "/auth", http.StatusSeeOther)
 			return
 		}
@@ -28,6 +40,8 @@ func withSessionRequired(next http.Handler) http.Handler {
 func isPublicRoute(path string) bool {
 	switch {
 	case path == "/auth":
+		return true
+	case path == "/auth/logout":
 		return true
 	case path == "/webauthn/login/options":
 		return true
@@ -44,4 +58,10 @@ func isPublicRoute(path string) bool {
 	default:
 		return false
 	}
+}
+
+func respondUnauthorized(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+	_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 }
