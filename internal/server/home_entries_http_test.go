@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -67,7 +68,7 @@ func TestEntriesRendersDayNavigationAndFiltersBySelectedDay(t *testing.T) {
 	}
 
 	body := rr.Body.String()
-	if !strings.Contains(body, "day-control") {
+	if !strings.Contains(body, "entries-day-nav") {
 		t.Fatalf("expected day navigation to render in entries page")
 	}
 	if !strings.Contains(body, "today timeline note") {
@@ -75,6 +76,73 @@ func TestEntriesRendersDayNavigationAndFiltersBySelectedDay(t *testing.T) {
 	}
 	if strings.Contains(body, "old timeline note") {
 		t.Fatalf("did not expect entries outside selected day to be rendered")
+	}
+}
+
+func TestEntriesAPIReturnsAudioFilePath(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	today := time.Now().Format("2006-01-02")
+
+	insertEntryFixture(t, s, entryFixture{userID: 1, entryDate: today, note: "typed note", recordedAtUTC: 1710000000})
+
+	_, err := s.queries.CreateDraftEntry(context.Background(), db.CreateDraftEntryParams{
+		UserID:                1,
+		RecordedAtUtc:         1710000100,
+		TimezoneOffsetMinutes: 0,
+		EntryDate:             today,
+		AudioFilePath:         sql.NullString{String: "/tmp/audio_1.webm", Valid: true},
+		CreatedAtUtc:          1710000100,
+	})
+	if err != nil {
+		t.Fatalf("create draft entry fixture: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/entries?day="+today, nil)
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
+		t.Fatalf("expected application/json content type, got %q", ct)
+	}
+
+	var payload struct {
+		Entries []struct {
+			ID            int64   `json:"id"`
+			IsDraft       bool    `json:"is_draft"`
+			AudioFilePath *string `json:"audio_file_path"`
+		} `json:"entries"`
+		SelectedDay string `json:"selected_day"`
+	}
+	if err := json.NewDecoder(rr.Body).Decode(&payload); err != nil {
+		t.Fatalf("decode /api/entries response: %v", err)
+	}
+
+	if payload.SelectedDay != today {
+		t.Fatalf("expected selected_day=%q, got %q", today, payload.SelectedDay)
+	}
+
+	if len(payload.Entries) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(payload.Entries))
+	}
+
+	var foundDraft bool
+	for _, entry := range payload.Entries {
+		if !entry.IsDraft {
+			continue
+		}
+		foundDraft = true
+		if entry.AudioFilePath == nil || *entry.AudioFilePath != "/tmp/audio_1.webm" {
+			t.Fatalf("expected draft entry audio_file_path to be set, got %#v", entry.AudioFilePath)
+		}
+	}
+
+	if !foundDraft {
+		t.Fatalf("expected to find a draft entry in API response")
 	}
 }
 

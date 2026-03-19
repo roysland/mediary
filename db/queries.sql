@@ -20,6 +20,9 @@ SELECT
     e.entry_date,
     e.note_text,
     e.is_private,
+    e.is_draft,
+    e.audio_file_path,
+    e.transcription_status,
     e.created_at_utc,
     tv.id AS trackable_value_id,
     tv.trackable_definition_id,
@@ -56,6 +59,9 @@ SELECT
     e.entry_date,
     e.note_text,
     e.is_private,
+    e.is_draft,
+    e.audio_file_path,
+    e.transcription_status,
     e.created_at_utc,
     tv.id AS trackable_value_id,
     tv.trackable_definition_id,
@@ -80,6 +86,40 @@ ORDER BY tv.created_at_utc ASC;
 -- name: DeleteEntry :exec
 DELETE FROM entries
 WHERE id = ? AND user_id = ?;
+
+-- name: CreateDraftEntry :one
+INSERT INTO entries (
+    user_id,
+    recorded_at_utc,
+    timezone_offset_minutes,
+    entry_date,
+    note_text,
+    is_private,
+    is_draft,
+    audio_file_path,
+    transcription_status,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, NULL, 0, 1, ?, 'pending', ?)
+RETURNING *;
+
+-- name: UpdateEntryTranscription :exec
+UPDATE entries
+SET note_text = ?,
+    is_draft = 0,
+    transcription_status = 'completed'
+WHERE id = ?;
+
+-- name: MarkTranscriptionFailed :exec
+UPDATE entries
+SET transcription_status = 'failed'
+WHERE id = ?;
+
+-- name: ListPendingTranscriptions :many
+SELECT id, audio_file_path
+FROM entries
+WHERE transcription_status = 'pending'
+AND audio_file_path IS NOT NULL;
 
 -- name: GetTrackableTemplates :many
 SELECT tt.*

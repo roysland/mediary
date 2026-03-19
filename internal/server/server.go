@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"html/template"
@@ -17,12 +18,14 @@ import (
 )
 
 type Server struct {
-	mux               *http.ServeMux
-	templates         *template.Template
-	templatesByLocale map[string]*template.Template
-	devMode           bool
-	queries           *db.Queries
-	dbConn            *sql.DB
+	mux                 *http.ServeMux
+	templates           *template.Template
+	templatesByLocale   map[string]*template.Template
+	devMode             bool
+	queries             *db.Queries
+	dbConn              *sql.DB
+	cfg                 Config
+	transcriptionWorker *TranscriptionWorker
 }
 
 func New(cfg Config) *Server {
@@ -45,8 +48,15 @@ func New(cfg Config) *Server {
 		devMode:           cfg.DevMode,
 		queries:           queries,
 		dbConn:            conn,
+		cfg:               cfg,
 		templatesByLocale: make(map[string]*template.Template),
 	}
+
+	worker := newTranscriptionWorker(queries, cfg)
+	s.transcriptionWorker = worker
+	ctx := context.Background()
+	worker.Start(ctx)
+	worker.RecoverPending(ctx)
 
 	if !s.devMode {
 		for _, locale := range i18n.Locales() {

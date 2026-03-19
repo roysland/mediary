@@ -6,14 +6,6 @@ This document outlines the feature implementation plan for the symptom tracker. 
 
 ## Phase 1: Core Usability & Capture
 
-### 1. Voice Logging (Speech-to-Text)
-**Priority:** High  
-**Goal:** Allow users to log symptoms quickly without typing.
-
-* **UX Flow:** Large mic button -> "Listening..." state -> Auto-upload on stop.
-* **Key Design Rule:** Do not force immediate transcription correction. Allow "Delayed Refinement."
-* **Implementation:** MediaRecorder API + `hx-post`. Server-side Whisper (whisper.cpp) processing.
-* **Footgun Alert:** Avoid long loading spinners. Transition to a "Saved as Draft" state immediately after upload while processing occurs in the background.
 
 ### 2. Transactional Draft System
 **Priority:** High  
@@ -37,12 +29,6 @@ Disable referrer leakage. If a shared report links to external resources, the br
 
 ## Phase 2: Stability & Context
 
-### 4. PWA Offline-First Save
-**Priority:** High  
-**Goal:** Ensure logging works in clinics or hospitals with poor connectivity.
-
-* **Implementation:** Service Worker + IndexedDB queue.
-* **Footgun Alert:** Use client-side `created_at` timestamps. If entries arrive out of order once the user is back online, the timeline remains chronologically accurate.
 
 ### 5. Privacy Blur (Screen Lock)
 **Priority:** Medium  

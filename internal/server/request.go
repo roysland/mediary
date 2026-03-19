@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -58,10 +59,8 @@ func optionalInt64(value, field string) (sql.NullInt64, error) {
 
 func requireOneOf(value, field string, allowed ...string) (string, error) {
 	trimmed := strings.TrimSpace(value)
-	for _, option := range allowed {
-		if trimmed == option {
-			return trimmed, nil
-		}
+	if slices.Contains(allowed, trimmed) {
+		return trimmed, nil
 	}
 
 	return "", fmt.Errorf("invalid %s", field)

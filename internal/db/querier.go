@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	CreateDraftEntry(ctx context.Context, arg CreateDraftEntryParams) (Entry, error)
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error)
 	CreateTrackableDefinition(ctx context.Context, arg CreateTrackableDefinitionParams) (TrackableDefinition, error)
 	CreateTrackableValue(ctx context.Context, arg CreateTrackableValueParams) (TrackableValue, error)
@@ -28,12 +29,15 @@ type Querier interface {
 	GetTrackableTemplates(ctx context.Context, userID int64) ([]TrackableTemplate, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListEntriesByUser(ctx context.Context, userID int64) ([]Entry, error)
+	ListPendingTranscriptions(ctx context.Context) ([]ListPendingTranscriptionsRow, error)
 	ListSettings(ctx context.Context, userID int64) ([]Setting, error)
 	ListTrackableDailyDismissalsByUser(ctx context.Context, userID int64) ([]TrackableDailyDismissal, error)
 	ListTrackableDefinitions(ctx context.Context, userID int64) ([]TrackableDefinition, error)
 	ListTrackableDefinitionsWithDismissal(ctx context.Context, arg ListTrackableDefinitionsWithDismissalParams) ([]ListTrackableDefinitionsWithDismissalRow, error)
 	ListTrackableValuesByUser(ctx context.Context, userID int64) ([]TrackableValue, error)
 	ListWebauthnCredentialsByUser(ctx context.Context, userID int64) ([]WebauthnCredential, error)
+	MarkTranscriptionFailed(ctx context.Context, id int64) error
+	UpdateEntryTranscription(ctx context.Context, arg UpdateEntryTranscriptionParams) error
 	UpdateTrackableValueInt(ctx context.Context, arg UpdateTrackableValueIntParams) (TrackableValue, error)
 	UpdateTrackableValueText(ctx context.Context, arg UpdateTrackableValueTextParams) (TrackableValue, error)
 	UpsertSetting(ctx context.Context, arg UpsertSettingParams) error

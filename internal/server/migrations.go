@@ -174,6 +174,51 @@ var migrations = []migration{
 			return nil
 		},
 	},
+	{
+		id:   "006_voice_entry_columns",
+		name: "add voice/draft columns to entries",
+		up: func(tx *sql.Tx) error {
+			hasEntries, err := tableExistsTx(tx, "entries")
+			if err != nil {
+				return err
+			}
+			if !hasEntries {
+				return nil
+			}
+
+			hasDraft, err := columnExistsTx(tx, "entries", "is_draft")
+			if err != nil {
+				return err
+			}
+			if !hasDraft {
+				if _, err := tx.Exec(`ALTER TABLE entries ADD COLUMN is_draft INTEGER NOT NULL DEFAULT 0`); err != nil {
+					return fmt.Errorf("add entries.is_draft: %w", err)
+				}
+			}
+
+			hasAudio, err := columnExistsTx(tx, "entries", "audio_file_path")
+			if err != nil {
+				return err
+			}
+			if !hasAudio {
+				if _, err := tx.Exec(`ALTER TABLE entries ADD COLUMN audio_file_path TEXT`); err != nil {
+					return fmt.Errorf("add entries.audio_file_path: %w", err)
+				}
+			}
+
+			hasStatus, err := columnExistsTx(tx, "entries", "transcription_status")
+			if err != nil {
+				return err
+			}
+			if !hasStatus {
+				if _, err := tx.Exec(`ALTER TABLE entries ADD COLUMN transcription_status TEXT NOT NULL DEFAULT 'none'`); err != nil {
+					return fmt.Errorf("add entries.transcription_status: %w", err)
+				}
+			}
+
+			return nil
+		},
+	},
 }
 
 func runMigrations(conn *sql.DB) error {

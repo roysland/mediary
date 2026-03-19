@@ -41,6 +41,10 @@ CREATE TABLE IF NOT EXISTS entries (
     note_text TEXT,
     is_private INTEGER NOT NULL DEFAULT 0,
 
+    is_draft INTEGER NOT NULL DEFAULT 0,
+    audio_file_path TEXT,
+    transcription_status TEXT NOT NULL DEFAULT 'none',
+
     created_at_utc INTEGER NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

@@ -7,9 +7,16 @@ import (
 func (s *Server) routes() {
 	fs := http.FileServer(http.Dir("web/static"))
 	s.mux.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	// Serve audio files from the audio storage directory.
+	audioFS := http.FileServer(http.Dir(s.cfg.AudioStorageDir))
+	s.mux.Handle("/data/audio/", http.StripPrefix("/data/audio/", audioFS))
+
 	s.mux.HandleFunc("/", s.home)
 	s.mux.HandleFunc("/entries", s.entries)
+	s.mux.HandleFunc("/api/entries", s.entriesAPI)
 	s.mux.HandleFunc("/entry/add", s.addEntry)
+	s.mux.HandleFunc("/entry/voice", s.addVoiceEntry)
 	s.mux.HandleFunc("/entry/{id}/delete", s.deleteEntry)
 	s.mux.HandleFunc("/entry/{id}", s.entryItem)
 	s.mux.HandleFunc("/entry/{id}/trackables", s.entryTrackablesDialog)

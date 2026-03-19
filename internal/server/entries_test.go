@@ -29,6 +29,11 @@ func TestParseSelectedDay(t *testing.T) {
 			input:   "03-01-2026",
 			wantErr: true,
 		},
+		{
+			name:  "future date clamped to today",
+			input: "2030-01-01",
+			want:  now,
+		},
 	}
 
 	for _, tt := range tests {
@@ -52,7 +57,9 @@ func TestParseSelectedDay(t *testing.T) {
 
 func TestBuildDayNavigation(t *testing.T) {
 	selected := time.Date(2026, 3, 17, 9, 30, 0, 0, time.UTC)
-	nav := buildDayNavigation(selected)
+	// Use a far-future now so the full window is visible
+	futureNow := time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC)
+	nav := buildDayNavigation(selected, futureNow)
 
 	wantLen := dayNavigationPastDays + dayNavigationFutureDays + 1
 	if len(nav) != wantLen {
@@ -79,5 +86,21 @@ func TestBuildDayNavigation(t *testing.T) {
 	}
 	if nav[len(nav)-1].Date != selected.AddDate(0, 0, dayNavigationFutureDays).Format("2006-01-02") {
 		t.Fatalf("unexpected last date: %s", nav[len(nav)-1].Date)
+	}
+}
+
+func TestBuildDayNavigationCapsAtToday(t *testing.T) {
+	today := time.Date(2026, 3, 17, 12, 0, 0, 0, time.UTC)
+	nav := buildDayNavigation(today, today)
+
+	todayStr := today.Format("2006-01-02")
+	for _, d := range nav {
+		if d.Date > todayStr {
+			t.Fatalf("navigation contains future date %s (today is %s)", d.Date, todayStr)
+		}
+	}
+
+	if nav[len(nav)-1].Date != todayStr {
+		t.Fatalf("expected last nav item to be today (%s), got %s", todayStr, nav[len(nav)-1].Date)
 	}
 }

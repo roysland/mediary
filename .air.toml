@@ -6,6 +6,11 @@ cmd = "go build -o tmp/app ./cmd/server"
 bin = "tmp/app"
 include_ext = ["go"]
 exclude_dir = ["tmp", "vendor"]
+env_vars = [
+  "WHISPER_BINARY_PATH=/home/oyvindr/whisper.cpp/build/bin/whisper-cli",
+  "WHISPER_MODEL_PATH=/home/oyvindr/whisper.cpp/models/ggml-base.en.bin",
+  "FFMPEG_BINARY_PATH=ffmpeg",
+]
 
 [log]
 time = true
