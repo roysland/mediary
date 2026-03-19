@@ -17,10 +17,18 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
     go build -trimpath -ldflags='-s -w' -o /out/server ./cmd/server
 
-FROM debian:bookworm-slim AS runtime
+# NEW: Build whisper.cpp inside the container environment
+FROM debian:bookworm-slim AS whisper-build
+RUN apt-get update && apt-get install -y build-essential cmake git
+WORKDIR /whisper-src
+# Clone a specific version or copy your local source
+RUN git clone https://github.com/ggerganov/whisper.cpp.git .
+RUN cmake -B build -DWHISPER_BUILD_EXAMPLES=ON && cmake --build build --config Release
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates ffmpeg \
+# FINAL RUNTIME STAGE
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates ffmpeg libstdc++6 libc6 libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -29,6 +37,7 @@ COPY --from=build /out/server /app/server
 COPY --from=build /src/db /app/db
 COPY --from=build /src/internal/views /app/internal/views
 COPY --from=build /src/web/static /app/web/static
+COPY --from=whisper-build /whisper-src/build/bin/whisper-cli /usr/local/bin/whisper-cli
 
 RUN mkdir -p /app/data/audio
 
