@@ -230,6 +230,79 @@ func (q *Queries) CreateTrackableValue(ctx context.Context, arg CreateTrackableV
 	return i, err
 }
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (
+    created_at_utc,
+    webauthn_user_id,
+    display_name
+)
+VALUES (?, ?, ?)
+RETURNING id, created_at_utc, webauthn_user_id, display_name, timezone
+`
+
+type CreateUserParams struct {
+	CreatedAtUtc   int64          `json:"created_at_utc"`
+	WebauthnUserID []byte         `json:"webauthn_user_id"`
+	DisplayName    sql.NullString `json:"display_name"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, createUser, arg.CreatedAtUtc, arg.WebauthnUserID, arg.DisplayName)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAtUtc,
+		&i.WebauthnUserID,
+		&i.DisplayName,
+		&i.Timezone,
+	)
+	return i, err
+}
+
+const createWebauthnCredential = `-- name: CreateWebauthnCredential :one
+INSERT INTO webauthn_credentials (
+    user_id,
+    credential_id,
+    public_key,
+    sign_count,
+    transports,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, ?, ?)
+RETURNING id, user_id, credential_id, public_key, sign_count, transports, created_at_utc
+`
+
+type CreateWebauthnCredentialParams struct {
+	UserID       int64          `json:"user_id"`
+	CredentialID []byte         `json:"credential_id"`
+	PublicKey    []byte         `json:"public_key"`
+	SignCount    int64          `json:"sign_count"`
+	Transports   sql.NullString `json:"transports"`
+	CreatedAtUtc int64          `json:"created_at_utc"`
+}
+
+func (q *Queries) CreateWebauthnCredential(ctx context.Context, arg CreateWebauthnCredentialParams) (WebauthnCredential, error) {
+	row := q.db.QueryRowContext(ctx, createWebauthnCredential,
+		arg.UserID,
+		arg.CredentialID,
+		arg.PublicKey,
+		arg.SignCount,
+		arg.Transports,
+		arg.CreatedAtUtc,
+	)
+	var i WebauthnCredential
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.CredentialID,
+		&i.PublicKey,
+		&i.SignCount,
+		&i.Transports,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
 const deleteEntriesByUser = `-- name: DeleteEntriesByUser :exec
 DELETE FROM entries
 WHERE user_id = ?
@@ -643,6 +716,44 @@ func (q *Queries) GetTrackableTemplates(ctx context.Context, userID int64) ([]Tr
 		return nil, err
 	}
 	return items, nil
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, created_at_utc, webauthn_user_id, display_name, timezone
+FROM users
+WHERE id = ?
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAtUtc,
+		&i.WebauthnUserID,
+		&i.DisplayName,
+		&i.Timezone,
+	)
+	return i, err
+}
+
+const getUserByWebauthnUserID = `-- name: GetUserByWebauthnUserID :one
+SELECT id, created_at_utc, webauthn_user_id, display_name, timezone
+FROM users
+WHERE webauthn_user_id = ?
+`
+
+func (q *Queries) GetUserByWebauthnUserID(ctx context.Context, webauthnUserID []byte) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByWebauthnUserID, webauthnUserID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAtUtc,
+		&i.WebauthnUserID,
+		&i.DisplayName,
+		&i.Timezone,
+	)
+	return i, err
 }
 
 const listEntries = `-- name: ListEntries :many
@@ -1227,6 +1338,22 @@ func (q *Queries) UpdateTrackableValueText(ctx context.Context, arg UpdateTracka
 		&i.UpdatedAtUtc,
 	)
 	return i, err
+}
+
+const updateWebauthnCredentialSignCount = `-- name: UpdateWebauthnCredentialSignCount :exec
+UPDATE webauthn_credentials
+SET sign_count = ?
+WHERE credential_id = ?
+`
+
+type UpdateWebauthnCredentialSignCountParams struct {
+	SignCount    int64  `json:"sign_count"`
+	CredentialID []byte `json:"credential_id"`
+}
+
+func (q *Queries) UpdateWebauthnCredentialSignCount(ctx context.Context, arg UpdateWebauthnCredentialSignCountParams) error {
+	_, err := q.db.ExecContext(ctx, updateWebauthnCredentialSignCount, arg.SignCount, arg.CredentialID)
+	return err
 }
 
 const upsertSetting = `-- name: UpsertSetting :exec

@@ -24,3 +24,7 @@
 	Why: `initVoiceRecorder` is called on every `htmx:afterSwap` and currently attaches new click listeners each time for the same DOM nodes, which can trigger multiple recorder/upload flows from one click.
 	How: Make initialization idempotent by marking the section as bound (for example with `data-voice-bound="1"`) or by removing/replacing existing listeners before adding new ones.
 
+- Add authenticated device-link flow with QR for cross-device onboarding.
+	Why: Discoverable passkeys and multi-passkey support are now in place, but users without synced passkey managers still need a smoother way to enroll a second device from an already signed-in device.
+	How: Add a short-lived one-time linking token endpoint for authenticated users, render it as a QR code, and let the new device redeem it only to initiate `/auth/passkeys/options` for that same account before requiring passkey confirmation.
+

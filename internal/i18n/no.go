@@ -2,6 +2,10 @@ package i18n
 
 var norwegianCatalog = Catalog{
 	"app.title":                                "Symptomsporer",
+	"auth.create_passkey":                      "Opprett passnokkel",
+	"auth.sign_in":                             "Logg inn med passnokkel",
+	"auth.subtitle":                            "Passnokler er den eneste innloggingsmetoden for denne dagboken.",
+	"auth.title":                               "Innlogging med passnokkel",
 	"common.cancel":                            "Avbryt",
 	"common.close":                             "Lukk",
 	"common.restore":                           "Gjenopprett",
@@ -42,6 +46,9 @@ var norwegianCatalog = Catalog{
 	"settings.language.english":                "Engelsk",
 	"settings.language.label":                  "Språk",
 	"settings.language.norwegian":              "Norsk",
+	"settings.passkeys.add":                    "Legg til en passnokkel til",
+	"settings.passkeys.description":            "Registrer en ekstra passnokkel for en annen enhet eller reserveautentikator.",
+	"settings.passkeys.title":                  "Passnokler",
 	"settings.screen_lock.10_minutes":          "Etter 10 minutter",
 	"settings.screen_lock.1_minute":            "Etter 1 minutt",
 	"settings.screen_lock.5_minutes":           "Etter 5 minutter",

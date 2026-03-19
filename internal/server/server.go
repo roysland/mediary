@@ -10,9 +10,14 @@ import (
 	"net/http"
 	"path/filepath"
 	"sort"
+	"strings"
+	"sync"
 	"time"
 
+	"github.com/go-webauthn/webauthn/protocol"
+	webauthnlib "github.com/go-webauthn/webauthn/webauthn"
 	_ "github.com/mattn/go-sqlite3"
+	"roysland.me/symptomstracker/internal/auth"
 	"roysland.me/symptomstracker/internal/db"
 	"roysland.me/symptomstracker/internal/i18n"
 )
@@ -27,6 +32,10 @@ type Server struct {
 	dbConn              *sql.DB
 	cfg                 Config
 	transcriptionWorker *TranscriptionWorker
+	authSessions        *auth.SessionManager
+	webauthn            *webauthnlib.WebAuthn
+	ceremonyMu          sync.Mutex
+	ceremonies          map[string]webauthnCeremony
 }
 
 func New(cfg Config) *Server {
@@ -44,6 +53,35 @@ func New(cfg Config) *Server {
 
 	queries := db.New(conn)
 
+	authSessionSecret := strings.TrimSpace(cfg.AuthSessionSecret)
+	if cfg.DevMode && authSessionSecret == "" {
+		authSessionSecret = "dev-only-insecure-session-secret-change-me"
+	}
+	if authSessionSecret == "" {
+		log.Fatal("AUTH_SESSION_SECRET is required")
+	}
+
+	authSessions, err := auth.NewSessionManager(authSessionSecret, !cfg.DevMode)
+	if err != nil {
+		log.Fatal(err)
+	}
+	auth.SetDefaultSessionManager(authSessions)
+
+	webauthn, err := webauthnlib.New(&webauthnlib.Config{
+		RPID:          cfg.WebAuthnRPID,
+		RPDisplayName: cfg.WebAuthnRPDisplayName,
+		RPOrigins:     cfg.WebAuthnRPOrigins,
+		AuthenticatorSelection: protocol.AuthenticatorSelection{
+			AuthenticatorAttachment: protocol.Platform,
+			ResidentKey:             protocol.ResidentKeyRequirementRequired,
+			RequireResidentKey:      protocol.ResidentKeyRequired(),
+			UserVerification:        protocol.VerificationPreferred,
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	s := &Server{
 		mux:               http.NewServeMux(),
 		devMode:           cfg.DevMode,
@@ -51,6 +89,9 @@ func New(cfg Config) *Server {
 		dbConn:            conn,
 		cfg:               cfg,
 		templatesByLocale: make(map[string]*template.Template),
+		authSessions:      authSessions,
+		webauthn:          webauthn,
+		ceremonies:        make(map[string]webauthnCeremony),
 	}
 
 	worker := newTranscriptionWorker(queries, cfg)

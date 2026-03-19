@@ -32,6 +32,16 @@ type Config struct {
 	// CSRFTrustedOrigins lists additional origins allowed for cross-origin write
 	// requests when using net/http CrossOriginProtection.
 	CSRFTrustedOrigins []string
+
+	// AuthSessionSecret signs auth cookies. Must be set in production.
+	AuthSessionSecret string
+
+	// WebAuthnRPID is the relying party ID for passkey ceremonies.
+	WebAuthnRPID string
+	// WebAuthnRPDisplayName is shown to users during passkey flows.
+	WebAuthnRPDisplayName string
+	// WebAuthnRPOrigins are allowed origins for WebAuthn ceremonies.
+	WebAuthnRPOrigins []string
 }
 
 // LoadConfig loads configuration from environment variables with sensible defaults.
@@ -46,6 +56,10 @@ func LoadConfig() Config {
 		FFmpegBinaryPath:            getEnv("FFMPEG_BINARY_PATH", "ffmpeg"),
 		TranscriptionTimeoutSeconds: getEnvInt("TRANSCRIPTION_TIMEOUT_SECONDS", 120),
 		CSRFTrustedOrigins:          getEnvCSV("CSRF_TRUSTED_ORIGINS"),
+		AuthSessionSecret:           getEnv("AUTH_SESSION_SECRET", ""),
+		WebAuthnRPID:                getEnv("WEBAUTHN_RP_ID", "localhost"),
+		WebAuthnRPDisplayName:       getEnv("WEBAUTHN_RP_DISPLAY_NAME", "Symptoms Tracker"),
+		WebAuthnRPOrigins:           getEnvCSVWithDefault("WEBAUTHN_RP_ORIGINS", []string{"http://localhost:8080"}),
 	}
 	return cfg
 }
@@ -88,6 +102,15 @@ func getEnvCSV(key string) []string {
 
 	if len(values) == 0 {
 		return nil
+	}
+
+	return values
+}
+
+func getEnvCSVWithDefault(key string, fallback []string) []string {
+	values := getEnvCSV(key)
+	if len(values) == 0 {
+		return fallback
 	}
 
 	return values

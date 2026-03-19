@@ -292,6 +292,42 @@ FROM webauthn_credentials
 WHERE user_id = ?
 ORDER BY created_at_utc DESC;
 
+-- name: CreateUser :one
+INSERT INTO users (
+    created_at_utc,
+    webauthn_user_id,
+    display_name
+)
+VALUES (?, ?, ?)
+RETURNING *;
+
+-- name: GetUserByID :one
+SELECT *
+FROM users
+WHERE id = ?;
+
+-- name: GetUserByWebauthnUserID :one
+SELECT *
+FROM users
+WHERE webauthn_user_id = ?;
+
+-- name: CreateWebauthnCredential :one
+INSERT INTO webauthn_credentials (
+    user_id,
+    credential_id,
+    public_key,
+    sign_count,
+    transports,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: UpdateWebauthnCredentialSignCount :exec
+UPDATE webauthn_credentials
+SET sign_count = ?
+WHERE credential_id = ?;
+
 -- name: UpsertSetting :exec
 INSERT INTO settings (
     user_id,
