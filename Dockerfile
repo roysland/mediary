@@ -43,7 +43,9 @@ RUN mkdir -p /app/data/audio
 
 ENV APP_ENV=production \
     LISTEN_ADDR=:8080 \
-    AUDIO_STORAGE_DIR=/app/data/audio
+    AUDIO_STORAGE_DIR=/app/data/audio \
+    WHISPER_BINARY_PATH=/usr/local/bin/whisper-cli \
+    WHISPER_MODEL_PATH=/app/data/models/ggml-small.bin
 
 EXPOSE 8080
 VOLUME ["/app/data"]
