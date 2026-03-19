@@ -13,7 +13,9 @@ COPY go.mod go.sum* ./
 RUN go mod download
 
 COPY . .
-RUN go build -trimpath -ldflags='-s -w' -o /out/server ./cmd/server
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    go build -trimpath -ldflags='-s -w' -o /out/server ./cmd/server
 
 FROM debian:bookworm-slim AS runtime
 
