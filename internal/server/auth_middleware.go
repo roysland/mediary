@@ -15,6 +15,11 @@ func withSessionRequired(next http.Handler) http.Handler {
 
 		user := auth.CurrentUser(r)
 		if user == nil || user.ID <= 0 {
+			req := classifyRequest(r)
+			if req.IsAJAX || req.AcceptsJSON {
+				respondUnauthorized(w, r)
+				return
+			}
 			http.Redirect(w, r, "/auth", http.StatusSeeOther)
 			return
 		}
@@ -28,6 +33,8 @@ func withSessionRequired(next http.Handler) http.Handler {
 func isPublicRoute(path string) bool {
 	switch {
 	case path == "/auth":
+		return true
+	case path == "/auth/logout":
 		return true
 	case path == "/webauthn/login/options":
 		return true
