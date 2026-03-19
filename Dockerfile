@@ -20,15 +20,21 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # NEW: Build whisper.cpp inside the container environment
 FROM debian:bookworm-slim AS whisper-build
 RUN apt-get update && apt-get install -y build-essential cmake git
+
 WORKDIR /whisper-src
-# Clone a specific version or copy your local source
 RUN git clone https://github.com/ggerganov/whisper.cpp.git .
-RUN cmake -B build -DWHISPER_BUILD_EXAMPLES=ON && cmake --build build --config Release
+
+# The magic flag is -DBUILD_SHARED_LIBS=OFF
+RUN cmake -B build \
+    -DWHISPER_BUILD_EXAMPLES=ON \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DGGML_OPENMP=OFF && \
+    cmake --build build --config Release -j$(nproc)
 
 # FINAL RUNTIME STAGE
 FROM debian:bookworm-slim AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates ffmpeg libstdc++6 libc6 libgomp1 \
+    ca-certificates ffmpeg libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
