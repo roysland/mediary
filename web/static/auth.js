@@ -107,6 +107,25 @@ function setStatus(target, message, isError = false) {
   target.dataset.error = isError ? "true" : "false";
 }
 
+let pendingConditionalLoginController = null;
+
+function abortPendingConditionalLogin() {
+  if (!pendingConditionalLoginController) {
+    return;
+  }
+
+  pendingConditionalLoginController.abort();
+  pendingConditionalLoginController = null;
+}
+
+function isAbortError(error) {
+  if (!error) {
+    return false;
+  }
+
+  return error.name === "AbortError";
+}
+
 async function performRegistration(beginURL, finishURL, displayName = "") {
   const payload = {
     device_name: displayName,
@@ -126,12 +145,15 @@ async function performRegistration(beginURL, finishURL, displayName = "") {
   return result;
 }
 
-async function performLogin({ conditional = false } = {}) {
+async function performLogin({ conditional = false, signal } = {}) {
   const options = await fetchJSON(`/webauthn/login/options${conditional ? "?conditional=1" : ""}`, { method: "POST", body: "{}" });
   const normalized = normalizeRequestOptions(options);
   const getOptions = { publicKey: normalized.publicKey };
   if (conditional) {
     getOptions.mediation = "conditional";
+  }
+  if (signal) {
+    getOptions.signal = signal;
   }
 
   const assertion = await navigator.credentials.get(getOptions);
@@ -167,6 +189,7 @@ function initAuthPage() {
 
   registerBtn?.addEventListener("click", async () => {
     try {
+      abortPendingConditionalLogin();
       if (registerBtn) registerBtn.disabled = true;
       if (loginBtn) loginBtn.disabled = true;
       setStatus(statusEl, "Creating passkey...");
@@ -185,6 +208,7 @@ function initAuthPage() {
 
   loginBtn?.addEventListener("click", async () => {
     try {
+      abortPendingConditionalLogin();
       if (registerBtn) registerBtn.disabled = true;
       if (loginBtn) loginBtn.disabled = true;
       setStatus(statusEl, "Waiting for your passkey...");
@@ -214,14 +238,23 @@ async function maybeStartConditionalLogin(statusEl, registerBtn, loginBtn) {
       return;
     }
 
+    const controller = new AbortController();
+    pendingConditionalLoginController = controller;
+
     setStatus(statusEl, "Looking for saved passkeys...");
-    const result = await performLogin({ conditional: true });
+    const result = await performLogin({ conditional: true, signal: controller.signal });
     setStatus(statusEl, "Signed in. Redirecting...");
     window.location.assign(result.redirect || "/");
   } catch (error) {
+    if (isAbortError(error)) {
+      return;
+    }
+
     // Conditional mediation can fail silently; keep manual buttons available.
     if (registerBtn) registerBtn.disabled = false;
     if (loginBtn) loginBtn.disabled = false;
+  } finally {
+    pendingConditionalLoginController = null;
   }
 }
 
