@@ -12,6 +12,7 @@ var englishCatalog = Catalog{
 	"entry.add_trackable":               "Add trackable",
 	"entry.add_trackable_link":          "Add Trackable",
 	"entry.add_trackables":              "Add Trackables",
+	"entry.add":                         "Add entry",
 	"entry.delete_note":                 "Delete note",
 	"entry.filter.placeholder":          "Filter symptoms and activities",
 	"entry.input.label":                 "How are you feeling?",

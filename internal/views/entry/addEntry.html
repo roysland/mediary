@@ -7,7 +7,6 @@
 {{ end }}
 
 {{ define "add_entry_content" }}
-<fieldset>
 
 <form method="post" action="/entry/add"
       hx-post="/entry/add"
@@ -35,5 +34,5 @@ id="entry_submit_button"
             <span class="submit-layer submit-check" aria-hidden="true"></span>
           </button>
 </form>
-</fieldset>
+
 {{ end }}

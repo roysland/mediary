@@ -68,7 +68,7 @@ func TestEntriesRendersDayNavigationAndFiltersBySelectedDay(t *testing.T) {
 	}
 
 	body := rr.Body.String()
-	if !strings.Contains(body, "day-control") {
+	if !strings.Contains(body, "entries-day-nav") {
 		t.Fatalf("expected day navigation to render in entries page")
 	}
 	if !strings.Contains(body, "today timeline note") {

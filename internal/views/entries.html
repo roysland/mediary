@@ -1,10 +1,10 @@
 {{ define "entries_title" }}{{ t "entries.title" }}{{ end }}
 
 {{ define "entries_day_navigation" }}
-<nav class="card">
-    <ul class="day-control">
+<nav class="entries-day-nav">
+    <ul class="entries-day-nav__list">
         {{ range .DayNavigation }}
-        <li>
+        <li class="entries-day-nav__item">
             <a href="/entries?day={{ .Date }}"
                  hx-get="/entries?day={{ .Date }}"
                  hx-target="main.container"
@@ -12,8 +12,8 @@
                  hx-swap="outerHTML"
                  hx-push-url="true"
                  {{ if .IsCurrent }}aria-current="page"{{ end }}>
-                <span class="day-number">{{ .DayNumber }}</span>
-                <span class="day-name">{{ .DayName }}</span>
+                <span class="entries-day-nav__number">{{ .DayNumber }}</span>
+                <span class="entries-day-nav__name">{{ .DayName }}</span>
             </a>
         </li>
         {{ end }}
@@ -22,15 +22,15 @@
 {{ end }}
 
 {{ define "entries_list_content" }}
-<section class="card">
+<section class="entries-list-section">
     {{ if .Entries }}
-    <ul class="entry-list">
+    <ul class="entries-timeline">
         {{ range .Entries }}
             {{ template "entry_item" . }}
         {{ end }}
     </ul>
     {{ else }}
-    <p>{{ t "entry.no_entries" }}</p>
+    <p class="entries-empty">{{ t "entry.no_entries" }}</p>
     {{ end }}
 </section>
 {{ end }}
@@ -52,60 +52,83 @@
     {{ template "entry_trackable_dialog_content" .EntryTrackableDialogData }}
 </dialog>
 
+<a href="/entry/add" class="entries-fab" aria-label="{{ t "entry.add" }}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"/>
+    </svg>
+</a>
+
 {{ end }}
 
 {{ define "entry_item" }}
-<li class="entry-item {{ if .IsPrivate }}entry-item--private{{ end }}" data-id="entry-{{ .ID }}" data-audio-file-path="{{ .AudioFilePath.String }}">
-    <div class="entry-item__header">
-        <div class="entry-meta">
-            <time is="relative-time" datetime="{{ formatISO .RecordedAtUtc }}">{{ formatUnix .RecordedAtUtc }}</time>
-            {{ if ne .EntryDate (formatUnix .RecordedAtUtc | printf "%.10s") }}
-            <div class="entry-date-note">{{ t "entry.logged_for" }} {{ .EntryDate }}</div>
-            {{ end }}
-        </div>
-        {{ if .IsPrivate }}
-        <div class="entry-private-indicator">
-        <img src="/static/security.svg" alt="{{ t "entry.private_entry_alt" }}" class="entry-private-indicator__icon">
-        <span class="entry-private-indicator__label">{{ t "entry.private.label" }}</span>
-        </div>
-        {{ end }}
+<li class="entry-card-li" data-id="entry-{{ .ID }}">
+<mecfs-swipe-dismiss class="entry-card-wrapper{{ if .IsPrivate }} entry-card-wrapper--private{{ end }}" threshold="0.5" direction="right" data-entry-id="{{ .ID }}">
+    <div slot="background" class="entry-card__delete-bg" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        <span>{{ t "entry.delete_note" }}</span>
     </div>
-    {{ if .Trackables }}
-    <ul class="entry-trackables">
-        {{ range .Trackables }}
-        <li>
-            {{ if .Icon }}<span class="icon">{{ .Icon }}</span>{{ end }}
-            <span>{{ .Name }}</span>
-            <strong>{{ .Value }}</strong>
-        </li>
-        {{ end }}
-    </ul>
-    {{ end }}
-    <div class="entry-text">{{ .NoteText.String }}
-        {{ if .AudioFilePath.String }}
-        <audio style="display: block; height: 56px;" controls class="entry-audio">
-            <source src="/{{ .AudioFilePath.String }}" type="audio/webm">
-        </audio>
+    <article class="entry-card">
+        <header class="entry-card__header">
+            <div class="entry-card__meta">
+                <time is="relative-time" class="entry-card__time" datetime="{{ formatISO .RecordedAtUtc }}">{{ formatUnix .RecordedAtUtc }}</time>
+                {{ if ne .EntryDate (formatUnix .RecordedAtUtc | printf "%.10s") }}
+                <span class="entry-card__date-note">{{ t "entry.logged_for" }} {{ .EntryDate }}</span>
+                {{ end }}
+            </div>
+            {{ if .IsPrivate }}
+            <span class="entry-card__private-badge">
+                <img src="/static/security.svg" alt="" aria-hidden="true" class="entry-card__private-icon">
+                <span>{{ t "entry.private.label" }}</span>
+            </span>
+            {{ end }}
+        </header>
+
+        {{ if .Trackables }}
+        <ul class="entry-card__trackables">
+            {{ range .Trackables }}
+            <li class="entry-card__trackable-chip">
+                {{ if .Icon }}<span class="entry-card__trackable-icon" aria-hidden="true">{{ .Icon }}</span>{{ end }}
+                <span class="entry-card__trackable-name">{{ .Name }}</span>
+                <strong class="entry-card__trackable-value">{{ .Value }}</strong>
+            </li>
+            {{ end }}
+        </ul>
         {{ end }}
 
         {{ if .IsDraft }}
-        <span class="voice-draft-badge">
-          {{ if eq .TranscriptionStatus "pending" }}🎙️ Transcribing...{{ end }}
-          {{ if eq .TranscriptionStatus "failed" }}🎙️ Transcription failed{{ end }}
+        <span class="entry-card__draft-badge">
+            {{ if eq .TranscriptionStatus "pending" }}🎙️ Transcribing...{{ end }}
+            {{ if eq .TranscriptionStatus "failed" }}🎙️ Transcription failed{{ end }}
         </span>
-        {{ else if .NoteText.String }}
-        <button id="entry-{{ .ID }}-context-button" type="button" class="button--ghost button--more" popovertarget="entry-{{ .ID }}-context">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M3 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm5-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4-1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-            </svg>
-        </button>
-        <div class="entry-actions entry-actions--column flex col" popover id="entry-{{ .ID }}-context" anchor="entry-{{ .ID}}-context-button" data-placement="left">
-        <button type="button" class="button--ghost button--sm edit-note-button" data-entry-id="{{ .ID }}">{{ t "entry.add_trackable" }}</button>
-        <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
-        </div>
         {{ else }}
-        <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
+        <div class="entry-card__body">
+            {{ if .NoteText.String }}
+            <p class="entry-card__note">{{ .NoteText.String }}</p>
+            {{ end }}
+            {{ if .AudioFilePath.String }}
+            <audio controls class="entry-card__audio">
+                <source src="/{{ .AudioFilePath.String }}" type="audio/webm">
+            </audio>
+            {{ end }}
+            <div class="entry-card__actions">
+                {{ if .NoteText.String }}
+                <button id="entry-{{ .ID }}-context-button" type="button" class="button--ghost button--sm entry-card__more-btn" popovertarget="entry-{{ .ID }}-context">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M3 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm5-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4-1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                    </svg>
+                    <span class="visually-hidden">{{ t "entry.add_trackable" }}</span>
+                </button>
+                <div class="entry-card__context-menu flex col" popover id="entry-{{ .ID }}-context" anchor="entry-{{ .ID }}-context-button" data-placement="left">
+                    <button type="button" class="button--ghost button--sm edit-note-button" data-entry-id="{{ .ID }}">{{ t "entry.add_trackable" }}</button>
+                    <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
+                </div>
+                {{ else }}
+                <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
+                {{ end }}
+            </div>
+        </div>
         {{ end }}
-    </div>
+    </article>
+</mecfs-swipe-dismiss>
 </li>
 {{ end }}

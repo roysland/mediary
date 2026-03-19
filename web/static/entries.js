@@ -73,6 +73,55 @@ function setDialogEntryId(dialog, entryId) {
 function initEntriesInteractions() {
   scrollDayControl();
 
+  // Swipe-to-delete: mecfs-swipe-dismiss fires "swipedismiss" when threshold met.
+  document.body.addEventListener("swipedismiss", (event) => {
+    const wrapper = event.target.closest(".entry-card-wrapper");
+    if (!wrapper) return;
+
+    const entryId = Number(wrapper.dataset.entryId);
+    if (!Number.isFinite(entryId) || entryId <= 0) return;
+
+    const messages = getEntriesMessages();
+    const confirmed = window.confirm(messages.deleteConfirm);
+
+    if (!confirmed) {
+      // Reset the swipe animation so card slides back into place.
+      const foreground = wrapper.querySelector(":not([slot=background])");
+      if (foreground instanceof HTMLElement) {
+        foreground.style.transition = "transform 180ms ease";
+        foreground.style.transform = "translateX(0)";
+      }
+      return;
+    }
+
+    fetch(`/entry/${entryId}/delete`, {
+      method: "POST",
+      headers: { "HX-Request": "true" },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          window.alert(messages.deleteFailed);
+          const foreground = wrapper.querySelector(":not([slot=background])");
+          if (foreground instanceof HTMLElement) {
+            foreground.style.transition = "transform 180ms ease";
+            foreground.style.transform = "translateX(0)";
+          }
+          return;
+        }
+        const li = wrapper.closest("[data-id]");
+        if (li) li.remove();
+      })
+      .catch((error) => {
+        console.error("Error deleting entry:", error);
+        window.alert(messages.deleteError);
+        const foreground = wrapper.querySelector(":not([slot=background])");
+        if (foreground instanceof HTMLElement) {
+          foreground.style.transition = "transform 180ms ease";
+          foreground.style.transform = "translateX(0)";
+        }
+      });
+  });
+
   document.body.addEventListener("click", (event) => {
     const trigger = event.target.closest(".edit-note-button");
     if (!trigger) {
