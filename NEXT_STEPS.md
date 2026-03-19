@@ -1,5 +1,9 @@
 ## Remaining Follow-ups
 
+- Add production deployment docs for Docker on VPS.
+	Why: The project now has a Dockerfile, but operators still need a canonical deploy recipe (volume mapping, env vars, restart policy, reverse-proxy/HTTPS expectations).
+	How: Add a concise section in `readme.md` (or `docs/deployment.md`) with `docker build`, `docker run`, required env vars (`AUTH_SESSION_SECRET`, `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_ORIGINS`), and an example behind Caddy/Nginx.
+
 - Coordinate git-history cleanup for prior runtime artifacts.
 	Why: Artifacts are no longer tracked in current commits, but old history still contains paths such as `server`, `tmp/app`, and `data/app.db`.
 	How: Align with collaborators, then run `git filter-repo --path server --path tmp/app --path data/app.db --invert-paths` and force-push with clear migration instructions.

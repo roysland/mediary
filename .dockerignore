@@ -1,0 +1,18 @@
+.git
+.gitignore
+.vscode
+
+# Build/test artifacts
+server
+tmp/
+
+# Local runtime data
+data/
+
+# Docs and planning notes not needed in image
+AGENTS.md
+IMPROVEMENTS.md
+NEXT_STEPS.md
+thoughts.md
+todo.md
+open
