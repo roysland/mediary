@@ -23,3 +23,7 @@
 - Guard against duplicate voice-recorder event listeners after HTMX swaps.
 	Why: `initVoiceRecorder` is called on every `htmx:afterSwap` and currently attaches new click listeners each time for the same DOM nodes, which can trigger multiple recorder/upload flows from one click.
 	How: Make initialization idempotent by marking the section as bound (for example with `data-voice-bound="1"`) or by removing/replacing existing listeners before adding new ones.
+
+- Verify `CrossOriginProtection` behavior behind reverse proxies and multi-host deployments.
+	Why: CSRF checks depend on request host/origin matching. If TLS termination or host rewriting is misconfigured, legitimate same-origin writes may be rejected or protection may not match intended public origins.
+	How: In staging/prod, validate `Origin` and `Host` handling end-to-end and add explicit trusted origins via `AddTrustedOrigin` if traffic comes through alternate public domains.

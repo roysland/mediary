@@ -40,6 +40,10 @@ func respondUnauthorized(w http.ResponseWriter, r *http.Request) {
 	respondError(w, r, http.StatusUnauthorized, "Unauthorized")
 }
 
+func respondForbidden(w http.ResponseWriter, r *http.Request, message string) {
+	respondError(w, r, http.StatusForbidden, message)
+}
+
 func respondNotFound(w http.ResponseWriter, r *http.Request, message string) {
 	respondError(w, r, http.StatusNotFound, message)
 }

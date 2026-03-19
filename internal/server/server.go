@@ -19,6 +19,7 @@ import (
 
 type Server struct {
 	mux                 *http.ServeMux
+	handler             http.Handler
 	templates           *template.Template
 	templatesByLocale   map[string]*template.Template
 	devMode             bool
@@ -121,5 +122,17 @@ func (s *Server) loadTemplates(locale string) (*template.Template, error) {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
+	if s.handler == nil {
+		s.handler = withCrossOriginProtection(s.mux)
+	}
+	s.handler.ServeHTTP(w, r)
+}
+
+func withCrossOriginProtection(next http.Handler) http.Handler {
+	protection := http.NewCrossOriginProtection()
+	protection.SetDenyHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		respondForbidden(w, r, "Forbidden")
+	}))
+
+	return protection.Handler(next)
 }
