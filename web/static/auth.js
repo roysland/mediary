@@ -6,7 +6,12 @@ function base64UrlToBytes(value) {
 }
 
 function bytesToBase64Url(bytes) {
-  const value = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+  const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let binary = "";
+  for (let i = 0; i < uint8.length; i++) {
+    binary += String.fromCharCode(uint8[i]);
+  }
+  const value = btoa(binary);
   return value.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
