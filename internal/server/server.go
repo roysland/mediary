@@ -123,13 +123,18 @@ func (s *Server) loadTemplates(locale string) (*template.Template, error) {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.handler == nil {
-		s.handler = withCrossOriginProtection(s.mux)
+		s.handler = withCrossOriginProtection(s.mux, s.cfg)
 	}
 	s.handler.ServeHTTP(w, r)
 }
 
-func withCrossOriginProtection(next http.Handler) http.Handler {
+func withCrossOriginProtection(next http.Handler, cfg Config) http.Handler {
 	protection := http.NewCrossOriginProtection()
+	for _, origin := range cfg.CSRFTrustedOrigins {
+		if err := protection.AddTrustedOrigin(origin); err != nil {
+			log.Printf("warning: invalid CSRF trusted origin %q: %v", origin, err)
+		}
+	}
 	protection.SetDenyHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		respondForbidden(w, r, "Forbidden")
 	}))

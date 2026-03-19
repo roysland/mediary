@@ -30,5 +30,5 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/trackables/{id}", s.registerTrackable)
 
 	// Wrap all routes once so CSRF checks apply uniformly.
-	s.handler = withCrossOriginProtection(s.mux)
+	s.handler = withCrossOriginProtection(s.mux, s.cfg)
 }

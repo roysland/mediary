@@ -3,6 +3,7 @@ package server
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Config holds the server configuration loaded from environment variables.
@@ -27,6 +28,10 @@ type Config struct {
 	// TranscriptionTimeoutSeconds is the maximum time allowed for a single
 	// transcription job (ffmpeg + whisper). Defaults to 120.
 	TranscriptionTimeoutSeconds int
+
+	// CSRFTrustedOrigins lists additional origins allowed for cross-origin write
+	// requests when using net/http CrossOriginProtection.
+	CSRFTrustedOrigins []string
 }
 
 // LoadConfig loads configuration from environment variables with sensible defaults.
@@ -40,6 +45,7 @@ func LoadConfig() Config {
 		WhisperModelPath:            getEnv("WHISPER_MODEL_PATH", ""),
 		FFmpegBinaryPath:            getEnv("FFMPEG_BINARY_PATH", "ffmpeg"),
 		TranscriptionTimeoutSeconds: getEnvInt("TRANSCRIPTION_TIMEOUT_SECONDS", 120),
+		CSRFTrustedOrigins:          getEnvCSV("CSRF_TRUSTED_ORIGINS"),
 	}
 	return cfg
 }
@@ -60,4 +66,29 @@ func getEnvInt(key string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+// getEnvCSV splits a comma-separated environment variable into trimmed values.
+// Empty items are discarded.
+func getEnvCSV(key string) []string {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return nil
+	}
+
+	parts := strings.Split(raw, ",")
+	values := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed == "" {
+			continue
+		}
+		values = append(values, trimmed)
+	}
+
+	if len(values) == 0 {
+		return nil
+	}
+
+	return values
 }
