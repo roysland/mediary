@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -259,7 +260,8 @@ func (s *Server) finishLogin(w http.ResponseWriter, r *http.Request) {
 		r,
 	)
 	if err != nil {
-		respondBadRequest(w, r, fmt.Sprintf("Invalid login response: %v", err))
+		log.Printf("webauthn login failed: %v", err)
+		respondBadRequest(w, r, "Invalid login response")
 		return
 	}
 
