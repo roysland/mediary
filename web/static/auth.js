@@ -167,8 +167,8 @@ function initAuthPage() {
 
   registerBtn?.addEventListener("click", async () => {
     try {
-      registerBtn.disabled = true;
-      loginBtn.disabled = true;
+      if (registerBtn) registerBtn.disabled = true;
+      if (loginBtn) loginBtn.disabled = true;
       setStatus(statusEl, "Creating passkey...");
       const deviceName = deviceNameInput?.value?.trim() || "";
 
@@ -178,15 +178,15 @@ function initAuthPage() {
     } catch (error) {
       setStatus(statusEl, error.message || "Failed to create passkey", true);
     } finally {
-      registerBtn.disabled = false;
-      loginBtn.disabled = false;
+      if (registerBtn) registerBtn.disabled = false;
+      if (loginBtn) loginBtn.disabled = false;
     }
   });
 
   loginBtn?.addEventListener("click", async () => {
     try {
-      registerBtn.disabled = true;
-      loginBtn.disabled = true;
+      if (registerBtn) registerBtn.disabled = true;
+      if (loginBtn) loginBtn.disabled = true;
       setStatus(statusEl, "Waiting for your passkey...");
 
       const result = await performLogin();
@@ -195,8 +195,8 @@ function initAuthPage() {
     } catch (error) {
       setStatus(statusEl, error.message || "Failed to sign in", true);
     } finally {
-      registerBtn.disabled = false;
-      loginBtn.disabled = false;
+      if (registerBtn) registerBtn.disabled = false;
+      if (loginBtn) loginBtn.disabled = false;
     }
   });
 
@@ -220,8 +220,8 @@ async function maybeStartConditionalLogin(statusEl, registerBtn, loginBtn) {
     window.location.assign(result.redirect || "/");
   } catch (error) {
     // Conditional mediation can fail silently; keep manual buttons available.
-    registerBtn.disabled = false;
-    loginBtn.disabled = false;
+    if (registerBtn) registerBtn.disabled = false;
+    if (loginBtn) loginBtn.disabled = false;
   }
 }
 
