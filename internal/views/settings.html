@@ -47,6 +47,10 @@
     <p>{{ t "settings.passkeys.description" }}</p>
     <button type="button" class="button" data-auth-add-passkey>{{ t "settings.passkeys.add" }}</button>
     <p class="auth-status" data-auth-passkey-status aria-live="polite"></p>
+
+    <form action="/auth/logout" method="post">
+        <button type="submit" class="button button--ghost">{{ t "settings.passkeys.logout_other" }}</button>
+    </form>
 </fieldset>
 
 <fieldset>

@@ -265,11 +265,12 @@ INSERT INTO webauthn_credentials (
     credential_id,
     public_key,
     sign_count,
+    flags,
     transports,
     created_at_utc
 )
-VALUES (?, ?, ?, ?, ?, ?)
-RETURNING id, user_id, credential_id, public_key, sign_count, transports, created_at_utc
+VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING id, user_id, credential_id, public_key, sign_count, flags, transports, created_at_utc
 `
 
 type CreateWebauthnCredentialParams struct {
@@ -277,6 +278,7 @@ type CreateWebauthnCredentialParams struct {
 	CredentialID []byte         `json:"credential_id"`
 	PublicKey    []byte         `json:"public_key"`
 	SignCount    int64          `json:"sign_count"`
+	Flags        sql.NullString `json:"flags"`
 	Transports   sql.NullString `json:"transports"`
 	CreatedAtUtc int64          `json:"created_at_utc"`
 }
@@ -287,6 +289,7 @@ func (q *Queries) CreateWebauthnCredential(ctx context.Context, arg CreateWebaut
 		arg.CredentialID,
 		arg.PublicKey,
 		arg.SignCount,
+		arg.Flags,
 		arg.Transports,
 		arg.CreatedAtUtc,
 	)
@@ -297,6 +300,7 @@ func (q *Queries) CreateWebauthnCredential(ctx context.Context, arg CreateWebaut
 		&i.CredentialID,
 		&i.PublicKey,
 		&i.SignCount,
+		&i.Flags,
 		&i.Transports,
 		&i.CreatedAtUtc,
 	)
@@ -1210,7 +1214,7 @@ func (q *Queries) ListTrackableValuesByUser(ctx context.Context, userID int64) (
 }
 
 const listWebauthnCredentialsByUser = `-- name: ListWebauthnCredentialsByUser :many
-SELECT id, user_id, credential_id, public_key, sign_count, transports, created_at_utc
+SELECT id, user_id, credential_id, public_key, sign_count, flags, transports, created_at_utc
 FROM webauthn_credentials
 WHERE user_id = ?
 ORDER BY created_at_utc DESC
@@ -1231,6 +1235,7 @@ func (q *Queries) ListWebauthnCredentialsByUser(ctx context.Context, userID int6
 			&i.CredentialID,
 			&i.PublicKey,
 			&i.SignCount,
+			&i.Flags,
 			&i.Transports,
 			&i.CreatedAtUtc,
 		); err != nil {

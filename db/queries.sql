@@ -317,10 +317,11 @@ INSERT INTO webauthn_credentials (
     credential_id,
     public_key,
     sign_count,
+    flags,
     transports,
     created_at_utc
 )
-VALUES (?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 -- name: UpdateWebauthnCredentialSignCount :exec

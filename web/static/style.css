@@ -400,10 +400,6 @@ label {
   margin: 0;
 }
 
-.trackable-picker .textinput {
-  display: flex;
-  flex-direction: column;
-}
 
 .trackable-picker form {
   margin: 0;

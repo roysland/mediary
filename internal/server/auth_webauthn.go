@@ -65,6 +65,7 @@ func (u webauthnUser) WebAuthnCredentials() []webauthnlib.Credential {
 			Authenticator: webauthnlib.Authenticator{
 				SignCount: uint32(cred.SignCount),
 			},
+			Flags: parseCredentialFlags(cred.Flags),
 		})
 	}
 
@@ -258,7 +259,7 @@ func (s *Server) finishLogin(w http.ResponseWriter, r *http.Request) {
 		r,
 	)
 	if err != nil {
-		respondBadRequest(w, r, "Invalid passkey login response")
+		respondBadRequest(w, r, fmt.Sprintf("Invalid login response: %v", err))
 		return
 	}
 
@@ -446,12 +447,12 @@ func (s *Server) consumeCeremony(w http.ResponseWriter, r *http.Request, expecte
 func (s *Server) resolveDiscoverableUser(rawID, userHandle []byte) (webauthnlib.User, error) {
 	user, err := s.queries.GetUserByWebauthnUserID(context.Background(), userHandle)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user not found by handle: %w", err)
 	}
 
 	loaded, err := s.loadWebauthnUser(context.Background(), user.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load user credentials: %w", err)
 	}
 
 	for _, credential := range loaded.credentials {
@@ -460,7 +461,7 @@ func (s *Server) resolveDiscoverableUser(rawID, userHandle []byte) (webauthnlib.
 		}
 	}
 
-	return nil, errors.New("credential not found for user")
+	return nil, fmt.Errorf("credential ID %x not found in user's credentials", rawID)
 }
 
 func (s *Server) loadWebauthnUser(ctx context.Context, userID int64) (webauthnUser, error) {
@@ -482,12 +483,18 @@ func (s *Server) storeCredential(ctx context.Context, userID int64, credential *
 		return errors.New("credential is nil")
 	}
 
-	_, err := s.queries.CreateWebauthnCredential(ctx, db.CreateWebauthnCredentialParams{
+	flagsJSON, err := json.Marshal(credential.Flags)
+	if err != nil {
+		return fmt.Errorf("marshal flags: %w", err)
+	}
+
+	_, err = s.queries.CreateWebauthnCredential(ctx, db.CreateWebauthnCredentialParams{
 		UserID:       userID,
 		CredentialID: credential.ID,
 		PublicKey:    credential.PublicKey,
 		SignCount:    int64(credential.Authenticator.SignCount),
 		Transports:   encodeTransportList(credential.Transport),
+		Flags:        sql.NullString{String: string(flagsJSON), Valid: true},
 		CreatedAtUtc: time.Now().Unix(),
 	})
 	if err != nil {
@@ -546,4 +553,17 @@ func encodeTransportList(transports []protocol.AuthenticatorTransport) sql.NullS
 	}
 
 	return sql.NullString{String: string(encoded), Valid: true}
+}
+
+func parseCredentialFlags(raw sql.NullString) webauthnlib.CredentialFlags {
+	if !raw.Valid || strings.TrimSpace(raw.String) == "" {
+		return webauthnlib.CredentialFlags{}
+	}
+
+	var flags webauthnlib.CredentialFlags
+	if err := json.Unmarshal([]byte(raw.String), &flags); err != nil {
+		return webauthnlib.CredentialFlags{}
+	}
+
+	return flags
 }

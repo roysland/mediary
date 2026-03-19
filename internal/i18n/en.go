@@ -55,6 +55,7 @@ var englishCatalog = Catalog{
 	"settings.language.norwegian":              "Norwegian",
 	"settings.passkeys.add":                    "Add another passkey",
 	"settings.passkeys.description":            "Register another passkey for a second device or backup authenticator.",
+	"settings.passkeys.logout_other":           "Log out on other devices",
 	"settings.passkeys.title":                  "Passkeys",
 	"settings.screen_lock.10_minutes":          "After 10 minutes",
 	"settings.screen_lock.1_minute":            "After 1 minute",

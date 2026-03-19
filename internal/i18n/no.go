@@ -55,6 +55,7 @@ var norwegianCatalog = Catalog{
 	"settings.language.norwegian":              "Norsk",
 	"settings.passkeys.add":                    "Legg til en passnokkel til",
 	"settings.passkeys.description":            "Registrer en ekstra passnokkel for en annen enhet eller reserveautentikator.",
+	"settings.passkeys.logout_other":           "Logg ut på andre enheter",
 	"settings.passkeys.title":                  "Passnokler",
 	"settings.screen_lock.10_minutes":          "Etter 10 minutter",
 	"settings.screen_lock.1_minute":            "Etter 1 minutt",
