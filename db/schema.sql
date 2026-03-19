@@ -29,6 +29,20 @@ CREATE TABLE IF NOT EXISTS webauthn_credentials (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS device_link_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    token_hash BLOB NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL,
+
+    expires_at_utc INTEGER NOT NULL,
+    redeemed_at_utc INTEGER,
+    used_at_utc INTEGER,
+    created_at_utc INTEGER NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -190,6 +204,12 @@ ON trackable_values(trackable_definition_id);
 
 CREATE INDEX IF NOT EXISTS idx_trackable_daily_dismissals_user_date
 ON trackable_daily_dismissals(user_id, dismissal_date);
+
+CREATE INDEX IF NOT EXISTS idx_device_link_tokens_user
+ON device_link_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_device_link_tokens_expires
+ON device_link_tokens(expires_at_utc);
 
 INSERT OR IGNORE INTO trackable_templates
 (name, value_type, unit, min_value, max_value, icon, is_sensitive, private_label, custom_control_type, category, created_at_utc)

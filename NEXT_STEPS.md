@@ -176,3 +176,7 @@
 
 	“Link expired, generate a new one”
 
+- Add explicit approval step on the original device for QR link redemption.
+	Why: QR-based linking is now implemented with short-lived, single-use, high-entropy tokens, but a photographed QR can still be redeemed by a third party before the user completes enrollment.
+	How: Introduce a `pending` link status plus an approval prompt on the currently signed-in device. Allow `/auth/passkeys/register/options` on the new device only after approval, and expire pending links quickly.
+

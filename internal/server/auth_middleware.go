@@ -56,6 +56,16 @@ func isPublicRoute(path string) bool {
 		return true
 	case path == "/webauthn/register/verify":
 		return true
+	case path == "/webauthn/passkeys/options":
+		return true
+	case path == "/webauthn/passkeys/verify":
+		return true
+	case path == "/auth/passkeys/register/options":
+		return true
+	case path == "/auth/passkeys/register/verify":
+		return true
+	case path == "/link":
+		return true
 	case path == "/static/", path == "/favicon.ico":
 		return true
 	case len(path) >= len("/static/") && path[:len("/static/")] == "/static/":
@@ -63,10 +73,4 @@ func isPublicRoute(path string) bool {
 	default:
 		return false
 	}
-}
-
-func respondUnauthorized(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusUnauthorized)
-	_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 }

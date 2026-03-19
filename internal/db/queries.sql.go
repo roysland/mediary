@@ -10,6 +10,44 @@ import (
 	"database/sql"
 )
 
+const createDeviceLinkToken = `-- name: CreateDeviceLinkToken :one
+INSERT INTO device_link_tokens (
+        token_hash,
+        user_id,
+        expires_at_utc,
+        created_at_utc
+)
+VALUES (?, ?, ?, ?)
+RETURNING id, token_hash, user_id, expires_at_utc, redeemed_at_utc, used_at_utc, created_at_utc
+`
+
+type CreateDeviceLinkTokenParams struct {
+	TokenHash    []byte `json:"token_hash"`
+	UserID       int64  `json:"user_id"`
+	ExpiresAtUtc int64  `json:"expires_at_utc"`
+	CreatedAtUtc int64  `json:"created_at_utc"`
+}
+
+func (q *Queries) CreateDeviceLinkToken(ctx context.Context, arg CreateDeviceLinkTokenParams) (DeviceLinkToken, error) {
+	row := q.db.QueryRowContext(ctx, createDeviceLinkToken,
+		arg.TokenHash,
+		arg.UserID,
+		arg.ExpiresAtUtc,
+		arg.CreatedAtUtc,
+	)
+	var i DeviceLinkToken
+	err := row.Scan(
+		&i.ID,
+		&i.TokenHash,
+		&i.UserID,
+		&i.ExpiresAtUtc,
+		&i.RedeemedAtUtc,
+		&i.UsedAtUtc,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
 const createDraftEntry = `-- name: CreateDraftEntry :one
 INSERT INTO entries (
     user_id,
@@ -1262,6 +1300,29 @@ func (q *Queries) ListWebauthnCredentialsByUser(ctx context.Context, userID int6
 	return items, nil
 }
 
+const markDeviceLinkTokenUsed = `-- name: MarkDeviceLinkTokenUsed :execrows
+UPDATE device_link_tokens
+SET used_at_utc = ?1
+WHERE id = ?2
+    AND user_id = ?3
+    AND redeemed_at_utc IS NOT NULL
+    AND used_at_utc IS NULL
+`
+
+type MarkDeviceLinkTokenUsedParams struct {
+	UsedAtUtc sql.NullInt64 `json:"used_at_utc"`
+	TokenID   int64         `json:"token_id"`
+	UserID    int64         `json:"user_id"`
+}
+
+func (q *Queries) MarkDeviceLinkTokenUsed(ctx context.Context, arg MarkDeviceLinkTokenUsedParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, markDeviceLinkTokenUsed, arg.UsedAtUtc, arg.TokenID, arg.UserID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const markTranscriptionFailed = `-- name: MarkTranscriptionFailed :exec
 UPDATE entries
 SET transcription_status = 'failed'
@@ -1271,6 +1332,37 @@ WHERE id = ?
 func (q *Queries) MarkTranscriptionFailed(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, markTranscriptionFailed, id)
 	return err
+}
+
+const redeemDeviceLinkToken = `-- name: RedeemDeviceLinkToken :one
+UPDATE device_link_tokens
+SET redeemed_at_utc = ?1
+WHERE token_hash = ?2
+    AND expires_at_utc > ?3
+    AND redeemed_at_utc IS NULL
+    AND used_at_utc IS NULL
+RETURNING id, token_hash, user_id, expires_at_utc, redeemed_at_utc, used_at_utc, created_at_utc
+`
+
+type RedeemDeviceLinkTokenParams struct {
+	RedeemedAtUtc sql.NullInt64 `json:"redeemed_at_utc"`
+	TokenHash     []byte        `json:"token_hash"`
+	NowUtc        int64         `json:"now_utc"`
+}
+
+func (q *Queries) RedeemDeviceLinkToken(ctx context.Context, arg RedeemDeviceLinkTokenParams) (DeviceLinkToken, error) {
+	row := q.db.QueryRowContext(ctx, redeemDeviceLinkToken, arg.RedeemedAtUtc, arg.TokenHash, arg.NowUtc)
+	var i DeviceLinkToken
+	err := row.Scan(
+		&i.ID,
+		&i.TokenHash,
+		&i.UserID,
+		&i.ExpiresAtUtc,
+		&i.RedeemedAtUtc,
+		&i.UsedAtUtc,
+		&i.CreatedAtUtc,
+	)
+	return i, err
 }
 
 const updateEntryTranscription = `-- name: UpdateEntryTranscription :exec
