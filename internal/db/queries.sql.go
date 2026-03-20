@@ -1371,6 +1371,45 @@ func (q *Queries) RedeemDeviceLinkToken(ctx context.Context, arg RedeemDeviceLin
 	return i, err
 }
 
+const updateEntryText = `-- name: UpdateEntryText :one
+UPDATE entries
+SET note_text = ?,
+    is_private = ?
+WHERE id = ? AND user_id = ?
+RETURNING id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, is_draft, audio_file_path, transcription_status, created_at_utc
+`
+
+type UpdateEntryTextParams struct {
+	NoteText  sql.NullString `json:"note_text"`
+	IsPrivate int64          `json:"is_private"`
+	ID        int64          `json:"id"`
+	UserID    int64          `json:"user_id"`
+}
+
+func (q *Queries) UpdateEntryText(ctx context.Context, arg UpdateEntryTextParams) (Entry, error) {
+	row := q.db.QueryRowContext(ctx, updateEntryText,
+		arg.NoteText,
+		arg.IsPrivate,
+		arg.ID,
+		arg.UserID,
+	)
+	var i Entry
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.RecordedAtUtc,
+		&i.TimezoneOffsetMinutes,
+		&i.EntryDate,
+		&i.NoteText,
+		&i.IsPrivate,
+		&i.IsDraft,
+		&i.AudioFilePath,
+		&i.TranscriptionStatus,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
 const updateEntryTranscription = `-- name: UpdateEntryTranscription :exec
 UPDATE entries
 SET note_text = ?,

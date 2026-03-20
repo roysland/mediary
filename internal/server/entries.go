@@ -110,6 +110,7 @@ func (s *Server) entries(w http.ResponseWriter, r *http.Request) {
 		"SelectedDay":              selectedDayStr,
 		"TodayStr":                 todayStr,
 		"DayNavigation":            buildDayNavigation(selectedDay, now),
+		"AddEntryForm":             buildEntryFormViewData("/entry/add", selectedDayStr, todayStr, true, true, true),
 		"EntryTrackableDialogData": entryTrackableDialogData,
 	})
 }
@@ -230,7 +231,20 @@ func (s *Server) addEntry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodGet {
-		s.renderPage(w, r, "entries_add_title", "entries_add_content", nil)
+		now := time.Now()
+		selectedDay, err := parseSelectedDay(r.URL.Query().Get("day"), now)
+		if err != nil {
+			log.Printf("Invalid day format: %v", err)
+			respondBadRequest(w, r, "Invalid day format")
+			return
+		}
+
+		selectedDayStr := selectedDay.Format(dateLayoutISO)
+		todayStr := now.Format(dateLayoutISO)
+
+		s.renderPage(w, r, "entries_add_title", "entries_add_content", map[string]interface{}{
+			"AddEntryForm": buildEntryFormViewData("/entry/add", selectedDayStr, todayStr, true, false, false),
+		})
 		return
 	}
 
@@ -250,6 +264,22 @@ func (s *Server) addEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	entryDate, err := resolveEntryDate(r.FormValue("entry_date"), now)
+	if err != nil {
+		respondBadRequest(w, r, "Invalid entry_date")
+		return
+	}
+
+	editEntryID, err := optionalInt64(r.FormValue("entry_id"), "entry_id")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+	if editEntryID.Valid && editEntryID.Int64 <= 0 {
+		respondBadRequest(w, r, "entry_id must be positive")
+		return
+	}
+
 	isPrivate, err := checkboxToInt64(r.FormValue("is_private_entry"), "is_private_entry")
 	if err != nil {
 		respondBadRequest(w, r, err.Error())
@@ -257,13 +287,32 @@ func (s *Server) addEntry(w http.ResponseWriter, r *http.Request) {
 	}
 	noteText := sql.NullString{String: note, Valid: note != ""}
 
-	entry, err := s.createEntry(r.Context(), userID, now, noteText, isPrivate)
-	if err != nil {
-		log.Printf("Failed to create entry: %v", err)
-		respondInternalError(w, r, "Failed to save entry")
-		return
+	var entry db.Entry
+	if editEntryID.Valid {
+		entry, err = s.queries.UpdateEntryText(r.Context(), db.UpdateEntryTextParams{
+			NoteText:  noteText,
+			IsPrivate: isPrivate,
+			ID:        editEntryID.Int64,
+			UserID:    userID,
+		})
+		if errors.Is(err, sql.ErrNoRows) {
+			respondNotFound(w, r, "Entry not found")
+			return
+		}
+		if err != nil {
+			log.Printf("Failed to update entry %d via addEntry flow: %v", editEntryID.Int64, err)
+			respondInternalError(w, r, "Failed to save entry")
+			return
+		}
+	} else {
+		entry, err = s.createEntry(r.Context(), userID, now, entryDate, noteText, isPrivate)
+		if err != nil {
+			log.Printf("Failed to create entry: %v", err)
+			respondInternalError(w, r, "Failed to save entry")
+			return
+		}
+		log.Printf("Created entry: %+v", entry)
 	}
-	log.Printf("Created entry: %+v", entry)
 	if s.devMode {
 		time.Sleep(devAddEntryDelay)
 	}
@@ -272,5 +321,60 @@ func (s *Server) addEntry(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	http.Redirect(w, r, "/entries", http.StatusSeeOther)
+	http.Redirect(w, r, "/entries?day="+entry.EntryDate, http.StatusSeeOther)
+}
+
+func (s *Server) editEntry(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+
+	entryID, ok := requirePathInt64(w, r, "id", "entry ID")
+	if !ok {
+		return
+	}
+
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+
+	if !requireParsedForm(w, r) {
+		return
+	}
+
+	note, err := requireNonEmpty(r.FormValue("entry_input"), "entry_input")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	isPrivate, err := checkboxToInt64(r.FormValue("is_private_entry"), "is_private_entry")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	entry, err := s.queries.UpdateEntryText(r.Context(), db.UpdateEntryTextParams{
+		NoteText:  sql.NullString{String: note, Valid: note != ""},
+		IsPrivate: isPrivate,
+		ID:        entryID,
+		UserID:    userID,
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		respondNotFound(w, r, "Entry not found")
+		return
+	}
+	if err != nil {
+		log.Printf("Failed to update entry %d: %v", entryID, err)
+		respondInternalError(w, r, "Failed to update entry")
+		return
+	}
+
+	if classifyRequest(r).IsHTMX {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	http.Redirect(w, r, "/entries?day="+entry.EntryDate, http.StatusSeeOther)
 }

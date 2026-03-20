@@ -45,6 +45,7 @@ type Querier interface {
 	MarkDeviceLinkTokenUsed(ctx context.Context, arg MarkDeviceLinkTokenUsedParams) (int64, error)
 	MarkTranscriptionFailed(ctx context.Context, id int64) error
 	RedeemDeviceLinkToken(ctx context.Context, arg RedeemDeviceLinkTokenParams) (DeviceLinkToken, error)
+	UpdateEntryText(ctx context.Context, arg UpdateEntryTextParams) (Entry, error)
 	UpdateEntryTranscription(ctx context.Context, arg UpdateEntryTranscriptionParams) error
 	UpdateTrackableValueInt(ctx context.Context, arg UpdateTrackableValueIntParams) (TrackableValue, error)
 	UpdateTrackableValueText(ctx context.Context, arg UpdateTrackableValueTextParams) (TrackableValue, error)

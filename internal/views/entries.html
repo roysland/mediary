@@ -40,6 +40,9 @@
         data-delete-confirm="{{ t "entries.delete.confirm" }}"
         data-delete-failed="{{ t "entries.delete.failed" }}"
         data-delete-error="{{ t "entries.delete.error" }}"
+        data-entry-add-title="{{ t "entry.add" }}"
+        data-entry-add-text-title="{{ t "entry.add_text" }}"
+        data-entry-edit-text-title="{{ t "entry.edit_text" }}"
         hidden
     ></div>
 
@@ -59,11 +62,31 @@
 
     {{ template "entries_list_content" . }}
 
+    <dialog
+        id="entry-note-dialog"
+        class="sheet"
+        data-entry-note-dialog
+        data-default-action="{{ .AddEntryForm.FormAction }}"
+        data-default-entry-date="{{ .AddEntryForm.EntryDate }}"
+        data-today-str="{{ .TodayStr }}"
+    >
+        <div class="entry-note-dialog">
+            <div class="entry-trackable-dialog__header">
+                <h2 data-entry-note-dialog-title>{{ t "entry.add" }}</h2>
+                <form method="dialog">
+                    <button type="submit" class="button--ghost">{{ t "common.close" }}</button>
+                </form>
+            </div>
+
+            {{ template "add_entry_content" .AddEntryForm }}
+        </div>
+    </dialog>
+
     <dialog id="add-quick-trackable-dialog" class="sheet">
         {{ template "entry_trackable_dialog_content" .EntryTrackableDialogData }}
     </dialog>
 
-    <a href="/entry/add" class="entries-fab" aria-label="{{ t "entry.add" }}">
+    <a href="/entry/add?day={{ .SelectedDay }}" class="entries-fab" aria-label="{{ t "entry.add" }}" data-open-entry-dialog>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 5v14M5 12h14"/>
         </svg>
@@ -117,26 +140,34 @@
             {{ if .NoteText.String }}
             <p class="entry-card__note">{{ .NoteText.String }}</p>
             {{ end }}
+            <textarea id="entry-{{ .ID }}-note-source" hidden>{{ .NoteText.String }}</textarea>
             {{ if .AudioFilePath.String }}
             <audio controls class="entry-card__audio">
                 <source src="/{{ .AudioFilePath.String }}" type="audio/webm">
             </audio>
             {{ end }}
             <div class="entry-card__actions">
-                {{ if .NoteText.String }}
                 <button id="entry-{{ .ID }}-context-button" type="button" class="button--ghost button--sm entry-card__more-btn" popovertarget="entry-{{ .ID }}-context">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
                         <path d="M3 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm5-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4-1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
                     </svg>
-                    <span class="visually-hidden">{{ t "entry.add_trackable" }}</span>
+                    <span class="visually-hidden">{{ t "entry.more_actions" }}</span>
                 </button>
                 <div class="entry-card__context-menu flex col" popover id="entry-{{ .ID }}-context" anchor="entry-{{ .ID }}-context-button" data-placement="left">
-                    <button type="button" class="button--ghost button--sm edit-note-button" data-entry-id="{{ .ID }}">{{ t "entry.add_trackable" }}</button>
+                    <button
+                        type="button"
+                        class="button--ghost button--sm edit-entry-button"
+                        data-entry-id="{{ .ID }}"
+                        data-entry-date="{{ .EntryDate }}"
+                        data-entry-private="{{ if .IsPrivate }}true{{ else }}false{{ end }}"
+                        data-entry-has-note="{{ if .NoteText.String }}true{{ else }}false{{ end }}"
+                        data-entry-note-source="entry-{{ .ID }}-note-source"
+                    >
+                        {{ if .NoteText.String }}{{ t "entry.edit_text" }}{{ else }}{{ t "entry.add_text" }}{{ end }}
+                    </button>
+                    <button type="button" class="button--ghost button--sm edit-trackables-button" data-entry-id="{{ .ID }}">{{ t "entry.add_trackable" }}</button>
                     <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
                 </div>
-                {{ else }}
-                <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
-                {{ end }}
             </div>
         </div>
         {{ end }}

@@ -348,6 +348,52 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
   flex-direction: column;
 }
 
+.entry-note-dialog {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.entry-form__meta {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.entry-form__date {
+  margin: 0;
+  font-size: var(--font-size-00);
+  color: var(--color-text-muted);
+}
+
+.entry-form__warning {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in oklch, var(--color-warning) 45%, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--color-warning-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-00);
+}
+
+.entry-form__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.entry-form__privacy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: right;
+}
+
+.entry-form textarea {
+  width: 100%;
+  min-height: 10rem;
+}
+
 /* Delete swipe background */
 .entry-card__delete-bg {
   display: flex;

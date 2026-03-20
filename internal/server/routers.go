@@ -30,6 +30,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/entry/add", s.addEntry)
 	s.mux.HandleFunc("/entry/voice", s.addVoiceEntry)
 	s.mux.HandleFunc("/entry/{id}/delete", s.deleteEntry)
+	s.mux.HandleFunc("/entry/{id}/edit", s.editEntry)
 	s.mux.HandleFunc("/entry/{id}", s.entryItem)
 	s.mux.HandleFunc("/entry/{id}/trackables", s.entryTrackablesDialog)
 	s.mux.HandleFunc("/settings", s.settings)

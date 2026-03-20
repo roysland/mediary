@@ -89,6 +89,13 @@ ORDER BY tv.created_at_utc ASC;
 DELETE FROM entries
 WHERE id = ? AND user_id = ?;
 
+-- name: UpdateEntryText :one
+UPDATE entries
+SET note_text = ?,
+    is_private = ?
+WHERE id = ? AND user_id = ?
+RETURNING *;
+
 -- name: CreateDraftEntry :one
 INSERT INTO entries (
     user_id,

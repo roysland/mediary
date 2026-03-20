@@ -19,5 +19,13 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 	s.renderPage(w, r, "home_title", "home_content", map[string]interface{}{
 		"SelectedDay": today,
 		"TodayStr":    today,
+		"AddEntryForm": buildEntryFormViewData(
+			"/entry/add",
+			today,
+			today,
+			false,
+			true,
+			false,
+		),
 	})
 }

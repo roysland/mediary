@@ -17,8 +17,8 @@
 	How: Add a Playwright test that submits the home quick-capture form and asserts submit-state attribute transitions and input reset behavior.
 
 - Add browser-level regression test for entries context actions.
-	Why: Entries context menu, add-trackable dialog opening, and delete confirmation are browser-driven and can regress without server test failures.
-	How: Add a Playwright test that opens the entry context menu, verifies dialog behavior, and confirms deletion updates the DOM only after successful confirmation.
+	Why: Entries context menu, note-sheet editing, add-trackable dialog opening, and delete confirmation are browser-driven and can regress without server test failures.
+	How: Add a Playwright test that opens the entry context menu, verifies note-sheet and trackable-dialog behavior for the selected day, and confirms deletion updates the DOM only after successful confirmation.
 
 - Add CSS styles for the voice recording UI.
 	Why: The voice section elements (#voice-idle, #voice-recording, .btn-voice-mic, .voice-draft-badge, .voice-saved, etc.) have no dedicated styles yet and rely on fallback defaults.
