@@ -7,9 +7,10 @@ import (
 )
 
 type entryTrackableValueView struct {
-	Name  string
-	Icon  string
-	Value string
+	Name        string
+	Icon        string
+	Value       string
+	IsSensitive bool
 }
 
 type entryView struct {
@@ -25,44 +26,46 @@ type entryView struct {
 }
 
 type entryWithTrackableRow struct {
-	ID                  int64
-	RecordedAtUtc       int64
-	EntryDate           string
-	NoteText            sql.NullString
-	IsPrivate           int64
-	IsDraft             int64
-	AudioFilePath       sql.NullString
-	TranscriptionStatus string
-	TrackableValueID    sql.NullInt64
-	TrackableName       sql.NullString
-	TrackableIcon       sql.NullString
-	TrackableValueType  sql.NullString
-	ValueInt            sql.NullInt64
-	ValueBool           sql.NullInt64
-	ValueText           sql.NullString
-	TrackableUnit       sql.NullString
+	ID                   int64
+	RecordedAtUtc        int64
+	EntryDate            string
+	NoteText             sql.NullString
+	IsPrivate            int64
+	IsDraft              int64
+	AudioFilePath        sql.NullString
+	TranscriptionStatus  string
+	TrackableValueID     sql.NullInt64
+	TrackableName        sql.NullString
+	TrackableIcon        sql.NullString
+	TrackableValueType   sql.NullString
+	ValueInt             sql.NullInt64
+	ValueBool            sql.NullInt64
+	ValueText            sql.NullString
+	TrackableUnit        sql.NullString
+	TrackableIsSensitive sql.NullInt64
 }
 
 func buildEntryViews(rows []db.ListEntriesRow) []entryView {
 	viewRows := make([]entryWithTrackableRow, 0, len(rows))
 	for _, row := range rows {
 		viewRows = append(viewRows, entryWithTrackableRow{
-			ID:                  row.ID,
-			RecordedAtUtc:       row.RecordedAtUtc,
-			EntryDate:           row.EntryDate,
-			NoteText:            row.NoteText,
-			IsPrivate:           row.IsPrivate,
-			IsDraft:             row.IsDraft,
-			AudioFilePath:       row.AudioFilePath,
-			TranscriptionStatus: row.TranscriptionStatus,
-			TrackableValueID:    row.TrackableValueID,
-			TrackableName:       row.TrackableName,
-			TrackableIcon:       row.TrackableIcon,
-			TrackableValueType:  row.TrackableValueType,
-			ValueInt:            row.ValueInt,
-			ValueBool:           row.ValueBool,
-			ValueText:           row.ValueText,
-			TrackableUnit:       row.TrackableUnit,
+			ID:                   row.ID,
+			RecordedAtUtc:        row.RecordedAtUtc,
+			EntryDate:            row.EntryDate,
+			NoteText:             row.NoteText,
+			IsPrivate:            row.IsPrivate,
+			IsDraft:              row.IsDraft,
+			AudioFilePath:        row.AudioFilePath,
+			TranscriptionStatus:  row.TranscriptionStatus,
+			TrackableValueID:     row.TrackableValueID,
+			TrackableName:        row.TrackableName,
+			TrackableIcon:        row.TrackableIcon,
+			TrackableValueType:   row.TrackableValueType,
+			ValueInt:             row.ValueInt,
+			ValueBool:            row.ValueBool,
+			ValueText:            row.ValueText,
+			TrackableUnit:        row.TrackableUnit,
+			TrackableIsSensitive: row.TrackableIsSensitive,
 		})
 	}
 
@@ -73,22 +76,23 @@ func buildEntryView(rows []db.GetEntryWithTrackablesRow) (entryView, bool) {
 	viewRows := make([]entryWithTrackableRow, 0, len(rows))
 	for _, row := range rows {
 		viewRows = append(viewRows, entryWithTrackableRow{
-			ID:                  row.ID,
-			RecordedAtUtc:       row.RecordedAtUtc,
-			EntryDate:           row.EntryDate,
-			NoteText:            row.NoteText,
-			IsPrivate:           row.IsPrivate,
-			IsDraft:             row.IsDraft,
-			AudioFilePath:       row.AudioFilePath,
-			TranscriptionStatus: row.TranscriptionStatus,
-			TrackableValueID:    row.TrackableValueID,
-			TrackableName:       row.TrackableName,
-			TrackableIcon:       row.TrackableIcon,
-			TrackableValueType:  row.TrackableValueType,
-			ValueInt:            row.ValueInt,
-			ValueBool:           row.ValueBool,
-			ValueText:           row.ValueText,
-			TrackableUnit:       row.TrackableUnit,
+			ID:                   row.ID,
+			RecordedAtUtc:        row.RecordedAtUtc,
+			EntryDate:            row.EntryDate,
+			NoteText:             row.NoteText,
+			IsPrivate:            row.IsPrivate,
+			IsDraft:              row.IsDraft,
+			AudioFilePath:        row.AudioFilePath,
+			TranscriptionStatus:  row.TranscriptionStatus,
+			TrackableValueID:     row.TrackableValueID,
+			TrackableName:        row.TrackableName,
+			TrackableIcon:        row.TrackableIcon,
+			TrackableValueType:   row.TrackableValueType,
+			ValueInt:             row.ValueInt,
+			ValueBool:            row.ValueBool,
+			ValueText:            row.ValueText,
+			TrackableUnit:        row.TrackableUnit,
+			TrackableIsSensitive: row.TrackableIsSensitive,
 		})
 	}
 
@@ -134,6 +138,7 @@ func buildEntryViewsFromRows(rows []entryWithTrackableRow) []entryView {
 				valueText: row.ValueText,
 				unit:      row.TrackableUnit,
 			}),
+			IsSensitive: row.TrackableIsSensitive.Valid && row.TrackableIsSensitive.Int64 == 1,
 		})
 	}
 

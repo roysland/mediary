@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 
 	"roysland.me/symptomstracker/internal/db"
@@ -52,10 +53,19 @@ func buildDayNavigation(selectedDay time.Time, now time.Time) []dayNav {
 	return navigation
 }
 
+func resolveEntryDate(value string, now time.Time) (string, error) {
+	selectedDay, err := parseSelectedDay(strings.TrimSpace(value), now)
+	if err != nil {
+		return "", err
+	}
+	return selectedDay.Format(dateLayoutISO), nil
+}
+
 func (s *Server) createEntry(
 	ctx context.Context,
 	userID int64,
 	now time.Time,
+	entryDate string,
 	note sql.NullString,
 	isPrivate int64,
 ) (db.Entry, error) {
@@ -63,7 +73,7 @@ func (s *Server) createEntry(
 		UserID:                userID,
 		RecordedAtUtc:         now.UTC().Unix(),
 		TimezoneOffsetMinutes: defaultTimezoneOffsetMinutes,
-		EntryDate:             now.Format(dateLayoutISO),
+		EntryDate:             entryDate,
 		NoteText:              note,
 		IsPrivate:             isPrivate,
 		CreatedAtUtc:          now.UTC().Unix(),

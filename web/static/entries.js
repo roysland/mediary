@@ -1,3 +1,5 @@
+const sensitiveFilterStorageKey = "entries-show-sensitive";
+
 function getEntriesMessages() {
   const i18n = document.getElementById("entries-i18n");
   if (!(i18n instanceof HTMLElement)) {
@@ -5,6 +7,9 @@ function getEntriesMessages() {
       deleteConfirm: "Are you sure you want to delete this entry? This action cannot be undone.",
       deleteFailed: "Failed to delete entry. Please try again.",
       deleteError: "An error occurred while deleting the entry. Please try again.",
+      entryAddTitle: "Add entry",
+      entryAddTextTitle: "Add text",
+      entryEditTextTitle: "Edit text",
     };
   }
 
@@ -13,7 +18,104 @@ function getEntriesMessages() {
       i18n.dataset.deleteConfirm || "Are you sure you want to delete this entry? This action cannot be undone.",
     deleteFailed: i18n.dataset.deleteFailed || "Failed to delete entry. Please try again.",
     deleteError: i18n.dataset.deleteError || "An error occurred while deleting the entry. Please try again.",
+    entryAddTitle: i18n.dataset.entryAddTitle || "Add entry",
+    entryAddTextTitle: i18n.dataset.entryAddTextTitle || "Add text",
+    entryEditTextTitle: i18n.dataset.entryEditTextTitle || "Edit text",
   };
+}
+
+function readSensitiveFilterPreference() {
+  try {
+    return window.localStorage.getItem(sensitiveFilterStorageKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeSensitiveFilterPreference(showSensitive) {
+  try {
+    window.localStorage.setItem(sensitiveFilterStorageKey, String(showSensitive));
+  } catch {
+    // Ignore storage failures and keep the current in-memory state.
+  }
+}
+
+function setSensitiveContentState(showSensitive) {
+  document.documentElement.dataset.showSensitiveContent = showSensitive ? "true" : "false";
+}
+
+function updateEntriesEmptyState(root) {
+  if (!(root instanceof HTMLElement)) {
+    return;
+  }
+
+  const timeline = root.querySelector("[data-entries-timeline]");
+  const emptyState = root.querySelector("[data-entries-empty-state]");
+  if (!(timeline instanceof HTMLElement) || !(emptyState instanceof HTMLElement)) {
+    return;
+  }
+
+  const hasVisibleEntries = Array.from(timeline.children).some(
+    (child) => child instanceof HTMLElement && !child.hidden,
+  );
+
+  timeline.hidden = !hasVisibleEntries;
+  emptyState.hidden = hasVisibleEntries;
+}
+
+function updateDismissedTrackablePanels(root) {
+  if (!(root instanceof ParentNode)) {
+    return;
+  }
+
+  root.querySelectorAll("[data-trackable-picker]").forEach((picker) => {
+    if (!(picker instanceof HTMLElement)) {
+      return;
+    }
+
+    const dismissedPanel = picker.querySelector("[data-dismissed-trackables-panel]");
+    const dismissedTrackablesList = picker.querySelector("[data-dismissed-trackables-list]");
+    if (!(dismissedPanel instanceof HTMLElement) || !(dismissedTrackablesList instanceof HTMLElement)) {
+      return;
+    }
+
+    const hasVisibleDismissedTrackables = Array.from(dismissedTrackablesList.children).some(
+      (child) => child instanceof HTMLElement && !child.hidden,
+    );
+    dismissedPanel.hidden = !hasVisibleDismissedTrackables;
+  });
+}
+
+function applySensitiveFilter() {
+  const showSensitive = readSensitiveFilterPreference();
+  setSensitiveContentState(showSensitive);
+
+  document.querySelectorAll("[data-sensitive-filter-toggle]").forEach((toggle) => {
+    if (toggle instanceof HTMLInputElement) {
+      toggle.checked = showSensitive;
+    }
+  });
+
+  document.querySelectorAll("[data-sensitive-filter-root]").forEach((root) => {
+    if (!(root instanceof HTMLElement)) {
+      return;
+    }
+
+    root.querySelectorAll("[data-entry-private='true']").forEach((entry) => {
+      if (entry instanceof HTMLElement) {
+        entry.hidden = !showSensitive;
+      }
+    });
+
+    root.querySelectorAll("[data-sensitive-trackable='true']").forEach((trackable) => {
+      if (trackable instanceof HTMLElement) {
+        trackable.hidden = !showSensitive;
+      }
+    });
+
+    updateEntriesEmptyState(root);
+    updateDismissedTrackablePanels(root);
+  });
 }
 
 function deleteEntry(entryId) {
@@ -35,9 +137,14 @@ function deleteEntry(entryId) {
         return;
       }
 
-      const entryElement = document.querySelector(`[data-id='entry-${entryId}']`);
-      if (entryElement) {
-        entryElement.remove();
+      try {
+        const entryElement = document.querySelector(`[data-id='entry-${entryId}']`);
+        if (entryElement) {
+          entryElement.remove();
+          applySensitiveFilter();
+        }
+      } catch (error) {
+        console.error("Entry deleted, but UI refresh failed:", error);
       }
     })
     .catch((error) => {
@@ -68,6 +175,101 @@ function setDialogEntryId(dialog, entryId) {
     entryInput.value = String(entryId);
     form.append(entryInput);
   });
+}
+
+function getRequestForm(eventDetail) {
+  const elt = eventDetail?.elt;
+  if (elt instanceof HTMLFormElement) {
+    return elt;
+  }
+
+  if (elt instanceof Element) {
+    return elt.closest("form");
+  }
+
+  return null;
+}
+
+function refreshEntriesPage() {
+  const page = document.querySelector(".entries-page");
+  const target = document.querySelector("main.container");
+  const url = window.location.pathname + window.location.search;
+  if (!(page instanceof HTMLElement) || !(target instanceof HTMLElement) || typeof htmx === "undefined") {
+    return;
+  }
+
+  htmx.ajax("GET", url, {
+    target,
+    select: "main.container",
+    swap: "outerHTML",
+  });
+}
+
+function configureEntryNoteDialog(options = {}) {
+  const dialog = document.getElementById("entry-note-dialog");
+  if (!(dialog instanceof HTMLDialogElement)) {
+    return null;
+  }
+
+  const form = dialog.querySelector("[data-entry-form]");
+  const title = dialog.querySelector("[data-entry-note-dialog-title]");
+  const textarea = dialog.querySelector("[data-entry-form-textarea]");
+  const privacy = dialog.querySelector("#is_private-entry");
+  const entryIdInput = dialog.querySelector("[data-entry-form-entry-id]");
+  const dateInput = dialog.querySelector("[data-entry-form-date]");
+  const dateLabel = dialog.querySelector("[data-entry-form-date-label]");
+  const warning = dialog.querySelector("[data-entry-form-warning]");
+  if (!(form instanceof HTMLFormElement) || !(textarea instanceof HTMLTextAreaElement)) {
+    return null;
+  }
+
+  const messages = getEntriesMessages();
+  const entryDate = options.entryDate || dialog.dataset.defaultEntryDate || "";
+  const mode = options.mode || "add";
+  const action = dialog.dataset.defaultAction || "/entry/add";
+
+  form.reset();
+  form.action = action;
+  if (form.hasAttribute("hx-post")) {
+    form.setAttribute("hx-post", action);
+  }
+  if (entryIdInput instanceof HTMLInputElement) {
+    entryIdInput.value = mode === "edit" && Number.isFinite(options.entryId) && options.entryId > 0
+      ? String(options.entryId)
+      : "";
+  }
+
+  textarea.value = options.noteText || "";
+  if (privacy instanceof HTMLInputElement) {
+    privacy.checked = options.isPrivate === true;
+  }
+  if (dateInput instanceof HTMLInputElement) {
+    dateInput.value = entryDate;
+  }
+  if (dateLabel instanceof HTMLElement) {
+    dateLabel.textContent = entryDate;
+  }
+  if (warning instanceof HTMLElement) {
+    warning.hidden = !(entryDate && dialog.dataset.todayStr && entryDate < dialog.dataset.todayStr);
+  }
+  if (title instanceof HTMLElement) {
+    if (mode === "edit") {
+      title.textContent = options.hasNote ? messages.entryEditTextTitle : messages.entryAddTextTitle;
+    } else {
+      title.textContent = messages.entryAddTitle;
+    }
+  }
+
+  if (!dialog.open) {
+    dialog.showModal();
+  }
+
+  window.requestAnimationFrame(() => {
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  });
+
+  return dialog;
 }
 
 function initEntriesInteractions() {
@@ -108,8 +310,16 @@ function initEntriesInteractions() {
           }
           return;
         }
-        const li = wrapper.closest("[data-id]");
-        if (li) li.remove();
+
+        try {
+          const li = wrapper.closest("[data-id]");
+          if (li) {
+            li.remove();
+            applySensitiveFilter();
+          }
+        } catch (error) {
+          console.error("Entry deleted by swipe, but UI refresh failed:", error);
+        }
       })
       .catch((error) => {
         console.error("Error deleting entry:", error);
@@ -122,14 +332,56 @@ function initEntriesInteractions() {
       });
   });
 
-  document.body.addEventListener("click", (event) => {
-    const trigger = event.target.closest(".edit-note-button");
-    if (!trigger) {
-      const deleteButton = event.target.closest(".delete-note-button");
-      if (!deleteButton) {
-        return;
+  document.addEventListener("click", (event) => {
+    const target = event.target instanceof Element
+      ? event.target
+      : event.target instanceof Node
+        ? event.target.parentElement
+        : null;
+
+    if (!target) {
+      return;
+    }
+
+    if (target instanceof HTMLDialogElement) {
+      if (target.id === "add-quick-trackable-dialog" || target.id === "entry-note-dialog") {
+        target.close();
+      }
+      return;
+    }
+
+    const openEntryDialog = target.closest("[data-open-entry-dialog]");
+    if (openEntryDialog) {
+      event.preventDefault();
+      configureEntryNoteDialog({ mode: "add" });
+      return;
+    }
+
+    const editEntryButton = target.closest(".edit-entry-button");
+    if (editEntryButton) {
+      const popover = editEntryButton.closest("[popover]");
+      if (popover && typeof popover.hidePopover === "function") {
+        popover.hidePopover();
       }
 
+      const entryId = Number(editEntryButton.dataset.entryId);
+      const noteSourceId = editEntryButton.dataset.entryNoteSource || "";
+      const noteSource = noteSourceId ? document.getElementById(noteSourceId) : null;
+      const noteText = noteSource instanceof HTMLTextAreaElement ? noteSource.value : "";
+
+      configureEntryNoteDialog({
+        mode: "edit",
+        entryId,
+        entryDate: editEntryButton.dataset.entryDate || "",
+        isPrivate: editEntryButton.dataset.entryPrivate === "true",
+        hasNote: editEntryButton.dataset.entryHasNote === "true",
+        noteText,
+      });
+      return;
+    }
+
+    const deleteButton = target.closest(".delete-note-button");
+    if (deleteButton) {
       const popover = deleteButton.closest("[popover]");
       if (popover && typeof popover.hidePopover === "function") {
         popover.hidePopover();
@@ -139,6 +391,11 @@ function initEntriesInteractions() {
       if (Number.isFinite(entryId) && entryId > 0) {
         deleteEntry(entryId);
       }
+      return;
+    }
+
+    const trigger = target.closest(".edit-trackables-button");
+    if (!trigger) {
       return;
     }
 
@@ -176,14 +433,34 @@ function initEntriesInteractions() {
     });
   });
 
-  const quickTrackableDialog = document.getElementById("add-quick-trackable-dialog");
-  if (quickTrackableDialog) {
-    quickTrackableDialog.addEventListener("click", (event) => {
-      if (event.target === quickTrackableDialog) {
-        quickTrackableDialog.close();
-      }
-    });
-  }
+  document.body.addEventListener("change", (event) => {
+    if (!(event.target instanceof HTMLInputElement) || !event.target.matches("[data-sensitive-filter-toggle]")) {
+      return;
+    }
+
+    writeSensitiveFilterPreference(event.target.checked);
+    applySensitiveFilter();
+  });
+
+  document.body.addEventListener("htmx:afterSwap", () => {
+    applySensitiveFilter();
+  });
+
+  document.body.addEventListener("htmx:afterRequest", (event) => {
+    const form = getRequestForm(event.detail);
+    if (!(form instanceof HTMLFormElement) || form.dataset.entryDialogForm !== "true" || !event.detail.successful) {
+      return;
+    }
+
+    const dialog = form.closest("dialog");
+    if (dialog instanceof HTMLDialogElement && dialog.open) {
+      dialog.close();
+    }
+
+    refreshEntriesPage();
+  });
+
+  applySensitiveFilter();
 }
 
 if (document.readyState === "loading") {

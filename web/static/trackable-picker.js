@@ -12,6 +12,7 @@ function createDismissedItem(trackableElement, restoreLabel) {
   const item = document.createElement("li");
   item.className = "dismissed-trackable";
   item.dataset.trackableId = trackableElement.dataset.trackableId || "";
+  item.dataset.sensitiveTrackable = trackableElement.dataset.sensitiveTrackable || "false";
 
   const meta = document.createElement("div");
   meta.className = "dismissed-trackable__meta";

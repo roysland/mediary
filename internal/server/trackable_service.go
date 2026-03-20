@@ -209,7 +209,7 @@ func (s *Server) createEntryAndValue(
 	valueBool sql.NullInt64,
 	valueText sql.NullString,
 ) (db.TrackableValue, error) {
-	entry, err := s.createEntry(ctx, userID, now, sql.NullString{}, 0)
+	entry, err := s.createEntry(ctx, userID, now, now.Format(dateLayoutISO), sql.NullString{}, 0)
 	if err != nil {
 		return db.TrackableValue{}, fmt.Errorf("create entry: %w", err)
 	}

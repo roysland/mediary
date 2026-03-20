@@ -1,38 +1,54 @@
-{{ define "entries_add_title" }}Add Entry{{ end }}
+{{ define "entries_add_title" }}{{ t "entry.add" }}{{ end }}
 
 {{ define "entries_add_content" }}
 <section class="card">
-  {{ template "add_entry_content" . }}
+  {{ template "add_entry_content" .AddEntryForm }}
 </section>
 {{ end }}
 
 {{ define "add_entry_content" }}
 
-<form method="post" action="/entry/add"
-      hx-post="/entry/add"
-  hx-swap="none"
-  data-submit-state>
-<div style="display: flex; justify-content: space-between;">
-    <label for="entry_input">{{t "entry.input.label"}}</label>
-<label for="is_private-entry">
-    <input type="checkbox" id="is_private-entry" name="is_private_entry" role="switch">
-    {{t "entry.private.label"}}
-</label>
-</div>
+<form
+    method="post"
+    action="{{ .FormAction }}"
+    {{ if .UseHTMX }}hx-post="{{ .FormAction }}" hx-swap="none"{{ end }}
+    data-submit-state
+    data-entry-form
+    {{ if .UseDialogRefresh }}data-entry-dialog-form="true"{{ end }}
+>
+    <input type="hidden" name="entry_id" value="{{ .EntryID }}" data-entry-form-entry-id>
+    <input type="hidden" name="entry_date" value="{{ .EntryDate }}" data-entry-form-date>
 
-    <textarea id="entry_input" name="entry_input" rows="4" cols="50" placeholder="" required></textarea>
+    {{ if .ShowEntryDate }}
+    <div class="entry-form__meta">
+        <p class="entry-form__date">{{ t "entry.logged_for" }} <span data-entry-form-date-label>{{ .EntryDate }}</span></p>
+        <p class="entry-form__warning" data-entry-form-warning {{ if .ShowPastDayWarning }}{{ else }}hidden{{ end }}>
+            {{ t "entry.past_day_warning" }}
+        </p>
+    </div>
+    {{ end }}
 
-<button
-id="entry_submit_button" 
-            type="submit"
-            class="submit-button"
-            data-submit-state-button
-            data-submit-visual="idle"
-          >
-            <span class="submit-layer submit-label">{{t "save"}}</span>
-            <span class="submit-layer submit-spinner" aria-hidden="true"></span>
-            <span class="submit-layer submit-check" aria-hidden="true"></span>
-          </button>
+    <div class="entry-form__header">
+        <label for="entry_input">{{ t "entry.input.label" }}</label>
+        <label class="entry-form__privacy" for="is_private-entry">
+            <input type="checkbox" id="is_private-entry" name="is_private_entry" role="switch" {{ if .IsPrivate }}checked{{ end }}>
+            {{ t "entry.private.label" }}
+        </label>
+    </div>
+
+    <textarea id="entry_input" name="entry_input" rows="4" cols="50" placeholder="" required data-entry-form-textarea>{{ .NoteText }}</textarea>
+
+    <button
+        id="entry_submit_button"
+        type="submit"
+        class="submit-button"
+        data-submit-state-button
+        data-submit-visual="idle"
+    >
+        <span class="submit-layer submit-label">{{ t "save" }}</span>
+        <span class="submit-layer submit-spinner" aria-hidden="true"></span>
+        <span class="submit-layer submit-check" aria-hidden="true"></span>
+    </button>
 </form>
 
 {{ end }}

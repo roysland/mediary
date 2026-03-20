@@ -17,8 +17,8 @@
 	How: Add a Playwright test that submits the home quick-capture form and asserts submit-state attribute transitions and input reset behavior.
 
 - Add browser-level regression test for entries context actions.
-	Why: Entries context menu, add-trackable dialog opening, and delete confirmation are browser-driven and can regress without server test failures.
-	How: Add a Playwright test that opens the entry context menu, verifies dialog behavior, and confirms deletion updates the DOM only after successful confirmation.
+	Why: Entries context menu, note-sheet editing, add-trackable dialog opening, and delete confirmation are browser-driven and can regress without server test failures.
+	How: Add a Playwright test that opens the entry context menu, verifies note-sheet and trackable-dialog behavior for the selected day, and confirms deletion updates the DOM only after successful confirmation.
 
 - Add CSS styles for the voice recording UI.
 	Why: The voice section elements (#voice-idle, #voice-recording, .btn-voice-mic, .voice-draft-badge, .voice-saved, etc.) have no dedicated styles yet and rely on fallback defaults.
@@ -32,155 +32,10 @@
 	Why: `initVoiceRecorder` is called on every `htmx:afterSwap` and currently attaches new click listeners each time for the same DOM nodes, which can trigger multiple recorder/upload flows from one click.
 	How: Make initialization idempotent by marking the section as bound (for example with `data-voice-bound="1"`) or by removing/replacing existing listeners before adding new ones.
 
-- Add authenticated device-link flow with QR for cross-device onboarding.
-	Why: Discoverable passkeys and multi-passkey support are now in place, but users without synced passkey managers still need a smoother way to enroll a second device from an already signed-in device.
-	How: Add a short-lived one-time linking token endpoint for authenticated users, render it as a QR code, and let the new device redeem it only to initiate `/auth/passkeys/options` for that same account before requiring passkey confirmation.
-	Flow (end-to-end)
-	1) On existing device (authenticated)
-
-	User clicks: “Add new device”
-
-	Server:
-
-	Generate random token (high entropy, e.g. 32 bytes)
-
-	Store:
-
-	token
-	user_id
-	expires_at (e.g. 2–5 minutes)
-	used = false
-
-	Render QR
-	2) On new device (QR scanned)
-
-	User opens /link?t=TOKEN
-
-	Server:
-
-	Validate token:
-
-	exists
-
-	not expired
-
-	not used
-
-	If valid:
-
-	Create temporary linking session (NOT a full auth session)
-
-	Associate it with user_id
-
-	Mark token as pending (optional)
-
-	Now show:
-
-	“Continue to add this device”
-
-	3) Start WebAuthn registration (on new device)
-
-	Call:
-
-	/auth/passkeys/register/options
-
-	But here’s the key:
-
-	Instead of creating a new user,
-
-	Use the user_id from the linking session
-
-	So:
-
-	user_id = linking_session.user_id
-	4) Complete registration
-
-	navigator.credentials.create()
-
-	Send to server
-
-	Verify
-
-	Store credential under that user_id
-
-	Now:
-
-	Mark token as used
-
-	Upgrade session → full authenticated session
-
-	Important constraints (don’t skip these)
-	1. Token must be:
-
-	single-use
-
-	short-lived (2–5 min)
-
-	high entropy (unguessable)
-
-	2. Token does NOT log the user in
-
-	It only allows:
-
-	starting registration for a specific user
-
-	If you skip this distinction, you create an account takeover vector.
-
-	3. Require user presence (WebAuthn)
-
-	The new device must:
-
-	perform biometric / PIN
-
-	generate a real credential
-
-	This is your actual security boundary.
-
-	4. Optional but strong improvement
-
-	Require confirmation on original device:
-
-	Flow:
-
-	New device scans QR
-
-	Old device shows: “Approve new device?”
-
-	Only then allow registration
-
-	This prevents someone photographing the QR and hijacking it.
-	UX notes (important for your app)
-
-	Keep it very low friction:
-
-	On existing device:
-
-	“Add device”
-
-	Show QR + short explanation
-
-	On new device:
-
-	Auto-continue after scan
-
-	One button: “Use this device”
-
-	Avoid extra steps unless necessary.
-	Subtle edge case
-
-	If user:
-
-	scans QR
-
-	waits too long
-
-	→ token expires
-
-	Handle gracefully:
-
-	“Link expired, generate a new one”
-
 - Add explicit approval step on the original device for QR link redemption.
 	Why: QR-based linking is now implemented with short-lived, single-use, high-entropy tokens, but a photographed QR can still be redeemed by a third party before the user completes enrollment.
 	How: Introduce a `pending` link status plus an approval prompt on the currently signed-in device. Allow `/auth/passkeys/register/options` on the new device only after approval, and expire pending links quickly.
 
+- Persist the sensitive-content filter in user settings instead of browser-local storage.
+	Why: The new entries-page toggle currently remembers its state only in the current browser, so a user switching devices or clearing storage gets inconsistent privacy behavior.
+	How: Add a boolean setting such as `show_sensitive_content`, load it with the rest of `UserSettings`, and update the entries toggle to save through the existing settings flow while keeping the client-side instant hide/show behavior.

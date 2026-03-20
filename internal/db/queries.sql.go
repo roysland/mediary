@@ -602,7 +602,8 @@ SELECT
     td.name AS trackable_name,
     td.icon AS trackable_icon,
     td.value_type AS trackable_value_type,
-    td.unit AS trackable_unit
+    td.unit AS trackable_unit,
+    td.is_sensitive AS trackable_is_sensitive
 FROM entries e
 LEFT JOIN trackable_values tv ON tv.entry_id = e.id
 LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
@@ -641,6 +642,7 @@ type GetEntryWithTrackablesRow struct {
 	TrackableIcon         sql.NullString `json:"trackable_icon"`
 	TrackableValueType    sql.NullString `json:"trackable_value_type"`
 	TrackableUnit         sql.NullString `json:"trackable_unit"`
+	TrackableIsSensitive  sql.NullInt64  `json:"trackable_is_sensitive"`
 }
 
 func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTrackablesParams) ([]GetEntryWithTrackablesRow, error) {
@@ -678,6 +680,7 @@ func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTr
 			&i.TrackableIcon,
 			&i.TrackableValueType,
 			&i.TrackableUnit,
+			&i.TrackableIsSensitive,
 		); err != nil {
 			return nil, err
 		}
@@ -834,7 +837,8 @@ SELECT
     td.name AS trackable_name,
     td.icon AS trackable_icon,
     td.value_type AS trackable_value_type,
-    td.unit AS trackable_unit
+    td.unit AS trackable_unit,
+    td.is_sensitive AS trackable_is_sensitive
 FROM entries e
 LEFT JOIN trackable_values tv ON tv.entry_id = e.id
 LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
@@ -874,6 +878,7 @@ type ListEntriesRow struct {
 	TrackableIcon         sql.NullString `json:"trackable_icon"`
 	TrackableValueType    sql.NullString `json:"trackable_value_type"`
 	TrackableUnit         sql.NullString `json:"trackable_unit"`
+	TrackableIsSensitive  sql.NullInt64  `json:"trackable_is_sensitive"`
 }
 
 func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error) {
@@ -911,6 +916,7 @@ func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Lis
 			&i.TrackableIcon,
 			&i.TrackableValueType,
 			&i.TrackableUnit,
+			&i.TrackableIsSensitive,
 		); err != nil {
 			return nil, err
 		}
@@ -1360,6 +1366,45 @@ func (q *Queries) RedeemDeviceLinkToken(ctx context.Context, arg RedeemDeviceLin
 		&i.ExpiresAtUtc,
 		&i.RedeemedAtUtc,
 		&i.UsedAtUtc,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
+const updateEntryText = `-- name: UpdateEntryText :one
+UPDATE entries
+SET note_text = ?,
+    is_private = ?
+WHERE id = ? AND user_id = ?
+RETURNING id, user_id, recorded_at_utc, timezone_offset_minutes, entry_date, note_text, is_private, is_draft, audio_file_path, transcription_status, created_at_utc
+`
+
+type UpdateEntryTextParams struct {
+	NoteText  sql.NullString `json:"note_text"`
+	IsPrivate int64          `json:"is_private"`
+	ID        int64          `json:"id"`
+	UserID    int64          `json:"user_id"`
+}
+
+func (q *Queries) UpdateEntryText(ctx context.Context, arg UpdateEntryTextParams) (Entry, error) {
+	row := q.db.QueryRowContext(ctx, updateEntryText,
+		arg.NoteText,
+		arg.IsPrivate,
+		arg.ID,
+		arg.UserID,
+	)
+	var i Entry
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.RecordedAtUtc,
+		&i.TimezoneOffsetMinutes,
+		&i.EntryDate,
+		&i.NoteText,
+		&i.IsPrivate,
+		&i.IsDraft,
+		&i.AudioFilePath,
+		&i.TranscriptionStatus,
 		&i.CreatedAtUtc,
 	)
 	return i, err
