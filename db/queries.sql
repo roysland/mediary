@@ -37,7 +37,8 @@ SELECT
     td.name AS trackable_name,
     td.icon AS trackable_icon,
     td.value_type AS trackable_value_type,
-    td.unit AS trackable_unit
+    td.unit AS trackable_unit,
+    td.is_sensitive AS trackable_is_sensitive
 FROM entries e
 LEFT JOIN trackable_values tv ON tv.entry_id = e.id
 LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
@@ -76,7 +77,8 @@ SELECT
     td.name AS trackable_name,
     td.icon AS trackable_icon,
     td.value_type AS trackable_value_type,
-    td.unit AS trackable_unit
+    td.unit AS trackable_unit,
+    td.is_sensitive AS trackable_is_sensitive
 FROM entries e
 LEFT JOIN trackable_values tv ON tv.entry_id = e.id
 LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
@@ -403,4 +405,3 @@ WHERE user_id = ?;
 -- name: DeleteWebauthnCredentialsByUser :exec
 DELETE FROM webauthn_credentials
 WHERE user_id = ?;
-

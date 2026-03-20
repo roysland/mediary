@@ -17,6 +17,7 @@ var norwegianCatalog = Catalog{
 	"entries.delete.confirm":                   "Er du sikker pa at du vil slette denne oppføringen? Handlingen kan ikke angres.",
 	"entries.delete.error":                     "Det oppstod en feil under sletting av oppføringen. Prov igjen.",
 	"entries.delete.failed":                    "Kunne ikke slette oppføringen. Prov igjen.",
+	"entries.sensitive_filter.label":           "Vis private og sensitive",
 	"entries.title":                            "Oppføringer",
 	"entry.add_trackable":                      "Legg til loggføring",
 	"entry.add_trackable_link":                 "Legg til loggføring",

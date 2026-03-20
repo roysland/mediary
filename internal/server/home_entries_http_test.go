@@ -81,6 +81,59 @@ func TestEntriesRendersDayNavigationAndFiltersBySelectedDay(t *testing.T) {
 	}
 }
 
+func TestEntriesRenderSensitiveFilterMarkers(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	today := time.Now().Format("2006-01-02")
+
+	privateEntry := insertEntryFixture(t, s, entryFixture{
+		userID:        1,
+		entryDate:     today,
+		note:          "private note",
+		recordedAtUTC: 1710000200,
+		isPrivate:     1,
+	})
+
+	sensitiveTrackable := insertTrackableDefinitionFixture(t, s, trackableDefinitionFixture{
+		userID:      1,
+		name:        "Medication",
+		valueType:   "text",
+		icon:        "💊",
+		category:    "symptom",
+		isSensitive: 1,
+	})
+
+	insertTrackableValueFixture(t, s, trackableValueFixture{
+		entryID:      privateEntry.ID,
+		trackableID:  sensitiveTrackable.ID,
+		valueText:    "Evening dose",
+		createdAtUTC: 1710000300,
+	})
+
+	req := authedRequest(t, s, http.MethodGet, "/entries?day="+today, nil)
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	body := rr.Body.String()
+	if !strings.Contains(body, `data-sensitive-filter-toggle`) {
+		t.Fatalf("expected sensitive filter toggle in entries page")
+	}
+	if !strings.Contains(body, `Show private and sensitive`) {
+		t.Fatalf("expected sensitive filter label in entries page")
+	}
+	if !strings.Contains(body, `data-entry-private="true"`) {
+		t.Fatalf("expected private entries to be marked for filtering")
+	}
+	if !strings.Contains(body, `data-sensitive-trackable="true"`) {
+		t.Fatalf("expected sensitive trackables to be marked for filtering")
+	}
+}
+
 func TestEntriesAPIReturnsAudioFilePath(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
@@ -316,6 +369,23 @@ type entryFixture struct {
 	entryDate     string
 	note          string
 	recordedAtUTC int64
+	isPrivate     int64
+}
+
+type trackableDefinitionFixture struct {
+	userID      int64
+	name        string
+	valueType   string
+	icon        string
+	category    string
+	isSensitive int64
+}
+
+type trackableValueFixture struct {
+	entryID      int64
+	trackableID  int64
+	valueText    string
+	createdAtUTC int64
 }
 
 func newHomeEntriesHTTPTestServer(t *testing.T) *Server {
@@ -379,21 +449,58 @@ func newHomeEntriesHTTPTestServer(t *testing.T) *Server {
 	return s
 }
 
-func insertEntryFixture(t *testing.T, s *Server, f entryFixture) {
+func insertEntryFixture(t *testing.T, s *Server, f entryFixture) db.Entry {
 	t.Helper()
 
-	_, err := s.queries.CreateEntry(context.Background(), db.CreateEntryParams{
+	entry, err := s.queries.CreateEntry(context.Background(), db.CreateEntryParams{
 		UserID:                f.userID,
 		RecordedAtUtc:         f.recordedAtUTC,
 		TimezoneOffsetMinutes: 0,
 		EntryDate:             f.entryDate,
 		NoteText:              sql.NullString{String: f.note, Valid: f.note != ""},
-		IsPrivate:             0,
+		IsPrivate:             f.isPrivate,
 		CreatedAtUtc:          f.recordedAtUTC,
 	})
 	if err != nil {
 		t.Fatalf("create entry fixture: %v", err)
 	}
+
+	return entry
+}
+
+func insertTrackableDefinitionFixture(t *testing.T, s *Server, f trackableDefinitionFixture) db.TrackableDefinition {
+	t.Helper()
+
+	definition, err := s.queries.CreateTrackableDefinition(context.Background(), db.CreateTrackableDefinitionParams{
+		UserID:       f.userID,
+		Name:         f.name,
+		ValueType:    f.valueType,
+		Icon:         sql.NullString{String: f.icon, Valid: f.icon != ""},
+		Category:     f.category,
+		IsSensitive:  f.isSensitive,
+		CreatedAtUtc: time.Now().UTC().Unix(),
+	})
+	if err != nil {
+		t.Fatalf("create trackable fixture: %v", err)
+	}
+
+	return definition
+}
+
+func insertTrackableValueFixture(t *testing.T, s *Server, f trackableValueFixture) db.TrackableValue {
+	t.Helper()
+
+	value, err := s.queries.CreateTrackableValue(context.Background(), db.CreateTrackableValueParams{
+		EntryID:               f.entryID,
+		TrackableDefinitionID: f.trackableID,
+		ValueText:             sql.NullString{String: f.valueText, Valid: f.valueText != ""},
+		CreatedAtUtc:          f.createdAtUTC,
+	})
+	if err != nil {
+		t.Fatalf("create trackable value fixture: %v", err)
+	}
+
+	return value
 }
 
 func parseTemplatesFromRoot(root, locale string) (*template.Template, error) {

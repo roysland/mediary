@@ -1,3 +1,5 @@
+const sensitiveFilterStorageKey = "entries-show-sensitive";
+
 function getEntriesMessages() {
   const i18n = document.getElementById("entries-i18n");
   if (!(i18n instanceof HTMLElement)) {
@@ -14,6 +16,100 @@ function getEntriesMessages() {
     deleteFailed: i18n.dataset.deleteFailed || "Failed to delete entry. Please try again.",
     deleteError: i18n.dataset.deleteError || "An error occurred while deleting the entry. Please try again.",
   };
+}
+
+function readSensitiveFilterPreference() {
+  try {
+    return window.localStorage.getItem(sensitiveFilterStorageKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeSensitiveFilterPreference(showSensitive) {
+  try {
+    window.localStorage.setItem(sensitiveFilterStorageKey, String(showSensitive));
+  } catch {
+    // Ignore storage failures and keep the current in-memory state.
+  }
+}
+
+function setSensitiveContentState(showSensitive) {
+  document.documentElement.dataset.showSensitiveContent = showSensitive ? "true" : "false";
+}
+
+function updateEntriesEmptyState(root) {
+  if (!(root instanceof HTMLElement)) {
+    return;
+  }
+
+  const timeline = root.querySelector("[data-entries-timeline]");
+  const emptyState = root.querySelector("[data-entries-empty-state]");
+  if (!(timeline instanceof HTMLElement) || !(emptyState instanceof HTMLElement)) {
+    return;
+  }
+
+  const hasVisibleEntries = Array.from(timeline.children).some(
+    (child) => child instanceof HTMLElement && !child.hidden,
+  );
+
+  timeline.hidden = !hasVisibleEntries;
+  emptyState.hidden = hasVisibleEntries;
+}
+
+function updateDismissedTrackablePanels(root) {
+  if (!(root instanceof ParentNode)) {
+    return;
+  }
+
+  root.querySelectorAll("[data-trackable-picker]").forEach((picker) => {
+    if (!(picker instanceof HTMLElement)) {
+      return;
+    }
+
+    const dismissedPanel = picker.querySelector("[data-dismissed-trackables-panel]");
+    const dismissedTrackablesList = picker.querySelector("[data-dismissed-trackables-list]");
+    if (!(dismissedPanel instanceof HTMLElement) || !(dismissedTrackablesList instanceof HTMLElement)) {
+      return;
+    }
+
+    const hasVisibleDismissedTrackables = Array.from(dismissedTrackablesList.children).some(
+      (child) => child instanceof HTMLElement && !child.hidden,
+    );
+    dismissedPanel.hidden = !hasVisibleDismissedTrackables;
+  });
+}
+
+function applySensitiveFilter() {
+  const showSensitive = readSensitiveFilterPreference();
+  setSensitiveContentState(showSensitive);
+
+  document.querySelectorAll("[data-sensitive-filter-toggle]").forEach((toggle) => {
+    if (toggle instanceof HTMLInputElement) {
+      toggle.checked = showSensitive;
+    }
+  });
+
+  document.querySelectorAll("[data-sensitive-filter-root]").forEach((root) => {
+    if (!(root instanceof HTMLElement)) {
+      return;
+    }
+
+    root.querySelectorAll("[data-entry-private='true']").forEach((entry) => {
+      if (entry instanceof HTMLElement) {
+        entry.hidden = !showSensitive;
+      }
+    });
+
+    root.querySelectorAll("[data-sensitive-trackable='true']").forEach((trackable) => {
+      if (trackable instanceof HTMLElement) {
+        trackable.hidden = !showSensitive;
+      }
+    });
+
+    updateEntriesEmptyState(root);
+    updateDismissedTrackablePanels(root);
+  });
 }
 
 function deleteEntry(entryId) {
@@ -38,6 +134,7 @@ function deleteEntry(entryId) {
       const entryElement = document.querySelector(`[data-id='entry-${entryId}']`);
       if (entryElement) {
         entryElement.remove();
+        applySensitiveFilter();
       }
     })
     .catch((error) => {
@@ -109,7 +206,10 @@ function initEntriesInteractions() {
           return;
         }
         const li = wrapper.closest("[data-id]");
-        if (li) li.remove();
+        if (li) {
+          li.remove();
+          applySensitiveFilter();
+        }
       })
       .catch((error) => {
         console.error("Error deleting entry:", error);
@@ -184,6 +284,21 @@ function initEntriesInteractions() {
       }
     });
   }
+
+  document.body.addEventListener("change", (event) => {
+    if (!(event.target instanceof HTMLInputElement) || !event.target.matches("[data-sensitive-filter-toggle]")) {
+      return;
+    }
+
+    writeSensitiveFilterPreference(event.target.checked);
+    applySensitiveFilter();
+  });
+
+  document.body.addEventListener("htmx:afterSwap", () => {
+    applySensitiveFilter();
+  });
+
+  applySensitiveFilter();
 }
 
 if (document.readyState === "loading") {

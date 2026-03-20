@@ -175,6 +175,22 @@ label {
   line-height: 1;
 }
 
+.entries-sensitive-filter {
+  margin-block-end: var(--space-md);
+}
+
+.entries-sensitive-filter__control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: var(--size-border-thin) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+}
+
 /* ── Entries: Timeline ───────────────────────────────────── */
 .entries-timeline {
   list-style: none;
@@ -204,6 +220,11 @@ label {
 .entry-card-wrapper--private .entry-card {
   filter: blur(1px);
   user-select: none;
+}
+
+html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-card {
+  filter: none;
+  user-select: text;
 }
 
 .entry-card {
@@ -567,4 +588,3 @@ label {
   background: #fff;
   padding: 0.5rem;
 }
-

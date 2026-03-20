@@ -23,45 +23,57 @@
 
 {{ define "entries_list_content" }}
 <section class="entries-list-section">
-    {{ if .Entries }}
-    <ul class="entries-timeline">
+    <ul class="entries-timeline" data-entries-timeline {{ if .Entries }}{{ else }}hidden{{ end }}>
         {{ range .Entries }}
             {{ template "entry_item" . }}
         {{ end }}
     </ul>
-    {{ else }}
-    <p class="entries-empty">{{ t "entry.no_entries" }}</p>
-    {{ end }}
+    <p class="entries-empty" data-entries-empty-state {{ if .Entries }}hidden{{ end }}>{{ t "entry.no_entries" }}</p>
 </section>
 {{ end }}
 
 {{ define "entries_content" }}
 
-<div
-    id="entries-i18n"
-    data-delete-confirm="{{ t "entries.delete.confirm" }}"
-    data-delete-failed="{{ t "entries.delete.failed" }}"
-    data-delete-error="{{ t "entries.delete.error" }}"
-    hidden
-></div>
+<section class="entries-page" data-sensitive-filter-root>
+    <div
+        id="entries-i18n"
+        data-delete-confirm="{{ t "entries.delete.confirm" }}"
+        data-delete-failed="{{ t "entries.delete.failed" }}"
+        data-delete-error="{{ t "entries.delete.error" }}"
+        hidden
+    ></div>
 
-{{ template "entries_day_navigation" . }}
-{{ template "entries_list_content" . }}
+    {{ template "entries_day_navigation" . }}
 
-<dialog id="add-quick-trackable-dialog" class="sheet">
-    {{ template "entry_trackable_dialog_content" .EntryTrackableDialogData }}
-</dialog>
+    <section class="entries-sensitive-filter" aria-label="{{ t "entries.sensitive_filter.label" }}">
+        <label class="entries-sensitive-filter__control" for="entries-show-sensitive">
+            <span>{{ t "entries.sensitive_filter.label" }}</span>
+            <input
+                type="checkbox"
+                id="entries-show-sensitive"
+                data-sensitive-filter-toggle
+                role="switch"
+            >
+        </label>
+    </section>
 
-<a href="/entry/add" class="entries-fab" aria-label="{{ t "entry.add" }}">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 5v14M5 12h14"/>
-    </svg>
-</a>
+    {{ template "entries_list_content" . }}
+
+    <dialog id="add-quick-trackable-dialog" class="sheet">
+        {{ template "entry_trackable_dialog_content" .EntryTrackableDialogData }}
+    </dialog>
+
+    <a href="/entry/add" class="entries-fab" aria-label="{{ t "entry.add" }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+        </svg>
+    </a>
+</section>
 
 {{ end }}
 
 {{ define "entry_item" }}
-<li class="entry-card-li" data-id="entry-{{ .ID }}">
+<li class="entry-card-li" data-id="entry-{{ .ID }}" data-entry-private="{{ if .IsPrivate }}true{{ else }}false{{ end }}">
 <mecfs-swipe-dismiss class="entry-card-wrapper{{ if .IsPrivate }} entry-card-wrapper--private{{ end }}" threshold="0.5" direction="right" data-entry-id="{{ .ID }}">
     <div slot="background" class="entry-card__delete-bg" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -86,7 +98,7 @@
         {{ if .Trackables }}
         <ul class="entry-card__trackables">
             {{ range .Trackables }}
-            <li class="entry-card__trackable-chip">
+            <li class="entry-card__trackable-chip" data-sensitive-trackable="{{ if .IsSensitive }}true{{ else }}false{{ end }}">
                 {{ if .Icon }}<span class="entry-card__trackable-icon" aria-hidden="true">{{ .Icon }}</span>{{ end }}
                 <span class="entry-card__trackable-name">{{ .Name }}</span>
                 <strong class="entry-card__trackable-value">{{ .Value }}</strong>

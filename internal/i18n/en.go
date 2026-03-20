@@ -17,6 +17,7 @@ var englishCatalog = Catalog{
 	"entries.delete.confirm":                   "Are you sure you want to delete this entry? This action cannot be undone.",
 	"entries.delete.error":                     "An error occurred while deleting the entry. Please try again.",
 	"entries.delete.failed":                    "Failed to delete entry. Please try again.",
+	"entries.sensitive_filter.label":           "Show private and sensitive",
 	"entries.title":                            "Entries",
 	"entry.add_trackable":                      "Add trackable",
 	"entry.add_trackable_link":                 "Add Trackable",

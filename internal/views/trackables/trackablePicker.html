@@ -8,7 +8,7 @@
 
     <section class="quick-tracker" data-active-trackables>
         {{ range .ActiveTrackables }}
-        <mecfs-swipe-dismiss class="trackable-item" threshold="0.5" direction="right" data-trackable-id="{{ .ID }}" data-trackable-name="{{ .Name }}" data-trackable-icon="{{ .Icon.String }}">
+        <mecfs-swipe-dismiss class="trackable-item" threshold="0.5" direction="right" data-trackable-id="{{ .ID }}" data-trackable-name="{{ .Name }}" data-trackable-icon="{{ .Icon.String }}" data-sensitive-trackable="{{ if .IsSensitive }}true{{ else }}false{{ end }}">
             {{ if eq .ValueType "integer" }}
             <form class="autosave-form" method="POST" action="/trackables/{{ .ID }}/add">
                 {{ if $.HasEntryID }}<input type="hidden" name="entry_id" value="{{ $.EntryID }}">{{ end }}
@@ -53,7 +53,7 @@
         <summary>{{ t "trackable.dismissed_for_today" }}</summary>
         <ul class="dismissed-trackables-list" data-dismissed-trackables-list>
             {{ range .DismissedTrackables }}
-            <li class="dismissed-trackable" data-trackable-id="{{ .ID }}">
+            <li class="dismissed-trackable" data-trackable-id="{{ .ID }}" data-sensitive-trackable="{{ if .IsSensitive }}true{{ else }}false{{ end }}">
                 <div class="dismissed-trackable__meta">
                     {{ if .Icon.String }}<span class="icon">{{ .Icon.String }}</span>{{ end }}
                     <span>{{ .Name }}</span>

@@ -602,7 +602,8 @@ SELECT
     td.name AS trackable_name,
     td.icon AS trackable_icon,
     td.value_type AS trackable_value_type,
-    td.unit AS trackable_unit
+    td.unit AS trackable_unit,
+    td.is_sensitive AS trackable_is_sensitive
 FROM entries e
 LEFT JOIN trackable_values tv ON tv.entry_id = e.id
 LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
@@ -641,6 +642,7 @@ type GetEntryWithTrackablesRow struct {
 	TrackableIcon         sql.NullString `json:"trackable_icon"`
 	TrackableValueType    sql.NullString `json:"trackable_value_type"`
 	TrackableUnit         sql.NullString `json:"trackable_unit"`
+	TrackableIsSensitive  sql.NullInt64  `json:"trackable_is_sensitive"`
 }
 
 func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTrackablesParams) ([]GetEntryWithTrackablesRow, error) {
@@ -678,6 +680,7 @@ func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTr
 			&i.TrackableIcon,
 			&i.TrackableValueType,
 			&i.TrackableUnit,
+			&i.TrackableIsSensitive,
 		); err != nil {
 			return nil, err
 		}
@@ -834,7 +837,8 @@ SELECT
     td.name AS trackable_name,
     td.icon AS trackable_icon,
     td.value_type AS trackable_value_type,
-    td.unit AS trackable_unit
+    td.unit AS trackable_unit,
+    td.is_sensitive AS trackable_is_sensitive
 FROM entries e
 LEFT JOIN trackable_values tv ON tv.entry_id = e.id
 LEFT JOIN trackable_definitions td ON td.id = tv.trackable_definition_id
@@ -874,6 +878,7 @@ type ListEntriesRow struct {
 	TrackableIcon         sql.NullString `json:"trackable_icon"`
 	TrackableValueType    sql.NullString `json:"trackable_value_type"`
 	TrackableUnit         sql.NullString `json:"trackable_unit"`
+	TrackableIsSensitive  sql.NullInt64  `json:"trackable_is_sensitive"`
 }
 
 func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error) {
@@ -911,6 +916,7 @@ func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Lis
 			&i.TrackableIcon,
 			&i.TrackableValueType,
 			&i.TrackableUnit,
+			&i.TrackableIsSensitive,
 		); err != nil {
 			return nil, err
 		}
