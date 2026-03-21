@@ -4,21 +4,13 @@
 	Why: `/webauthn/login/verify` currently returns a generic 400 for many error modes; logs now include origin/RPID context, but operators still need easy aggregation by failure reason.
 	How: Add counters and structured logs for categories like missing ceremony cookie, origin mismatch, RP ID mismatch, sign-counter mismatch, and credential not found. Surface these in deployment dashboards/alerts.
 
-- Add production deployment docs for Docker on VPS.
-	Why: The project now has a Dockerfile, but operators still need a canonical deploy recipe (volume mapping, env vars, restart policy, reverse-proxy/HTTPS expectations).
-	How: Add a concise section in `readme.md` (or `docs/deployment.md`) with `docker build`, `docker run`, required env vars (`AUTH_SESSION_SECRET`, `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_ORIGINS`), and an example behind Caddy/Nginx.
-
 - Coordinate git-history cleanup for prior runtime artifacts.
 	Why: Artifacts are no longer tracked in current commits, but old history still contains paths such as `server`, `tmp/app`, and `data/app.db`.
 	How: Align with collaborators, then run `git filter-repo --path server --path tmp/app --path data/app.db --invert-paths` and force-push with clear migration instructions.
 
-- Add browser-level test for home quick-capture submit-state transitions.
-	Why: Server-side tests cover hooks, but they do not verify client-side loading/success/idle state transitions.
-	How: Add a Playwright test that submits the home quick-capture form and asserts submit-state attribute transitions and input reset behavior.
-
-- Add browser-level regression test for entries context actions.
-	Why: Entries context menu, note-sheet editing, add-trackable dialog opening, and delete confirmation are browser-driven and can regress without server test failures.
-	How: Add a Playwright test that opens the entry context menu, verifies note-sheet and trackable-dialog behavior for the selected day, and confirms deletion updates the DOM only after successful confirmation.
+- Expand browser tests to run against a live authenticated server flow.
+	Why: Current Playwright tests validate client behavior with DOM fixtures and loaded scripts, but they do not yet exercise auth/session wiring and template integration end to end.
+	How: Add a Playwright project that starts `go run ./cmd/server/main.go`, establishes an authenticated test session (or test-only auth bypass), then verifies quick-capture and entry context behavior on real rendered pages.
 
 - Add CSS styles for the voice recording UI.
 	Why: The voice section elements (#voice-idle, #voice-recording, .btn-voice-mic, .voice-draft-badge, .voice-saved, etc.) have no dedicated styles yet and rely on fallback defaults.

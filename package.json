@@ -1,0 +1,28 @@
+{
+  "name": "symptomstracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Use go test ./... for Go tests and npm run test:browser for Playwright browser tests\"",
+    "test:browser": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roysland/mediary.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/roysland/mediary/issues"
+  },
+  "homepage": "https://github.com/roysland/mediary#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.53.0"
+  }
+}
