@@ -1,4 +1,4 @@
-const sensitiveFilterStorageKey = "entries-show-sensitive";
+let sensitiveFilterPreference = null;
 
 function getEntriesMessages() {
   const i18n = document.getElementById("entries-i18n");
@@ -25,19 +25,37 @@ function getEntriesMessages() {
 }
 
 function readSensitiveFilterPreference() {
-  try {
-    return window.localStorage.getItem(sensitiveFilterStorageKey) === "true";
-  } catch {
-    return false;
+  if (typeof sensitiveFilterPreference === "boolean") {
+    return sensitiveFilterPreference;
   }
+
+  const toggle = document.querySelector("[data-sensitive-filter-toggle]");
+  if (toggle instanceof HTMLInputElement) {
+    sensitiveFilterPreference = toggle.checked;
+    return sensitiveFilterPreference;
+  }
+
+  sensitiveFilterPreference = false;
+  return sensitiveFilterPreference;
 }
 
 function writeSensitiveFilterPreference(showSensitive) {
-  try {
-    window.localStorage.setItem(sensitiveFilterStorageKey, String(showSensitive));
-  } catch {
-    // Ignore storage failures and keep the current in-memory state.
-  }
+  sensitiveFilterPreference = showSensitive;
+}
+
+function persistSensitiveFilterPreference(showSensitive) {
+  return fetch("/settings/sensitive-content", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "HX-Request": "true",
+    },
+    body: `show_sensitive_content=${showSensitive ? "true" : "false"}`,
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error(`Failed to persist sensitive filter preference (${response.status})`);
+    }
+  });
 }
 
 function setSensitiveContentState(showSensitive) {
@@ -440,6 +458,10 @@ function initEntriesInteractions() {
 
     writeSensitiveFilterPreference(event.target.checked);
     applySensitiveFilter();
+
+    persistSensitiveFilterPreference(event.target.checked).catch((error) => {
+      console.error("Failed to persist sensitive filter preference:", error);
+    });
   });
 
   document.body.addEventListener("htmx:afterSwap", () => {

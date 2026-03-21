@@ -105,10 +105,18 @@ func (s *Server) entries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	settings, err := s.loadUserSettings(r.Context(), userID)
+	if err != nil {
+		log.Printf("Failed to load user settings: %v", err)
+		respondInternalError(w, r, "Failed to load settings")
+		return
+	}
+
 	s.renderPage(w, r, "entries_title", "entries_content", map[string]interface{}{
 		"Entries":                  entries,
 		"SelectedDay":              selectedDayStr,
 		"TodayStr":                 todayStr,
+		"ShowSensitiveContent":     settings.ShowSensitiveContent,
 		"DayNavigation":            buildDayNavigation(selectedDay, now),
 		"AddEntryForm":             buildEntryFormViewData("/entry/add", selectedDayStr, todayStr, true, true, true),
 		"EntryTrackableDialogData": entryTrackableDialogData,

@@ -12,10 +12,11 @@ import (
 func TestDefaultUserSettings(t *testing.T) {
 	got := defaultUserSettings()
 	want := UserSettings{
-		Language:   "en",
-		Theme:      "system",
-		ScreenLock: "none",
-		ShareTimer: "300",
+		Language:             "en",
+		Theme:                "system",
+		ScreenLock:           "none",
+		ShareTimer:           "300",
+		ShowSensitiveContent: false,
 	}
 
 	if got != want {
@@ -30,10 +31,11 @@ func TestLoadAndSaveUserSettings(t *testing.T) {
 	const now int64 = 1710000000
 
 	toSave := UserSettings{
-		Language:   "no",
-		Theme:      "dark",
-		ScreenLock: "300",
-		ShareTimer: "600",
+		Language:             "no",
+		Theme:                "dark",
+		ScreenLock:           "300",
+		ShareTimer:           "600",
+		ShowSensitiveContent: true,
 	}
 
 	if err := s.saveUserSettings(ctx, userID, toSave, now); err != nil {
