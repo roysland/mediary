@@ -18,7 +18,7 @@ module.exports = defineConfig({
     command: [
       "mkdir -p tmp",
       "rm -f tmp/playwright-e2e.db",
-      `APP_ENV=development LISTEN_ADDR=127.0.0.1:${livePort} DB_PATH=tmp/playwright-e2e.db E2E_AUTH_TOKEN=${liveAuthToken} go run ./cmd/server/main.go`,
+      `APP_ENV=development LISTEN_ADDR=127.0.0.1:${livePort} DB_PATH=tmp/playwright-e2e.db E2E_AUTH_TOKEN=${liveAuthToken} WHISPER_BINARY_PATH= WHISPER_MODEL_PATH= go run ./cmd/server/main.go`,
     ].join(" && "),
     url: `${liveBaseURL}/auth`,
     timeout: 120_000,
