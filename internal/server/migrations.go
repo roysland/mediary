@@ -4,8 +4,24 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"sort"
 	"time"
+
+	"github.com/pressly/goose/v3"
 )
+
+const gooseMigrationsDir = "db/migrations"
+
+var legacyMigrationVersionByID = map[string]int64{
+	"001_base_schema":                 1,
+	"002_migrate_user_settings":       2,
+	"003_entries_entry_date":          3,
+	"004_trackable_values_updated_at": 4,
+	"005_trackable_values_entry_date": 5,
+	"006_voice_entry_columns":         6,
+	"007_device_link_tokens":          7,
+	"008_trackable_soft_delete":       8,
+}
 
 type migration struct {
 	id   string
@@ -352,6 +368,109 @@ var migrations = []migration{
 }
 
 func runMigrations(conn *sql.DB) error {
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return fmt.Errorf("set goose dialect: %w", err)
+	}
+
+	hasGooseTable, err := tableExists(conn, goose.DefaultTablename)
+	if err != nil {
+		return err
+	}
+
+	if !hasGooseTable {
+		if err := migrateLegacySchemaIfNeeded(conn); err != nil {
+			return err
+		}
+	}
+
+	if err := goose.Up(conn, gooseMigrationsDir); err != nil {
+		return fmt.Errorf("run goose up: %w", err)
+	}
+
+	return nil
+}
+
+func migrateLegacySchemaIfNeeded(conn *sql.DB) error {
+	hasLegacyTable, err := tableExists(conn, "schema_migrations")
+	if err != nil {
+		return err
+	}
+	if !hasLegacyTable {
+		return nil
+	}
+
+	if err := runLegacyMigrations(conn); err != nil {
+		return err
+	}
+
+	legacyVersion, err := detectLegacyMigrationVersion(conn)
+	if err != nil {
+		return err
+	}
+
+	if err := bootstrapGooseVersion(conn, legacyVersion); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func bootstrapGooseVersion(conn *sql.DB, version int64) error {
+	if _, err := goose.EnsureDBVersion(conn); err != nil {
+		return fmt.Errorf("ensure goose version table: %w", err)
+	}
+
+	if version <= 0 {
+		return nil
+	}
+
+	current, err := goose.GetDBVersion(conn)
+	if err != nil {
+		return fmt.Errorf("read goose version: %w", err)
+	}
+	if current >= version {
+		return nil
+	}
+
+	if _, err := conn.Exec(
+		`INSERT INTO goose_db_version (version_id, is_applied) VALUES (?, ?)`,
+		version,
+		1,
+	); err != nil {
+		return fmt.Errorf("bootstrap goose version %d: %w", version, err)
+	}
+
+	return nil
+}
+
+func detectLegacyMigrationVersion(conn *sql.DB) (int64, error) {
+	applied, err := loadAppliedMigrations(conn)
+	if err != nil {
+		return 0, err
+	}
+
+	var maxVersion int64
+	var unknownIDs []string
+	for id := range applied {
+		version, ok := legacyMigrationVersionByID[id]
+		if !ok {
+			unknownIDs = append(unknownIDs, id)
+			continue
+		}
+		if version > maxVersion {
+			maxVersion = version
+		}
+	}
+
+	if len(unknownIDs) > 0 {
+		sort.Strings(unknownIDs)
+		return 0, fmt.Errorf("unknown legacy migration IDs: %v", unknownIDs)
+	}
+
+	return maxVersion, nil
+}
+
+func runLegacyMigrations(conn *sql.DB) error {
 	if _, err := conn.Exec(`
 		CREATE TABLE IF NOT EXISTS schema_migrations (
 			id TEXT PRIMARY KEY,
@@ -462,4 +581,16 @@ func columnExistsTx(tx *sql.Tx, tableName, columnName string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func tableExists(conn *sql.DB, tableName string) (bool, error) {
+	row := conn.QueryRow(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1`, tableName)
+	var exists int
+	if err := row.Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, fmt.Errorf("check table %s exists: %w", tableName, err)
+	}
+	return exists == 1, nil
 }
