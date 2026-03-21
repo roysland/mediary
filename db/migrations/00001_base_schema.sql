@@ -1,4 +1,5 @@
--- NOTE: This file is the canonical schema definition used by sqlc and the goose base-schema migration.
+-- +goose Up
+-- NOTE: This file mirrors db/schema.sql and is the goose base-schema migration.
 -- Runtime schema changes are applied through tracked files in db/migrations.
 
 CREATE TABLE IF NOT EXISTS users (
@@ -259,3 +260,6 @@ VALUES
 -- Sensitive but important biological signals
 ('Sexual activity', 'boolean', NULL, NULL, NULL, '🔒', 1, 'Private activity', NULL, 'activity', strftime('%s','now'));
 
+
+-- +goose Down
+SELECT 1;

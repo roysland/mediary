@@ -7,7 +7,17 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.34
 )
 
-require github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+require (
+	github.com/pressly/goose/v3 v3.27.0
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+)
+
+require (
+	github.com/mfridman/interpolate v0.0.2 // indirect
+	github.com/sethvargo/go-retry v0.3.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+)
 
 require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
