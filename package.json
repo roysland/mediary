@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Use go test ./... for Go tests and npm run test:browser for Playwright browser tests\"",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:browser:live": "playwright test --project=live-server"
   },
   "repository": {
     "type": "git",

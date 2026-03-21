@@ -8,9 +8,9 @@
 	Why: Artifacts are no longer tracked in current commits, but old history still contains paths such as `server`, `tmp/app`, and `data/app.db`.
 	How: Align with collaborators, then run `git filter-repo --path server --path tmp/app --path data/app.db --invert-paths` and force-push with clear migration instructions.
 
-- Expand browser tests to run against a live authenticated server flow.
-	Why: Current Playwright tests validate client behavior with DOM fixtures and loaded scripts, but they do not yet exercise auth/session wiring and template integration end to end.
-	How: Add a Playwright project that starts `go run ./cmd/server/main.go`, establishes an authenticated test session (or test-only auth bypass), then verifies quick-capture and entry context behavior on real rendered pages.
+- Speed up Playwright live-server runs by disabling transcription workers in test mode.
+	Why: Live browser tests currently boot the transcription worker even though they do not cover voice transcription paths, adding startup overhead and an unnecessary external binary dependency.
+	How: Add a test-only env toggle (or Playwright webServer env values) that sets `WHISPER_BINARY_PATH`/`WHISPER_MODEL_PATH` empty so the worker stays disabled during live browser regression runs.
 
 - Add CSS styles for the voice recording UI.
 	Why: The voice section elements (#voice-idle, #voice-recording, .btn-voice-mic, .voice-draft-badge, .voice-saved, etc.) have no dedicated styles yet and rely on fallback defaults.

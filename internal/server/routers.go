@@ -14,6 +14,7 @@ func (s *Server) routes() {
 
 	s.mux.HandleFunc("/", s.home)
 	s.mux.HandleFunc("/auth", s.authPage)
+	s.mux.HandleFunc("/auth/e2e/login", s.e2eLogin)
 	s.mux.HandleFunc("/webauthn/register/options", s.beginRegistration)
 	s.mux.HandleFunc("/webauthn/register/verify", s.finishRegistration)
 	s.mux.HandleFunc("/webauthn/login/options", s.beginLogin)

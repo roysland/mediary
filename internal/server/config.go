@@ -37,6 +37,9 @@ type Config struct {
 
 	// AuthSessionSecret signs auth cookies. Must be set in production.
 	AuthSessionSecret string
+	// E2EAuthToken enables a dev-only test login endpoint for browser E2E runs.
+	// Leave empty to disable.
+	E2EAuthToken string
 
 	// WebAuthnRPID is the relying party ID for passkey ceremonies.
 	WebAuthnRPID string
@@ -59,6 +62,7 @@ func LoadConfig() Config {
 		TranscriptionTimeoutSeconds: getEnvInt("TRANSCRIPTION_TIMEOUT_SECONDS", 120),
 		CSRFTrustedOrigins:          getEnvCSV("CSRF_TRUSTED_ORIGINS"),
 		AuthSessionSecret:           getEnv("AUTH_SESSION_SECRET", ""),
+		E2EAuthToken:                getEnv("E2E_AUTH_TOKEN", ""),
 		WebAuthnRPID:                getEnv("WEBAUTHN_RP_ID", "localhost"),
 		WebAuthnRPDisplayName:       getEnv("WEBAUTHN_RP_DISPLAY_NAME", "Symptoms Tracker"),
 		WebAuthnRPOrigins:           getEnvCSVWithDefault("WEBAUTHN_RP_ORIGINS", []string{"http://localhost:8080"}),

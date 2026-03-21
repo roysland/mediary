@@ -46,6 +46,8 @@ func isPublicRoute(path string) bool {
 	switch {
 	case path == "/auth":
 		return true
+	case path == "/auth/e2e/login":
+		return true
 	case path == "/auth/logout":
 		return true
 	case path == "/webauthn/login/options":
