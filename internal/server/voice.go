@@ -63,6 +63,9 @@ func (s *Server) addVoiceEntry(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	audioFileName := fmt.Sprintf("%d_%d.webm", userID, now.UnixNano())
 	audioFilePath := filepath.Join(audioDir, audioFileName)
+	// Store only the relative web path in the database, not the full filesystem path.
+	// This ensures it works correctly regardless of where AudioStorageDir is located.
+	relativeAudioPath := filepath.ToSlash(filepath.Join("data/audio", audioFileName))
 
 	dst, err := os.OpenFile(audioFilePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
@@ -85,7 +88,7 @@ func (s *Server) addVoiceEntry(w http.ResponseWriter, r *http.Request) {
 		RecordedAtUtc:         now.UTC().Unix(),
 		TimezoneOffsetMinutes: defaultTimezoneOffsetMinutes,
 		EntryDate:             now.Format(dateLayoutISO),
-		AudioFilePath:         sql.NullString{String: audioFilePath, Valid: true},
+		AudioFilePath:         sql.NullString{String: relativeAudioPath, Valid: true},
 		CreatedAtUtc:          now.UTC().Unix(),
 	})
 	if err != nil {
