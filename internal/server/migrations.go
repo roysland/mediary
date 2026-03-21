@@ -261,6 +261,94 @@ var migrations = []migration{
 			return nil
 		},
 	},
+	{
+		id:   "008_trackable_soft_delete",
+		name: "add deleted_at_utc to trackable_definitions and replace inline UNIQUE with partial index",
+		up: func(tx *sql.Tx) error {
+			// Check if already migrated.
+			hasCol, err := columnExistsTx(tx, "trackable_definitions", "deleted_at_utc")
+			if err != nil {
+				return err
+			}
+			if hasCol {
+				return nil
+			}
+
+			// SQLite cannot drop inline constraints; recreate the table without
+			// UNIQUE(user_id, name) and with the new deleted_at_utc column.
+			if _, err := tx.Exec(`
+				CREATE TABLE trackable_definitions_new (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id INTEGER NOT NULL,
+					template_id INTEGER,
+					name TEXT NOT NULL,
+					icon TEXT,
+					value_type TEXT NOT NULL,
+					unit TEXT,
+					min_value INTEGER,
+					max_value INTEGER,
+					is_sensitive INTEGER NOT NULL DEFAULT 0,
+					private_label TEXT,
+					category TEXT NOT NULL,
+					active INTEGER NOT NULL DEFAULT 1,
+					deleted_at_utc INTEGER,
+					created_at_utc INTEGER NOT NULL,
+					FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+					FOREIGN KEY (template_id) REFERENCES trackable_templates(id) ON DELETE SET NULL,
+					CHECK (value_type IN ('integer', 'boolean', 'text')),
+					CHECK (category IN ('default', 'symptom', 'activity', 'measurement', 'state'))
+				)
+			`); err != nil {
+				return fmt.Errorf("create trackable_definitions_new: %w", err)
+			}
+
+			if _, err := tx.Exec(`
+				INSERT INTO trackable_definitions_new
+					(id, user_id, template_id, name, icon, value_type, unit,
+					 min_value, max_value, is_sensitive, private_label, category,
+					 active, deleted_at_utc, created_at_utc)
+				SELECT id, user_id, template_id, name, icon, value_type, unit,
+					   min_value, max_value, is_sensitive, private_label, category,
+					   active, NULL, created_at_utc
+				FROM trackable_definitions
+			`); err != nil {
+				return fmt.Errorf("copy trackable_definitions: %w", err)
+			}
+
+			if _, err := tx.Exec(`DROP TABLE trackable_definitions`); err != nil {
+				return fmt.Errorf("drop old trackable_definitions: %w", err)
+			}
+
+			if _, err := tx.Exec(`ALTER TABLE trackable_definitions_new RENAME TO trackable_definitions`); err != nil {
+				return fmt.Errorf("rename trackable_definitions_new: %w", err)
+			}
+
+			if _, err := tx.Exec(`
+				CREATE INDEX IF NOT EXISTS idx_trackable_definitions_template_id
+				ON trackable_definitions(template_id)
+			`); err != nil {
+				return fmt.Errorf("create idx_trackable_definitions_template_id: %w", err)
+			}
+
+			if _, err := tx.Exec(`
+				CREATE UNIQUE INDEX IF NOT EXISTS idx_trackable_definitions_user_name_active
+				ON trackable_definitions(user_id, name)
+				WHERE deleted_at_utc IS NULL
+			`); err != nil {
+				return fmt.Errorf("create idx_trackable_definitions_user_name_active: %w", err)
+			}
+
+			if _, err := tx.Exec(`
+				CREATE UNIQUE INDEX IF NOT EXISTS idx_trackable_definitions_user_template
+				ON trackable_definitions(user_id, template_id)
+				WHERE template_id IS NOT NULL AND deleted_at_utc IS NULL
+			`); err != nil {
+				return fmt.Errorf("create idx_trackable_definitions_user_template: %w", err)
+			}
+
+			return nil
+		},
+	},
 }
 
 func runMigrations(conn *sql.DB) error {

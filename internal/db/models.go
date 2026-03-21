@@ -64,6 +64,7 @@ type TrackableDefinition struct {
 	PrivateLabel sql.NullString `json:"private_label"`
 	Category     string         `json:"category"`
 	Active       int64          `json:"active"`
+	DeletedAtUtc sql.NullInt64  `json:"deleted_at_utc"`
 	CreatedAtUtc int64          `json:"created_at_utc"`
 }
 

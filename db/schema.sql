@@ -98,11 +98,12 @@ CREATE TABLE IF NOT EXISTS trackable_definitions (
 
     active INTEGER NOT NULL DEFAULT 1,
 
+    deleted_at_utc INTEGER, -- NULL = live, Unix timestamp = soft-deleted
+
     created_at_utc INTEGER NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (template_id) REFERENCES trackable_templates(id) ON DELETE SET NULL,
-    UNIQUE(user_id, name),
     CHECK (value_type IN ('integer', 'boolean', 'text')),
     CHECK (category IN ('default', 'symptom', 'activity', 'measurement', 'state'))
 );
@@ -186,9 +187,13 @@ ON trackable_templates(name);
 CREATE INDEX IF NOT EXISTS idx_trackable_definitions_template_id
 ON trackable_definitions(template_id);
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_trackable_definitions_user_name_active
+ON trackable_definitions(user_id, name)
+WHERE deleted_at_utc IS NULL;
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_trackable_definitions_user_template
 ON trackable_definitions(user_id, template_id)
-WHERE template_id IS NOT NULL;
+WHERE template_id IS NOT NULL AND deleted_at_utc IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_entries_user_date
 ON entries(user_id, entry_date);

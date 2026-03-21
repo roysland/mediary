@@ -58,10 +58,15 @@
                     {{ if .Icon.String }}<span class="icon">{{ .Icon.String }}</span>{{ end }}
                     <span>{{ .Name }}</span>
                 </div>
+                <div class="dismissed-trackable__actions">
                 <form method="POST" action="/trackables/{{ .ID }}/dismissal" class="dismissed-trackable__form">
                     <input type="hidden" name="dismissed" value="false">
                     <button type="submit" class="restore-trackable" hx-post="/trackables/{{ .ID }}/dismissal" hx-trigger="click" hx-swap="none">{{ t "common.restore" }}</button>
                 </form>
+                <form method="POST" action="/trackables/{{ .ID }}/delete" class="dismissed-trackable__form">
+                    <button type="submit" class="delete-trackable" hx-post="/trackables/{{ .ID }}/delete" hx-trigger="click" hx-swap="none" data-confirm-label="{{ t `trackable.delete_confirm` }}">{{ t "trackable.delete" }}</button>
+                </form>
+                </div>
             </li>
             {{ end }}
         </ul>

@@ -39,6 +39,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/trackables/add", s.addTrackable)
 	s.mux.HandleFunc("/trackables", s.listTrackables)
 	s.mux.HandleFunc("/trackables/{id}/dismissal", s.saveTrackableDismissal)
+	s.mux.HandleFunc("/trackables/{id}/delete", s.deleteTrackable)
 	s.mux.HandleFunc("/trackables/{id}/add", s.saveTrackableValue)
 	s.mux.HandleFunc("/trackables/{id}", s.registerTrackable)
 

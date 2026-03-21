@@ -27,7 +27,7 @@ Current migration method is clunky. We can surely benefit from a third party lib
 
 
 ### Database Migrations
-**Library:** `github.com/pressly/goose` or `github.com/golang-migrate/migrate`
+**Library:** `github.com/pressly/goose`
 **Why:** Current `internal/server/migrations.go` is clunky with embedded SQL functions. These libraries provide:
 - Clean separation of migration logic (file-based SQL)
 - Better tracking of migration state

@@ -98,6 +98,8 @@ var norwegianCatalog = Catalog{
 	"trackable.category.symptom":               "Symptom",
 	"trackable.color":                          "Farge",
 	"trackable.dismissed_for_today":            "Skjult for i dag",
+	"trackable.delete":                         "Slett permanent",
+	"trackable.delete_confirm":                 "Slette denne loggføringen permanent? Historiske data bevares, men den vil ikke lenger vises i listen.",
 	"trackable.icon.label":                     "Ikon",
 	"trackable.icon.placeholder":               "Emoji eller kort tekst (f.eks. 'Vann')",
 	"trackable.max_value.label":                "Maksimumsverdi",

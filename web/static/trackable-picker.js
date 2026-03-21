@@ -99,6 +99,16 @@ window.initTrackablePickers = initTrackablePickers;
 function initTrackablePickerEvents() {
   initTrackablePickers(document);
 
+  // Intercept HTMX requests on elements with data-confirm-label and prompt the user.
+  document.body.addEventListener("htmx:confirm", (event) => {
+    const label = event.detail.elt?.dataset?.confirmLabel;
+    if (!label) return;
+    event.preventDefault();
+    if (window.confirm(label)) {
+      event.detail.issueRequest(true);
+    }
+  });
+
   document.addEventListener("swipedismiss", async (event) => {
     const trackableElement = event.target.closest(".trackable-item");
     const root = trackableElement?.closest("[data-trackable-picker]");
@@ -182,6 +192,18 @@ function initTrackablePickerEvents() {
       const isError = event.detail.xhr?.status >= 400;
       if (!isError) {
         window.location.reload();
+      }
+    }
+
+    if (event.detail.elt?.classList?.contains?.("delete-trackable")) {
+      const isError = event.detail.xhr?.status >= 400;
+      if (!isError) {
+        const li = event.detail.elt.closest(".dismissed-trackable");
+        if (li) {
+          li.remove();
+          const root = event.detail.elt.closest("[data-trackable-picker]");
+          if (root) ensureDismissedPanelVisibility(root);
+        }
       }
     }
   });

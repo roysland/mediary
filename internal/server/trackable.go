@@ -418,6 +418,44 @@ func (s *Server) saveTrackableValue(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, referer, http.StatusSeeOther)
 }
 
+func (s *Server) deleteTrackable(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+
+	trackableID, ok := requirePathInt64(w, r, "id", "trackable ID")
+	if !ok {
+		return
+	}
+
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+
+	now := time.Now()
+	err := s.queries.SoftDeleteTrackableDefinition(r.Context(), db.SoftDeleteTrackableDefinitionParams{
+		DeletedAtUtc: sql.NullInt64{Int64: now.UTC().Unix(), Valid: true},
+		ID:           trackableID,
+		UserID:       userID,
+	})
+	if err != nil {
+		respondInternalError(w, r, "Failed to delete trackable")
+		return
+	}
+
+	req := classifyRequest(r)
+	if req.IsAJAX {
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"status":       "success",
+			"trackable_id": trackableID,
+		})
+		return
+	}
+
+	http.Redirect(w, r, "/trackables", http.StatusSeeOther)
+}
+
 func (s *Server) saveTrackableDismissal(w http.ResponseWriter, r *http.Request) {
 	if !requireMethod(w, r, http.MethodPost) {
 		return

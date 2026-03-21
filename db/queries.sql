@@ -136,6 +136,7 @@ FROM trackable_templates tt
 LEFT JOIN trackable_definitions td
         ON td.template_id = tt.id
      AND td.user_id = ?
+     AND td.deleted_at_utc IS NULL
 WHERE td.id IS NULL;
 
 -- name: GetAvailableTrackableTemplateByID :one
@@ -144,6 +145,7 @@ FROM trackable_templates tt
 LEFT JOIN trackable_definitions td
         ON td.template_id = tt.id
      AND td.user_id = ?
+     AND td.deleted_at_utc IS NULL
 WHERE tt.id = ?
     AND td.id IS NULL;
 
@@ -193,6 +195,7 @@ LEFT JOIN trackable_daily_dismissals tdd
       AND tdd.user_id = td.user_id
       AND tdd.dismissal_date = ?
 WHERE td.user_id = ?
+    AND td.deleted_at_utc IS NULL
 ORDER BY td.name;
 
 -- name: UpsertTrackableDailyDismissal :one
@@ -258,7 +261,14 @@ RETURNING id, entry_id, trackable_definition_id, value_int, value_bool, value_te
 -- name: GetTrackableById :one
 SELECT *
 FROM trackable_definitions
-WHERE id = ? AND user_id = ?;
+WHERE id = ? AND user_id = ? AND deleted_at_utc IS NULL;
+
+-- name: SoftDeleteTrackableDefinition :exec
+UPDATE trackable_definitions
+SET deleted_at_utc = sqlc.arg(deleted_at_utc)
+WHERE id = sqlc.arg(id)
+    AND user_id = sqlc.arg(user_id)
+    AND deleted_at_utc IS NULL;
 
 -- name: ListSettings :many
 SELECT *

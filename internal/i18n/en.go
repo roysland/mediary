@@ -98,6 +98,8 @@ var englishCatalog = Catalog{
 	"trackable.category.symptom":               "Symptom",
 	"trackable.color":                          "Color",
 	"trackable.dismissed_for_today":            "Dismissed for today",
+	"trackable.delete":                         "Delete permanently",
+	"trackable.delete_confirm":                 "Delete this tracker permanently? Historical data will be preserved but it will no longer appear in your tracker list.",
 	"trackable.icon.label":                     "Icon",
 	"trackable.icon.placeholder":               "Emoji or short text (e.g. '💧' or 'Water')",
 	"trackable.max_value.label":                "Maximum value",

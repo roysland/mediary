@@ -167,7 +167,7 @@ INSERT INTO trackable_definitions (
     created_at_utc
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, user_id, template_id, name, icon, value_type, unit, min_value, max_value, is_sensitive, private_label, category, active, created_at_utc
+RETURNING id, user_id, template_id, name, icon, value_type, unit, min_value, max_value, is_sensitive, private_label, category, active, deleted_at_utc, created_at_utc
 `
 
 type CreateTrackableDefinitionParams struct {
@@ -215,6 +215,7 @@ func (q *Queries) CreateTrackableDefinition(ctx context.Context, arg CreateTrack
 		&i.PrivateLabel,
 		&i.Category,
 		&i.Active,
+		&i.DeletedAtUtc,
 		&i.CreatedAtUtc,
 	)
 	return i, err
@@ -517,6 +518,7 @@ FROM trackable_templates tt
 LEFT JOIN trackable_definitions td
         ON td.template_id = tt.id
      AND td.user_id = ?
+     AND td.deleted_at_utc IS NULL
 WHERE tt.id = ?
     AND td.id IS NULL
 `
@@ -696,9 +698,9 @@ func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTr
 }
 
 const getTrackableById = `-- name: GetTrackableById :one
-SELECT id, user_id, template_id, name, icon, value_type, unit, min_value, max_value, is_sensitive, private_label, category, active, created_at_utc
+SELECT id, user_id, template_id, name, icon, value_type, unit, min_value, max_value, is_sensitive, private_label, category, active, deleted_at_utc, created_at_utc
 FROM trackable_definitions
-WHERE id = ? AND user_id = ?
+WHERE id = ? AND user_id = ? AND deleted_at_utc IS NULL
 `
 
 type GetTrackableByIdParams struct {
@@ -723,6 +725,7 @@ func (q *Queries) GetTrackableById(ctx context.Context, arg GetTrackableByIdPara
 		&i.PrivateLabel,
 		&i.Category,
 		&i.Active,
+		&i.DeletedAtUtc,
 		&i.CreatedAtUtc,
 	)
 	return i, err
@@ -734,6 +737,7 @@ FROM trackable_templates tt
 LEFT JOIN trackable_definitions td
         ON td.template_id = tt.id
      AND td.user_id = ?
+     AND td.deleted_at_utc IS NULL
 WHERE td.id IS NULL
 `
 
@@ -1082,7 +1086,7 @@ func (q *Queries) ListTrackableDailyDismissalsByUser(ctx context.Context, userID
 }
 
 const listTrackableDefinitions = `-- name: ListTrackableDefinitions :many
-SELECT id, user_id, template_id, name, icon, value_type, unit, min_value, max_value, is_sensitive, private_label, category, active, created_at_utc
+SELECT id, user_id, template_id, name, icon, value_type, unit, min_value, max_value, is_sensitive, private_label, category, active, deleted_at_utc, created_at_utc
 FROM trackable_definitions
 WHERE user_id = ?
 `
@@ -1110,6 +1114,7 @@ func (q *Queries) ListTrackableDefinitions(ctx context.Context, userID int64) ([
 			&i.PrivateLabel,
 			&i.Category,
 			&i.Active,
+			&i.DeletedAtUtc,
 			&i.CreatedAtUtc,
 		); err != nil {
 			return nil, err
@@ -1148,6 +1153,7 @@ LEFT JOIN trackable_daily_dismissals tdd
       AND tdd.user_id = td.user_id
       AND tdd.dismissal_date = ?
 WHERE td.user_id = ?
+    AND td.deleted_at_utc IS NULL
 ORDER BY td.name
 `
 
@@ -1369,6 +1375,25 @@ func (q *Queries) RedeemDeviceLinkToken(ctx context.Context, arg RedeemDeviceLin
 		&i.CreatedAtUtc,
 	)
 	return i, err
+}
+
+const softDeleteTrackableDefinition = `-- name: SoftDeleteTrackableDefinition :exec
+UPDATE trackable_definitions
+SET deleted_at_utc = ?1
+WHERE id = ?2
+    AND user_id = ?3
+    AND deleted_at_utc IS NULL
+`
+
+type SoftDeleteTrackableDefinitionParams struct {
+	DeletedAtUtc sql.NullInt64 `json:"deleted_at_utc"`
+	ID           int64         `json:"id"`
+	UserID       int64         `json:"user_id"`
+}
+
+func (q *Queries) SoftDeleteTrackableDefinition(ctx context.Context, arg SoftDeleteTrackableDefinitionParams) error {
+	_, err := q.db.ExecContext(ctx, softDeleteTrackableDefinition, arg.DeletedAtUtc, arg.ID, arg.UserID)
+	return err
 }
 
 const updateEntryText = `-- name: UpdateEntryText :one

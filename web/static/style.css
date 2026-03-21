@@ -513,6 +513,12 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
   display: inline;
 }
 
+.dismissed-trackable__actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 :root {
   --submit-morph-duration: 180ms;
   --submit-success-hold: 800ms;
