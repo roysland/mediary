@@ -16,7 +16,7 @@
     data-entry-form
     {{ if .UseDialogRefresh }}data-entry-dialog-form="true"{{ end }}
 >
-    <input type="hidden" name="entry_id" value="{{ .EntryID }}" data-entry-form-entry-id>
+    <input type="hidden" name="entry_id" value="{{ if .EntryID }}{{ .EntryID }}{{ end }}" data-entry-form-entry-id>
     <input type="hidden" name="entry_date" value="{{ .EntryDate }}" data-entry-form-date>
 
     {{ if .ShowEntryDate }}
