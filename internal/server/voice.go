@@ -52,7 +52,7 @@ func (s *Server) addVoiceEntry(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure storage directory exists.
 	audioDir := s.cfg.AudioStorageDir
-	if err := os.MkdirAll(audioDir, 0750); err != nil {
+	if err := os.MkdirAll(audioDir, 0755); err != nil {
 		log.Printf("failed to create audio dir %s: %v", audioDir, err)
 		respondInternalError(w, r, "failed to prepare storage")
 		return
@@ -64,7 +64,7 @@ func (s *Server) addVoiceEntry(w http.ResponseWriter, r *http.Request) {
 	audioFileName := fmt.Sprintf("%d_%d.webm", userID, now.UnixNano())
 	audioFilePath := filepath.Join(audioDir, audioFileName)
 
-	dst, err := os.OpenFile(audioFilePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0640)
+	dst, err := os.OpenFile(audioFilePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		log.Printf("failed to create audio file %s: %v", audioFilePath, err)
 		respondInternalError(w, r, "failed to save audio")
