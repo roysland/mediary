@@ -18,6 +18,7 @@ const MAX_RECORDING_MS = 60_000; // 60 seconds
 function initVoiceRecorder() {
   const recordBtn   = document.getElementById("voice-record-btn");
   const stopBtn     = document.getElementById("voice-stop-btn");
+  const voiceSection = recordBtn ? recordBtn.closest(".voice-entry-section") : null;
   const idleEl      = document.getElementById("voice-idle");
   const recordingEl = document.getElementById("voice-recording");
   const uploadingEl = document.getElementById("voice-uploading");
@@ -26,6 +27,13 @@ function initVoiceRecorder() {
   const timerEl     = document.getElementById("voice-timer");
 
   if (!recordBtn) return; // voice section not present on this page
+  if (!stopBtn) return;
+
+  // Prevent duplicate listeners when HTMX swaps unrelated DOM fragments.
+  if (voiceSection && voiceSection.dataset.voiceBound === "1") return;
+  if (voiceSection) {
+    voiceSection.dataset.voiceBound = "1";
+  }
 
   let mediaRecorder = null;
   let audioChunks   = [];
