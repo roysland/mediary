@@ -411,6 +411,14 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
   box-shadow: var(--shadow-sm);
 }
 
+.voice-idle[hidden],
+.voice-recording[hidden],
+.voice-uploading[hidden],
+#voice-result[hidden],
+.voice-error[hidden] {
+  display: none;
+}
+
 .voice-idle {
   padding: var(--space-lg);
   display: grid;
