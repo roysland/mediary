@@ -1,0 +1,14 @@
+2026-03-23T01:47:23+01:00	INFO	[misconfig] Misconfiguration scanning is enabled
+2026-03-23T01:47:23+01:00	INFO	Detected config files	num=1
+
+Report Summary
+
+┌────────────┬────────────┬───────────────────┐
+│   Target   │    Type    │ Misconfigurations │
+├────────────┼────────────┼───────────────────┤
+│ Dockerfile │ dockerfile │         0         │
+└────────────┴────────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+

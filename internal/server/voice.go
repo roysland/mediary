@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -52,11 +53,18 @@ func (s *Server) addVoiceEntry(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure storage directory exists.
 	audioDir := s.cfg.AudioStorageDir
-	if err := os.MkdirAll(audioDir, 0755); err != nil {
+	if err := os.MkdirAll(audioDir, 0750); err != nil {
 		log.Printf("failed to create audio dir %s: %v", audioDir, err)
 		respondInternalError(w, r, "failed to prepare storage")
 		return
 	}
+	root, err := os.OpenRoot(audioDir)
+	if err != nil {
+		log.Printf("failed to open audio dir %s: %v", audioDir, err)
+		respondInternalError(w, r, "failed to prepare storage")
+		return
+	}
+	defer root.Close()
 
 	// Save the audio file under a name derived from user ID and time to avoid
 	// collisions. We do NOT use any user-supplied filename.
@@ -67,20 +75,31 @@ func (s *Server) addVoiceEntry(w http.ResponseWriter, r *http.Request) {
 	// This ensures it works correctly regardless of where AudioStorageDir is located.
 	relativeAudioPath := filepath.ToSlash(filepath.Join("data/audio", audioFileName))
 
-	dst, err := os.OpenFile(audioFilePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	dst, err := root.OpenFile(audioFileName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		log.Printf("failed to create audio file %s: %v", audioFilePath, err)
 		respondInternalError(w, r, "failed to save audio")
 		return
 	}
 	if _, err := io.Copy(dst, audioFile); err != nil {
-		dst.Close()
-		os.Remove(audioFilePath)
+		if closeErr := dst.Close(); closeErr != nil {
+			log.Printf("failed to close audio file %s: %v", audioFilePath, closeErr)
+		}
+		if removeErr := root.Remove(audioFileName); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
+			log.Printf("failed to remove partial audio file %s: %v", audioFilePath, removeErr)
+		}
 		log.Printf("failed to write audio file %s: %v", audioFilePath, err)
 		respondInternalError(w, r, "failed to save audio")
 		return
 	}
-	dst.Close()
+	if err := dst.Close(); err != nil {
+		if removeErr := root.Remove(audioFileName); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
+			log.Printf("failed to remove unreadable audio file %s: %v", audioFilePath, removeErr)
+		}
+		log.Printf("failed to finalize audio file %s: %v", audioFilePath, err)
+		respondInternalError(w, r, "failed to save audio")
+		return
+	}
 
 	// Create the draft entry in the database immediately.
 	entry, err := s.queries.CreateDraftEntry(r.Context(), db.CreateDraftEntryParams{
@@ -92,7 +111,9 @@ func (s *Server) addVoiceEntry(w http.ResponseWriter, r *http.Request) {
 		CreatedAtUtc:          now.UTC().Unix(),
 	})
 	if err != nil {
-		os.Remove(audioFilePath)
+		if removeErr := root.Remove(audioFileName); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
+			log.Printf("failed to remove orphaned audio file %s: %v", audioFilePath, removeErr)
+		}
 		log.Printf("failed to create draft entry: %v", err)
 		respondInternalError(w, r, "failed to save entry")
 		return

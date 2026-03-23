@@ -56,6 +56,7 @@
                 id="entries-show-sensitive"
                 data-sensitive-filter-toggle
                 role="switch"
+                {{ if .ShowSensitiveContent }}checked{{ end }}
             >
         </label>
     </section>
@@ -96,7 +97,17 @@
 {{ end }}
 
 {{ define "entry_item" }}
-<li class="entry-card-li" data-id="entry-{{ .ID }}" data-entry-private="{{ if .IsPrivate }}true{{ else }}false{{ end }}">
+<li
+    class="entry-card-li"
+    data-id="entry-{{ .ID }}"
+    data-entry-private="{{ if .IsPrivate }}true{{ else }}false{{ end }}"
+    {{ if and .IsDraft (eq .TranscriptionStatus "pending") }}
+    hx-get="/entry/{{ .ID }}"
+    hx-trigger="every 5s"
+    hx-target="this"
+    hx-swap="outerHTML"
+    {{ end }}
+>
 <mecfs-swipe-dismiss class="entry-card-wrapper{{ if .IsPrivate }} entry-card-wrapper--private{{ end }}" threshold="0.5" direction="right" data-entry-id="{{ .ID }}">
     <div slot="background" class="entry-card__delete-bg" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>

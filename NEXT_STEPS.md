@@ -1,45 +1,25 @@
 ## Remaining Follow-ups
 
+- Add CI checks for the E2E auth isolation contract.
+	Why: The `/auth/e2e/login` bypass is now split behind the `e2e` build tag plus `APP_ENV=test` and a required `PLAYWRIGHT_E2E_AUTH_TOKEN`, but that guarantee should be enforced automatically so future refactors do not reopen the path.
+	How: Add one CI job that runs `go test ./...`, one that runs `go test -tags e2e ./internal/server`, and one smoke check that starts a normal binary and asserts `/auth/e2e/login` returns 404.
+
 - Add structured diagnostics/metrics for WebAuthn ceremony failures.
 	Why: `/webauthn/login/verify` currently returns a generic 400 for many error modes; logs now include origin/RPID context, but operators still need easy aggregation by failure reason.
 	How: Add counters and structured logs for categories like missing ceremony cookie, origin mismatch, RP ID mismatch, sign-counter mismatch, and credential not found. Surface these in deployment dashboards/alerts.
-
-- Add production deployment docs for Docker on VPS.
-	Why: The project now has a Dockerfile, but operators still need a canonical deploy recipe (volume mapping, env vars, restart policy, reverse-proxy/HTTPS expectations).
-	How: Add a concise section in `readme.md` (or `docs/deployment.md`) with `docker build`, `docker run`, required env vars (`AUTH_SESSION_SECRET`, `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_ORIGINS`), and an example behind Caddy/Nginx.
 
 - Coordinate git-history cleanup for prior runtime artifacts.
 	Why: Artifacts are no longer tracked in current commits, but old history still contains paths such as `server`, `tmp/app`, and `data/app.db`.
 	How: Align with collaborators, then run `git filter-repo --path server --path tmp/app --path data/app.db --invert-paths` and force-push with clear migration instructions.
 
-- Add browser-level test for home quick-capture submit-state transitions.
-	Why: Server-side tests cover hooks, but they do not verify client-side loading/success/idle state transitions.
-	How: Add a Playwright test that submits the home quick-capture form and asserts submit-state attribute transitions and input reset behavior.
-
-- Add browser-level regression test for entries context actions.
-	Why: Entries context menu, note-sheet editing, add-trackable dialog opening, and delete confirmation are browser-driven and can regress without server test failures.
-	How: Add a Playwright test that opens the entry context menu, verifies note-sheet and trackable-dialog behavior for the selected day, and confirms deletion updates the DOM only after successful confirmation.
-
-- Add CSS styles for the voice recording UI.
-	Why: The voice section elements (#voice-idle, #voice-recording, .btn-voice-mic, .voice-draft-badge, .voice-saved, etc.) have no dedicated styles yet and rely on fallback defaults.
-	How: Add the required rules to EXTERNAL_DEPS.md for the stylesheet maintainer, or extend web/static/style.css. Key elements to style: `.voice-idle`, `.btn-voice-mic` (large circular button), `.voice-recording`, `.voice-dot` (animated pulsing indicator), `.voice-draft-badge`, `.voice-saved`, `.voice-error`.
-
-- Consider periodic polling / SSE for transcription status updates.
-	Why: After a voice draft is saved the entry list shows "Transcribing..." indefinitely until the user manually refreshes. On real hardware whisper typically finishes in a few seconds.
-	How: Either (a) add an HTMX polling target on the draft entry item (`hx-trigger="every 5s"` → `GET /entry/{id}`) that stops once `TranscriptionStatus` is no longer `pending`, or (b) push a Server-Sent Event when the worker finishes and let the client refresh the entry.
-
-- Guard against duplicate voice-recorder event listeners after HTMX swaps.
-	Why: `initVoiceRecorder` is called on every `htmx:afterSwap` and currently attaches new click listeners each time for the same DOM nodes, which can trigger multiple recorder/upload flows from one click.
-	How: Make initialization idempotent by marking the section as bound (for example with `data-voice-bound="1"`) or by removing/replacing existing listeners before adding new ones.
-
 - Add explicit approval step on the original device for QR link redemption.
 	Why: QR-based linking is now implemented with short-lived, single-use, high-entropy tokens, but a photographed QR can still be redeemed by a third party before the user completes enrollment.
 	How: Introduce a `pending` link status plus an approval prompt on the currently signed-in device. Allow `/auth/passkeys/register/options` on the new device only after approval, and expire pending links quickly.
 
-- Persist the sensitive-content filter in user settings instead of browser-local storage.
-	Why: The new entries-page toggle currently remembers its state only in the current browser, so a user switching devices or clearing storage gets inconsistent privacy behavior.
-	How: Add a boolean setting such as `show_sensitive_content`, load it with the rest of `UserSettings`, and update the entries toggle to save through the existing settings flow while keeping the client-side instant hide/show behavior.
-
 - Remove the temporary legacy migration bridge after one release cycle.
 	Why: `internal/server/migrations.go` now keeps the old custom migrator only to bootstrap existing installations into goose; once all active deployments have crossed that version boundary, this code is dead weight.
 	How: Add an app version/date cutoff, then delete `runLegacyMigrations` and helpers once telemetry or release notes confirm all environments use `goose_db_version`.
+
+- Make voice recorder bindings instance-safe (no global IDs).
+	Why: `web/static/voice-recorder.js` currently binds via `getElementById`, which assumes one recorder on the page. Any future second recorder instance or partial swap with duplicate IDs can bind listeners to the wrong element.
+	How: Replace IDs with `data-voice-*` hooks, initialize per `.voice-entry-section`, and scope queries/listeners to each section root.

@@ -7,10 +7,15 @@ import (
 	"roysland.me/symptomstracker/internal/auth"
 )
 
-func withSessionRequired(next http.Handler) http.Handler {
+func withSessionRequired(mux *http.ServeMux) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !routeExists(mux, r) {
+			respondNotFound(w, r, "Not found")
+			return
+		}
+
 		if isPublicRoute(r.URL.Path) {
-			next.ServeHTTP(w, r)
+			mux.ServeHTTP(w, r)
 			return
 		}
 
@@ -38,13 +43,22 @@ func withSessionRequired(next http.Handler) http.Handler {
 
 		_ = auth.RefreshCurrentSession(w, r)
 
-		next.ServeHTTP(w, r)
+		mux.ServeHTTP(w, r)
 	})
+}
+
+func routeExists(mux *http.ServeMux, r *http.Request) bool {
+	_, pattern := mux.Handler(r)
+	return pattern != ""
 }
 
 func isPublicRoute(path string) bool {
 	switch {
+	case path == "/healthz":
+		return true
 	case path == "/auth":
+		return true
+	case isPublicE2ERoute(path):
 		return true
 	case path == "/auth/logout":
 		return true

@@ -61,16 +61,18 @@ func TestWithSessionRequired_UnauthJSONRequestReturnsUnauthorized(t *testing.T) 
 }
 
 // TestWithSessionRequired_PublicRoutesAccessibleWithoutAuth verifies that the
-// /auth page is accessible without a session.
+// public routes are accessible without a session.
 func TestWithSessionRequired_PublicRoutesAccessibleWithoutAuth(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
-	req := httptest.NewRequest(http.MethodGet, "/auth", nil)
-	rr := httptest.NewRecorder()
-	s.ServeHTTP(rr, req)
+	for _, path := range []string{"/auth", "/healthz"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		rr := httptest.NewRecorder()
+		s.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Fatalf("expected 200 for /auth without session, got %d", rr.Code)
+		if rr.Code != http.StatusOK {
+			t.Fatalf("expected 200 for %s without session, got %d", path, rr.Code)
+		}
 	}
 }
 

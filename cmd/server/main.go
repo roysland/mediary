@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"roysland.me/symptomstracker/internal/server"
@@ -19,7 +20,16 @@ func main() {
 
 	log.Printf("Starting on %s\n", cfg.ListenAddr)
 
-	err := http.ListenAndServe(cfg.ListenAddr, s)
+	httpServer := &http.Server{
+		Addr:              cfg.ListenAddr,
+		Handler:           s,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	err := httpServer.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}

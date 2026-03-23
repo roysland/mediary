@@ -1,0 +1,64 @@
+2026-03-23T01:44:16+01:00	INFO	[vulndb] Need to update DB
+2026-03-23T01:44:16+01:00	INFO	[vulndb] Downloading vulnerability DB...
+2026-03-23T01:44:16+01:00	INFO	[vulndb] Downloading artifact...	repo="mirror.gcr.io/aquasec/trivy-db:2"
+287.23 KiB / 88.14 MiB [>________________________________________] 0.32% ? p/s ?2.66 MiB / 88.14 MiB [->_________________________________________] 3.01% ? p/s ?11.59 MiB / 88.14 MiB [----->___________________________________] 13.15% ? p/s ?21.78 MiB / 88.14 MiB [------>_____________________] 24.72% 35.87 MiB p/s ETA 1s32.85 MiB / 88.14 MiB [---------->_________________] 37.27% 35.87 MiB p/s ETA 1s43.14 MiB / 88.14 MiB [------------->______________] 48.94% 35.87 MiB p/s ETA 1s46.00 MiB / 88.14 MiB [-------------->_____________] 52.19% 36.16 MiB p/s ETA 1s46.20 MiB / 88.14 MiB [-------------->_____________] 52.42% 36.16 MiB p/s ETA 1s53.08 MiB / 88.14 MiB [---------------->___________] 60.22% 36.16 MiB p/s ETA 0s62.08 MiB / 88.14 MiB [------------------->________] 70.43% 35.56 MiB p/s ETA 0s68.64 MiB / 88.14 MiB [--------------------->______] 77.88% 35.56 MiB p/s ETA 0s72.70 MiB / 88.14 MiB [----------------------->____] 82.49% 35.56 MiB p/s ETA 0s78.71 MiB / 88.14 MiB [------------------------->__] 89.30% 35.05 MiB p/s ETA 0s78.84 MiB / 88.14 MiB [------------------------->__] 89.45% 35.05 MiB p/s ETA 0s87.98 MiB / 88.14 MiB [--------------------------->] 99.82% 35.05 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-------------------------->] 100.00% 33.80 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-------------------------->] 100.00% 33.80 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-------------------------->] 100.00% 33.80 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-------------------------->] 100.00% 31.62 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-------------------------->] 100.00% 31.62 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-------------------------->] 100.00% 31.62 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-------------------------->] 100.00% 29.58 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-------------------------->] 100.00% 29.58 MiB p/s ETA 0s88.14 MiB / 88.14 MiB [-----------------------------] 100.00% 19.87 MiB p/s 4.6s2026-03-23T01:44:22+01:00	INFO	[vulndb] Artifact successfully downloaded	repo="mirror.gcr.io/aquasec/trivy-db:2"
+2026-03-23T01:44:22+01:00	INFO	[vuln] Vulnerability scanning is enabled
+2026-03-23T01:44:22+01:00	INFO	[misconfig] Misconfiguration scanning is enabled
+2026-03-23T01:44:22+01:00	INFO	[misconfig] Need to update the checks bundle
+2026-03-23T01:44:22+01:00	INFO	[misconfig] Downloading the checks bundle...
+165.46 KiB / 165.46 KiB [-------------------------------------] 100.00% ? p/s 0s2026-03-23T01:44:23+01:00	INFO	[secret] Secret scanning is enabled
+2026-03-23T01:44:23+01:00	INFO	[secret] If your scanning is slow, please try '--scanners vuln' to disable secret scanning
+2026-03-23T01:44:23+01:00	INFO	[secret] Please see also https://trivy.dev/dev/docs/scanner/secret#recommendation for faster secret detection
+2026-03-23T01:44:24+01:00	INFO	[npm] To collect the license information of packages, "npm install" needs to be performed beforehand	dir="node_modules"
+2026-03-23T01:44:24+01:00	INFO	Suppressing dependencies for development and testing. To display them, try the '--include-dev-deps' flag.
+2026-03-23T01:44:24+01:00	INFO	Number of language-specific files	num=2
+2026-03-23T01:44:24+01:00	INFO	[gomod] Detecting vulnerabilities...
+2026-03-23T01:44:24+01:00	INFO	Detected config files	num=1
+
+Report Summary
+
+┌────────────┬────────────┬─────────────────┬─────────┬───────────────────┐
+│   Target   │    Type    │ Vulnerabilities │ Secrets │ Misconfigurations │
+├────────────┼────────────┼─────────────────┼─────────┼───────────────────┤
+│ go.mod     │   gomod    │        0        │    -    │         -         │
+├────────────┼────────────┼─────────────────┼─────────┼───────────────────┤
+│ Dockerfile │ dockerfile │        -        │    -    │         3         │
+└────────────┴────────────┴─────────────────┴─────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+Dockerfile (dockerfile)
+=======================
+Tests: 27 (SUCCESSES: 24, FAILURES: 3)
+Failures: 3 (UNKNOWN: 0, LOW: 1, MEDIUM: 0, HIGH: 2, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────────────────────────────────────────────
+
+
+AVD-DS-0026 (LOW): Add HEALTHCHECK instruction in your Dockerfile
+════════════════════════════════════════════════════════════════════════════════
+You should add HEALTHCHECK instruction in your docker container images to perform the health check on running containers.
+
+See https://avd.aquasec.com/misconfig/ds026
+────────────────────────────────────────────────────────────────────────────────
+
+
+AVD-DS-0029 (HIGH): '--no-install-recommends' flag is missed: 'apt-get update && apt-get install -y build-essential cmake git'
+════════════════════════════════════════════════════════════════════════════════
+'apt-get' install should use '--no-install-recommends' to minimize image size.
+
+See https://avd.aquasec.com/misconfig/ds029
+────────────────────────────────────────────────────────────────────────────────
+ Dockerfile:22
+────────────────────────────────────────────────────────────────────────────────
+  22 [ RUN apt-get update && apt-get install -y build-essential cmake git
+────────────────────────────────────────────────────────────────────────────────
+
+

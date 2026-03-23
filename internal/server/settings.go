@@ -14,10 +14,11 @@ import (
 )
 
 type UserSettings struct {
-	Language   string
-	Theme      string
-	ScreenLock string
-	ShareTimer string
+	Language             string
+	Theme                string
+	ScreenLock           string
+	ShareTimer           string
+	ShowSensitiveContent bool
 }
 
 type userDataExport struct {
@@ -132,11 +133,18 @@ func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now().UTC().Unix()
+	existingSettings, err := s.loadUserSettings(r.Context(), userID)
+	if err != nil {
+		respondInternalError(w, r, "Failed to load settings")
+		return
+	}
+
 	settings := UserSettings{
-		Language:   language,
-		Theme:      theme,
-		ScreenLock: screenLock,
-		ShareTimer: shareTimer,
+		Language:             language,
+		Theme:                theme,
+		ScreenLock:           screenLock,
+		ShareTimer:           shareTimer,
+		ShowSensitiveContent: existingSettings.ShowSensitiveContent,
 	}
 
 	if err := s.saveUserSettings(r.Context(), userID, settings, now); err != nil {
@@ -145,6 +153,41 @@ func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/settings", http.StatusSeeOther)
+}
+
+func (s *Server) settingsSensitiveContent(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+
+	userID, ok := requireUserID(w, r)
+	if !ok {
+		return
+	}
+
+	if !requireParsedForm(w, r) {
+		return
+	}
+
+	rawValue, err := requireOneOf(r.FormValue("show_sensitive_content"), "show_sensitive_content", "true", "false")
+	if err != nil {
+		respondBadRequest(w, r, err.Error())
+		return
+	}
+
+	settings, err := s.loadUserSettings(r.Context(), userID)
+	if err != nil {
+		respondInternalError(w, r, "Failed to load settings")
+		return
+	}
+	settings.ShowSensitiveContent = rawValue == "true"
+
+	if err := s.saveUserSettings(r.Context(), userID, settings, time.Now().UTC().Unix()); err != nil {
+		respondInternalError(w, r, "Failed to save settings")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) clearUserData(w http.ResponseWriter, r *http.Request) {
@@ -196,10 +239,11 @@ func (s *Server) exportUserData(w http.ResponseWriter, r *http.Request) {
 
 func defaultUserSettings() UserSettings {
 	return UserSettings{
-		Language:   "en",
-		Theme:      "system",
-		ScreenLock: "none",
-		ShareTimer: "300",
+		Language:             "en",
+		Theme:                "system",
+		ScreenLock:           "none",
+		ShareTimer:           "300",
+		ShowSensitiveContent: false,
 	}
 }
 
@@ -225,6 +269,8 @@ func (s *Server) loadUserSettings(ctx context.Context, userID int64) (UserSettin
 			settings.ScreenLock = row.SettingsValue.String
 		case "share_timer":
 			settings.ShareTimer = row.SettingsValue.String
+		case "show_sensitive_content":
+			settings.ShowSensitiveContent = row.SettingsValue.String == "true"
 		}
 	}
 
@@ -253,8 +299,11 @@ func (s *Server) saveUserSettings(ctx context.Context, userID int64, settings Us
 	if err := upsert("screen_lock", settings.ScreenLock); err != nil {
 		return err
 	}
+	if err := upsert("share_timer", settings.ShareTimer); err != nil {
+		return err
+	}
 
-	return upsert("share_timer", settings.ShareTimer)
+	return upsert("show_sensitive_content", fmt.Sprintf("%t", settings.ShowSensitiveContent))
 }
 
 func (s *Server) deleteAllUserData(ctx context.Context, userID int64) error {

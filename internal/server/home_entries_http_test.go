@@ -161,6 +161,47 @@ func TestEntriesRenderSensitiveFilterMarkers(t *testing.T) {
 	}
 }
 
+func TestEntriesRenderSensitiveFilterCheckedFromSettings(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	err := s.saveUserSettings(context.Background(), 1, UserSettings{
+		Language:             "en",
+		Theme:                "system",
+		ScreenLock:           "none",
+		ShareTimer:           "300",
+		ShowSensitiveContent: true,
+	}, time.Now().UTC().Unix())
+	if err != nil {
+		t.Fatalf("saveUserSettings failed: %v", err)
+	}
+
+	today := time.Now().Format("2006-01-02")
+	req := authedRequest(t, s, http.MethodGet, "/entries?day="+today, nil)
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	body := rr.Body.String()
+	toggleID := `id="entries-show-sensitive"`
+	idx := strings.Index(body, toggleID)
+	if idx == -1 {
+		t.Fatalf("expected sensitive toggle in entries page")
+	}
+
+	windowEnd := idx + 200
+	if windowEnd > len(body) {
+		windowEnd = len(body)
+	}
+	toggleMarkup := body[idx:windowEnd]
+	if !strings.Contains(toggleMarkup, `checked`) {
+		t.Fatalf("expected sensitive toggle to render as checked from saved settings")
+	}
+}
+
 func TestEntriesAPIReturnsAudioFilePath(t *testing.T) {
 	s := newHomeEntriesHTTPTestServer(t)
 
@@ -424,6 +465,44 @@ func TestSettingsPostRedirectsAndPersists(t *testing.T) {
 	}
 	if settings.Language != "no" || settings.Theme != "dark" || settings.ScreenLock != "300" || settings.ShareTimer != "600" {
 		t.Fatalf("unexpected persisted settings: %+v", settings)
+	}
+}
+
+func TestSettingsSensitiveContentPostPersists(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	body := strings.NewReader("show_sensitive_content=true")
+	req := authedRequest(t, s, http.MethodPost, "/settings/sensitive-content", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	settings, err := s.loadUserSettings(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("loadUserSettings failed: %v", err)
+	}
+	if !settings.ShowSensitiveContent {
+		t.Fatalf("expected show_sensitive_content to be persisted as true")
+	}
+}
+
+func TestSettingsSensitiveContentPostRejectsInvalidValue(t *testing.T) {
+	s := newHomeEntriesHTTPTestServer(t)
+
+	body := strings.NewReader("show_sensitive_content=maybe")
+	req := authedRequest(t, s, http.MethodPost, "/settings/sensitive-content", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rr.Code, rr.Body.String())
 	}
 }
 

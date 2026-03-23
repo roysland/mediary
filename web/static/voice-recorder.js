@@ -18,6 +18,7 @@ const MAX_RECORDING_MS = 60_000; // 60 seconds
 function initVoiceRecorder() {
   const recordBtn   = document.getElementById("voice-record-btn");
   const stopBtn     = document.getElementById("voice-stop-btn");
+  const voiceSection = recordBtn ? recordBtn.closest(".voice-entry-section") : null;
   const idleEl      = document.getElementById("voice-idle");
   const recordingEl = document.getElementById("voice-recording");
   const uploadingEl = document.getElementById("voice-uploading");
@@ -26,6 +27,13 @@ function initVoiceRecorder() {
   const timerEl     = document.getElementById("voice-timer");
 
   if (!recordBtn) return; // voice section not present on this page
+  if (!stopBtn) return;
+
+  // Prevent duplicate listeners when HTMX swaps unrelated DOM fragments.
+  if (voiceSection && voiceSection.dataset.voiceBound === "1") return;
+  if (voiceSection) {
+    voiceSection.dataset.voiceBound = "1";
+  }
 
   let mediaRecorder = null;
   let audioChunks   = [];
@@ -42,9 +50,9 @@ function initVoiceRecorder() {
   }
 
   function showError(msg) {
+    setState("idle");
     errorEl.textContent = msg;
     errorEl.hidden = false;
-    setState("idle");
   }
 
   function formatTime(ms) {
@@ -69,6 +77,10 @@ function initVoiceRecorder() {
   }
 
   async function startRecording() {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      return;
+    }
+
     errorEl.hidden = true;
 
     let stream;
@@ -93,20 +105,24 @@ function initVoiceRecorder() {
       return;
     }
 
-    mediaRecorder.addEventListener("dataavailable", (e) => {
+    const activeRecorder = mediaRecorder;
+
+    activeRecorder.addEventListener("dataavailable", (e) => {
       if (e.data && e.data.size > 0) {
         audioChunks.push(e.data);
       }
     });
 
-    mediaRecorder.addEventListener("stop", async () => {
+    activeRecorder.addEventListener("stop", async () => {
       // Release mic immediately after recording stops.
       stream.getTracks().forEach(t => t.stop());
       stopTimer();
       clearTimeout(autoStopTimer);
+      autoStopTimer = null;
 
-      const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+      const blob = new Blob(audioChunks, { type: activeRecorder.mimeType || "audio/webm" });
       audioChunks = [];
+      mediaRecorder = null;
 
       // If the user stops immediately, the recorder may not have emitted data yet.
       if (blob.size === 0) {
@@ -115,23 +131,26 @@ function initVoiceRecorder() {
       }
 
       setState("uploading");
-      await uploadAudio(blob, mediaRecorder.mimeType);
+      await uploadAudio(blob, activeRecorder.mimeType);
     });
 
-    mediaRecorder.start(1000); // collect chunks every 1s
+    activeRecorder.start(1000); // collect chunks every 1s
 
     setState("recording");
     startTimer();
 
     // Auto-stop after MAX_RECORDING_MS.
     autoStopTimer = setTimeout(() => {
-      if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
+      if (activeRecorder.state === "recording") {
+        activeRecorder.stop();
       }
     }, MAX_RECORDING_MS);
   }
 
   function stopRecording() {
+    clearTimeout(autoStopTimer);
+    autoStopTimer = null;
+
     if (mediaRecorder && mediaRecorder.state === "recording") {
       mediaRecorder.stop();
     }
@@ -186,6 +205,7 @@ function initVoiceRecorder() {
 
   recordBtn.addEventListener("click", startRecording);
   stopBtn.addEventListener("click", stopRecording);
+  setState("idle");
 }
 
 document.addEventListener("DOMContentLoaded", initVoiceRecorder);
