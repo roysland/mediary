@@ -10,6 +10,8 @@ import (
 
 // Config holds the server configuration loaded from environment variables.
 type Config struct {
+	// AppEnv identifies the runtime environment, such as development, test, or production.
+	AppEnv string
 	// DBPath is the path to the SQLite database file.
 	DBPath string
 	// ListenAddr is the address and port to listen on (e.g., ":8080").
@@ -37,7 +39,7 @@ type Config struct {
 
 	// AuthSessionSecret signs auth cookies. Must be set in production.
 	AuthSessionSecret string
-	// E2EAuthToken enables a dev-only test login endpoint for browser E2E runs.
+	// E2EAuthToken enables the test-only login bypass for browser E2E runs.
 	// Leave empty to disable.
 	E2EAuthToken string
 
@@ -51,10 +53,16 @@ type Config struct {
 
 // LoadConfig loads configuration from environment variables with sensible defaults.
 func LoadConfig() Config {
+	appEnv := strings.TrimSpace(os.Getenv("APP_ENV"))
+	if appEnv == "" {
+		appEnv = "development"
+	}
+
 	cfg := Config{
+		AppEnv:                      appEnv,
 		DBPath:                      getEnv("DB_PATH", "data/app.db"),
 		ListenAddr:                  getEnv("LISTEN_ADDR", ":8080"),
-		DevMode:                     os.Getenv("APP_ENV") != "production",
+		DevMode:                     appEnv != "production",
 		AudioStorageDir:             getEnv("AUDIO_STORAGE_DIR", "data/audio"),
 		WhisperBinaryPath:           getEnv("WHISPER_BINARY_PATH", ""),
 		WhisperModelPath:            getEnv("WHISPER_MODEL_PATH", ""),
@@ -62,7 +70,7 @@ func LoadConfig() Config {
 		TranscriptionTimeoutSeconds: getEnvInt("TRANSCRIPTION_TIMEOUT_SECONDS", 120),
 		CSRFTrustedOrigins:          getEnvCSV("CSRF_TRUSTED_ORIGINS"),
 		AuthSessionSecret:           getEnv("AUTH_SESSION_SECRET", ""),
-		E2EAuthToken:                getEnv("E2E_AUTH_TOKEN", ""),
+		E2EAuthToken:                strings.TrimSpace(os.Getenv("PLAYWRIGHT_E2E_AUTH_TOKEN")),
 		WebAuthnRPID:                getEnv("WEBAUTHN_RP_ID", "localhost"),
 		WebAuthnRPDisplayName:       getEnv("WEBAUTHN_RP_DISPLAY_NAME", "Symptoms Tracker"),
 		WebAuthnRPOrigins:           getEnvCSVWithDefault("WEBAUTHN_RP_ORIGINS", []string{"http://localhost:8080"}),

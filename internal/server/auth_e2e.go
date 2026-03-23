@@ -1,3 +1,5 @@
+//go:build e2e
+
 package server
 
 import (
@@ -5,7 +7,9 @@ import (
 	"crypto/subtle"
 	"database/sql"
 	"errors"
+	"net"
 	"net/http"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -14,19 +18,25 @@ import (
 
 const e2eWebAuthnUserID = "playwright-e2e-user"
 
-func (s *Server) e2eLogin(w http.ResponseWriter, r *http.Request) {
-	if !requireMethod(w, r, http.MethodGet) {
-		return
-	}
+const e2eLoginPath = "/auth/e2e/login"
 
-	token := strings.TrimSpace(s.cfg.E2EAuthToken)
-	if !s.devMode || token == "" {
+func (s *Server) registerE2ERoutes() {
+	s.mux.HandleFunc(e2eLoginPath, s.e2eLogin)
+}
+
+func isPublicE2ERoute(path string) bool {
+	return path == e2eLoginPath
+}
+
+// e2eLogin is a test-only authentication bypass for browser E2E runs.
+// It must only be enabled in APP_ENV=test and must never be exposed in production.
+func (s *Server) e2eLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
 		respondNotFound(w, r, "Not found")
 		return
 	}
 
-	requestToken := strings.TrimSpace(r.URL.Query().Get("token"))
-	if subtle.ConstantTimeCompare([]byte(requestToken), []byte(token)) != 1 {
+	if !s.isE2ERequestAuthorized(r) {
 		respondNotFound(w, r, "Not found")
 		return
 	}
@@ -48,6 +58,43 @@ func (s *Server) e2eLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+}
+
+func (s *Server) isE2ERequestAuthorized(r *http.Request) bool {
+	if s.cfg.AppEnv != "test" {
+		return false
+	}
+
+	token := strings.TrimSpace(s.cfg.E2EAuthToken)
+	if token == "" {
+		return false
+	}
+
+	if !isLoopbackRemoteAddr(r.RemoteAddr) {
+		return false
+	}
+
+	requestToken := strings.TrimSpace(r.URL.Query().Get("token"))
+	return subtle.ConstantTimeCompare([]byte(requestToken), []byte(token)) == 1
+}
+
+func isLoopbackRemoteAddr(remoteAddr string) bool {
+	host := strings.TrimSpace(remoteAddr)
+	if parsedHost, _, err := net.SplitHostPort(remoteAddr); err == nil {
+		host = parsedHost
+	}
+
+	host = strings.Trim(strings.TrimSpace(host), "[]")
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+
+	addr, err := netip.ParseAddr(host)
+	if err != nil {
+		return false
+	}
+
+	return addr.IsLoopback()
 }
 
 func (s *Server) ensureE2EUser(ctx context.Context) (db.User, error) {

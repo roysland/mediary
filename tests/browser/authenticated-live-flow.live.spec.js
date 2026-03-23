@@ -1,6 +1,10 @@
 const { test, expect } = require("@playwright/test");
 
-const e2eAuthToken = process.env.PLAYWRIGHT_E2E_AUTH_TOKEN || "playwright-e2e-token";
+const e2eAuthToken = process.env.PLAYWRIGHT_E2E_AUTH_TOKEN;
+
+if (!e2eAuthToken) {
+  throw new Error("PLAYWRIGHT_E2E_AUTH_TOKEN is required for live-server tests");
+}
 
 test.describe("authenticated live server flow", () => {
   test.describe.configure({ mode: "serial" });

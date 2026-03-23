@@ -19,11 +19,15 @@ func TestLoadConfigReadsTrustedOrigins(t *testing.T) {
 	t.Setenv("APP_ENV", "production")
 	t.Setenv("CSRF_TRUSTED_ORIGINS", "https://app.example.com,https://cdn.example.com")
 	t.Setenv("AUTH_SESSION_SECRET", "0123456789abcdef0123456789abcdef")
+	t.Setenv("PLAYWRIGHT_E2E_AUTH_TOKEN", "playwright-secret")
 	t.Setenv("WEBAUTHN_RP_ID", "app.example.com")
 	t.Setenv("WEBAUTHN_RP_DISPLAY_NAME", "My Diary")
 	t.Setenv("WEBAUTHN_RP_ORIGINS", "https://app.example.com,https://m.app.example.com")
 
 	cfg := LoadConfig()
+	if cfg.AppEnv != "production" {
+		t.Fatalf("unexpected AppEnv: %q", cfg.AppEnv)
+	}
 	want := []string{"https://app.example.com", "https://cdn.example.com"}
 	if !reflect.DeepEqual(cfg.CSRFTrustedOrigins, want) {
 		t.Fatalf("unexpected CSRFTrustedOrigins: got %#v want %#v", cfg.CSRFTrustedOrigins, want)
@@ -36,6 +40,9 @@ func TestLoadConfigReadsTrustedOrigins(t *testing.T) {
 	}
 	if cfg.WebAuthnRPDisplayName != "My Diary" {
 		t.Fatalf("unexpected WebAuthnRPDisplayName: %q", cfg.WebAuthnRPDisplayName)
+	}
+	if cfg.E2EAuthToken != "playwright-secret" {
+		t.Fatalf("unexpected E2EAuthToken: %q", cfg.E2EAuthToken)
 	}
 	rpOrigins := []string{"https://app.example.com", "https://m.app.example.com"}
 	if !reflect.DeepEqual(cfg.WebAuthnRPOrigins, rpOrigins) {
@@ -88,5 +95,17 @@ func TestValidateWebAuthnConfig_RejectsHTTPInProduction(t *testing.T) {
 	err := validateWebAuthnConfig(cfg)
 	if err == nil {
 		t.Fatal("expected http origin validation error in production, got nil")
+	}
+}
+
+func TestValidateE2EAuthConfig_RejectsTokenOutsideTestMode(t *testing.T) {
+	cfg := Config{
+		AppEnv:       "production",
+		E2EAuthToken: "playwright-secret",
+	}
+
+	err := validateE2EAuthConfig(cfg)
+	if err == nil {
+		t.Fatal("expected validation error when PLAYWRIGHT_E2E_AUTH_TOKEN is set outside test mode")
 	}
 }

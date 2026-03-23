@@ -1,5 +1,9 @@
 ## Remaining Follow-ups
 
+- Add CI checks for the E2E auth isolation contract.
+	Why: The `/auth/e2e/login` bypass is now split behind the `e2e` build tag plus `APP_ENV=test` and a required `PLAYWRIGHT_E2E_AUTH_TOKEN`, but that guarantee should be enforced automatically so future refactors do not reopen the path.
+	How: Add one CI job that runs `go test ./...`, one that runs `go test -tags e2e ./internal/server`, and one smoke check that starts a normal binary and asserts `/auth/e2e/login` returns 404.
+
 - Add structured diagnostics/metrics for WebAuthn ceremony failures.
 	Why: `/webauthn/login/verify` currently returns a generic 400 for many error modes; logs now include origin/RPID context, but operators still need easy aggregation by failure reason.
 	How: Add counters and structured logs for categories like missing ceremony cookie, origin mismatch, RP ID mismatch, sign-counter mismatch, and credential not found. Surface these in deployment dashboards/alerts.

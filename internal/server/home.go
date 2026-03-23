@@ -6,6 +6,11 @@ import (
 )
 
 func (s *Server) home(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		respondNotFound(w, r, "Not found")
+		return
+	}
+
 	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}

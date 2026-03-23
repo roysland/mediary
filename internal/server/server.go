@@ -41,6 +41,10 @@ type Server struct {
 }
 
 func New(cfg Config) *Server {
+	if err := validateE2EAuthConfig(cfg); err != nil {
+		log.Fatal(err)
+	}
+
 	conn, err := sql.Open("sqlite3", cfg.DBPath)
 	if err != nil {
 		log.Fatal(err)

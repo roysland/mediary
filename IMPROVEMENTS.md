@@ -13,30 +13,6 @@ Set up a service worker
 
 # Third party libraries
 
-## High Priority
-
-
-### Database Migrations
-**Library:** `github.com/pressly/goose`
-**Why:** Current `internal/server/migrations.go` is clunky with embedded SQL functions. These libraries provide:
-- Clean separation of migration logic (file-based SQL)
-- Better tracking of migration state
-- Easier to reason about schema evolution
-- No redundant transaction handling code
-**Cost:** Low (mostly file restructuring)
-**How:** Move SQL from `migrations.go` functions into separate numbered files (`001_base_schema.sql`, etc.). Use goose/migrate CLI to manage state.
-
-## Medium Priority
-
-
-### Docker/OCI Build
-**Library:** Not a library, but consider adding multi-stage Dockerfile
-**Why:** Currently no visibility into how this is deployed. Container image would:
-- Ensure build reproducibility
-- Simplify deployment across environments
-- Allow volume mounting for data persistence
-**Cost:** Low (standard pattern)
-**How:** Add Dockerfile with Go build stage and minimal runtime stage.
 
 ## Lower Priority (Consider Later)
 
@@ -49,12 +25,3 @@ Set up a service worker
 - Provide consistent error messages
 **Cost:** Medium (refactoring handler validation logic)
 **Assessment:** Current approach is explicit and works well. Worth considering only if validation becomes more complex.
-
-### Structured Logging
-**Library:** `golang.org/x/exp/slog` (Go 1.21+) or `uber-go/zap`
-**Why:** Currently using standard `log` package. Structured logging helps with:
-- Better error tracking in production
-- Easier log parsing/aggregation
-- Context propagation  
-**Cost:** Low to Medium (replacing log statements)
-**Assessment:** Not urgent. Current logging is fine for MVP. Upgrade when observability becomes important.
