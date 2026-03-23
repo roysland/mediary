@@ -8,6 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Use go test ./... for Go tests and npm run test:browser for Playwright browser tests\"",
+    "security:gosec": "./scripts/gosec.sh",
+    "security:gosec:report": "./scripts/gosec.sh docs/security/gosec-latest.txt",
     "test:browser": "playwright test",
     "test:browser:live": "playwright test --project=live-server"
   },

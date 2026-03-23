@@ -1,0 +1,60 @@
+[gosec] 2026/03/23 01:53:26 Including rules: default
+[gosec] 2026/03/23 01:53:26 Excluding rules: default
+[gosec] 2026/03/23 01:53:26 Including analyzers: default
+[gosec] 2026/03/23 01:53:26 Excluding analyzers: default
+[gosec] 2026/03/23 01:53:26 Import directory: /home/oyvindr/projects/symptomstracker/internal/auth
+[gosec] 2026/03/23 01:53:26 Import directory: /home/oyvindr/projects/symptomstracker/internal/server
+[gosec] 2026/03/23 01:53:26 Import directory: /home/oyvindr/projects/symptomstracker/cmd/server
+[gosec] 2026/03/23 01:53:26 Import directory: /home/oyvindr/projects/symptomstracker/internal/i18n
+[gosec] 2026/03/23 01:53:26 Import directory: /home/oyvindr/projects/symptomstracker/internal/db
+[gosec] 2026/03/23 01:53:26 Checking package: i18n
+[gosec] 2026/03/23 01:53:26 Checking file: /home/oyvindr/projects/symptomstracker/internal/i18n/en.go
+[gosec] 2026/03/23 01:53:26 Checking file: /home/oyvindr/projects/symptomstracker/internal/i18n/i18n.go
+[gosec] 2026/03/23 01:53:26 Checking file: /home/oyvindr/projects/symptomstracker/internal/i18n/no.go
+[gosec] 2026/03/23 01:53:26 Checking package: db
+[gosec] 2026/03/23 01:53:26 Ignoring generated file: /home/oyvindr/projects/symptomstracker/internal/db/db.go
+[gosec] 2026/03/23 01:53:26 Ignoring generated file: /home/oyvindr/projects/symptomstracker/internal/db/models.go
+[gosec] 2026/03/23 01:53:26 Ignoring generated file: /home/oyvindr/projects/symptomstracker/internal/db/querier.go
+[gosec] 2026/03/23 01:53:26 Ignoring generated file: /home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go
+[gosec] 2026/03/23 01:53:26 Checking package: auth
+[gosec] 2026/03/23 01:53:26 Checking file: /home/oyvindr/projects/symptomstracker/internal/auth/auth.go
+[gosec] 2026/03/23 01:53:26 Checking package: main
+[gosec] 2026/03/23 01:53:26 Checking file: /home/oyvindr/projects/symptomstracker/cmd/server/main.go
+[gosec] 2026/03/23 01:53:26 Checking package: server
+[gosec] 2026/03/23 01:53:26 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/auth_e2e.go
+[gosec] 2026/03/23 01:53:26 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/auth_middleware.go
+[gosec] 2026/03/23 01:53:26 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/auth_webauthn.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/authz.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/config.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/constants.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/device_link.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/entries.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/entry_form.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/entry_service.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/entry_view.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/health.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/home.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/http_helpers.go
+[gosec] 2026/03/23 01:53:27 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/migrations.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/request.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/respond.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/routers.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/server.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/settings.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/templates.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/trackable.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/trackable_preset_i18n.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/trackable_service.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/transcription_worker.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/value_format.go
+[gosec] 2026/03/23 01:53:28 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/voice.go
+Results:
+
+
+[1;36mSummary:[0m
+  Gosec  : v2.22.11
+  Files  : 32
+  Lines  : 5558
+  Nosec  : 4
+  Issues : [1;32m0[0m
+

@@ -44,6 +44,8 @@ func withSessionRequired(next http.Handler) http.Handler {
 
 func isPublicRoute(path string) bool {
 	switch {
+	case path == "/healthz":
+		return true
 	case path == "/auth":
 		return true
 	case path == "/auth/e2e/login":

@@ -11,16 +11,6 @@ Set up a service worker
 * There should be a very high threshold for adding notifications. This is not the kind of app that should disturb the user. However, we do need to encourage keeping the diary. 
 * Proper cache of javascript and css and images.
 
-# Idle detection 
-There is a setting for screen lock, but it currently does nothing.
-As a web app, Safari and Firefox still doesn't support Idle detection. If using this browser, the setting should be disabled.
-
-# CSFR token
-There is no XSS guards. Are they needed?
-
-# Goose migrations
-Current migration method is clunky. We can surely benefit from a third party library here?
-
 # Third party libraries
 
 ## High Priority

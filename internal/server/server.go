@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"html/template"
 	"io/fs"
@@ -55,7 +57,10 @@ func New(cfg Config) *Server {
 
 	authSessionSecret := strings.TrimSpace(cfg.AuthSessionSecret)
 	if cfg.DevMode && authSessionSecret == "" {
-		authSessionSecret = "dev-only-insecure-session-secret-change-me"
+		authSessionSecret, err = newDevSessionSecret()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	if authSessionSecret == "" {
 		log.Fatal("AUTH_SESSION_SECRET is required")
@@ -136,9 +141,19 @@ func templateFuncMap(locale string) template.FuncMap {
 			if err != nil {
 				return template.JS("null")
 			}
+			// #nosec G203 -- json.Marshal returns escaped JSON for direct embedding.
 			return template.JS(b)
 		},
 	}
+}
+
+func newDevSessionSecret() (string, error) {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(buf), nil
 }
 
 func (s *Server) loadTemplates(locale string) (*template.Template, error) {

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -61,18 +62,30 @@ func (u webauthnUser) WebAuthnDisplayName() string {
 func (u webauthnUser) WebAuthnCredentials() []webauthnlib.Credential {
 	result := make([]webauthnlib.Credential, 0, len(u.credentials))
 	for _, cred := range u.credentials {
+		signCount := credentialSignCount(cred.SignCount)
 		result = append(result, webauthnlib.Credential{
 			ID:        cred.CredentialID,
 			PublicKey: cred.PublicKey,
 			Transport: parseTransportList(cred.Transports),
 			Authenticator: webauthnlib.Authenticator{
-				SignCount: uint32(cred.SignCount),
+				SignCount: signCount,
 			},
 			Flags: parseCredentialFlags(cred.Flags),
 		})
 	}
 
 	return result
+}
+
+func credentialSignCount(signCount int64) uint32 {
+	if signCount <= 0 {
+		return 0
+	}
+	if signCount > math.MaxUint32 {
+		return math.MaxUint32
+	}
+
+	return uint32(signCount)
 }
 
 func (u webauthnUser) credentialDescriptors() []protocol.CredentialDescriptor {

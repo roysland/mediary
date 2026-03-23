@@ -1,0 +1,240 @@
+[gosec] 2026/03/23 01:43:50 Including rules: default
+[gosec] 2026/03/23 01:43:50 Excluding rules: default
+[gosec] 2026/03/23 01:43:50 Including analyzers: default
+[gosec] 2026/03/23 01:43:50 Excluding analyzers: default
+[gosec] 2026/03/23 01:43:50 Import directory: /home/oyvindr/projects/symptomstracker/internal/server
+[gosec] 2026/03/23 01:43:50 Import directory: /home/oyvindr/projects/symptomstracker/internal/auth
+[gosec] 2026/03/23 01:43:50 Import directory: /home/oyvindr/projects/symptomstracker/internal/i18n
+[gosec] 2026/03/23 01:43:50 Import directory: /home/oyvindr/projects/symptomstracker/cmd/server
+[gosec] 2026/03/23 01:43:50 Import directory: /home/oyvindr/projects/symptomstracker/internal/db
+[gosec] 2026/03/23 01:43:50 Checking package: i18n
+[gosec] 2026/03/23 01:43:50 Checking file: /home/oyvindr/projects/symptomstracker/internal/i18n/en.go
+[gosec] 2026/03/23 01:43:50 Checking file: /home/oyvindr/projects/symptomstracker/internal/i18n/i18n.go
+[gosec] 2026/03/23 01:43:50 Checking file: /home/oyvindr/projects/symptomstracker/internal/i18n/no.go
+[gosec] 2026/03/23 01:43:50 Checking package: db
+[gosec] 2026/03/23 01:43:50 Checking file: /home/oyvindr/projects/symptomstracker/internal/db/db.go
+[gosec] 2026/03/23 01:43:51 Checking file: /home/oyvindr/projects/symptomstracker/internal/db/models.go
+[gosec] 2026/03/23 01:43:51 Checking file: /home/oyvindr/projects/symptomstracker/internal/db/querier.go
+[gosec] 2026/03/23 01:43:51 Checking file: /home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go
+[gosec] 2026/03/23 01:43:52 Checking package: auth
+[gosec] 2026/03/23 01:43:52 Checking file: /home/oyvindr/projects/symptomstracker/internal/auth/auth.go
+[gosec] 2026/03/23 01:43:52 Checking package: main
+[gosec] 2026/03/23 01:43:52 Checking file: /home/oyvindr/projects/symptomstracker/cmd/server/main.go
+[gosec] 2026/03/23 01:43:52 Checking package: server
+[gosec] 2026/03/23 01:43:52 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/auth_e2e.go
+[gosec] 2026/03/23 01:43:52 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/auth_middleware.go
+[gosec] 2026/03/23 01:43:52 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/auth_webauthn.go
+[gosec] 2026/03/23 01:43:52 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/authz.go
+[gosec] 2026/03/23 01:43:52 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/config.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/constants.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/device_link.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/entries.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/entry_form.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/entry_service.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/entry_view.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/home.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/http_helpers.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/migrations.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/request.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/respond.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/routers.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/server.go
+[gosec] 2026/03/23 01:43:53 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/settings.go
+[gosec] 2026/03/23 01:43:54 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/templates.go
+[gosec] 2026/03/23 01:43:54 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/trackable.go
+[gosec] 2026/03/23 01:43:54 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/trackable_preset_i18n.go
+[gosec] 2026/03/23 01:43:54 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/trackable_service.go
+[gosec] 2026/03/23 01:43:54 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/transcription_worker.go
+[gosec] 2026/03/23 01:43:54 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/value_format.go
+[gosec] 2026/03/23 01:43:54 Checking file: /home/oyvindr/projects/symptomstracker/internal/server/voice.go
+Results:
+
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/server/auth_webauthn.go:69[0m] - G115 (CWE-190): integer overflow conversion int64 -> uint32 (Confidence: MEDIUM, Severity: HIGH)
+    68: 			Authenticator: webauthnlib.Authenticator{
+  > 69: 				SignCount: uint32(cred.SignCount),
+    70: 			},
+
+Autofix: 
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/server/server.go:58[0m] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+    57: 	if cfg.DevMode && authSessionSecret == "" {
+  > 58: 		authSessionSecret = "dev-only-insecure-session-secret-change-me"
+    59: 	}
+
+Autofix: 
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go:1520-1524[0m] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+    1519: 
+  > 1520: const updateWebauthnCredentialSignCount = `-- name: UpdateWebauthnCredentialSignCount :exec
+  > 1521: UPDATE webauthn_credentials
+  > 1522: SET sign_count = ?
+  > 1523: WHERE credential_id = ?
+  > 1524: `
+    1525: 
+
+Autofix: 
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go:1349-1357[0m] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+    1348: 
+  > 1349: const redeemDeviceLinkToken = `-- name: RedeemDeviceLinkToken :one
+  > 1350: UPDATE device_link_tokens
+  > 1351: SET redeemed_at_utc = ?1
+  > 1352: WHERE token_hash = ?2
+  > 1353:     AND expires_at_utc > ?3
+  > 1354:     AND redeemed_at_utc IS NULL
+  > 1355:     AND used_at_utc IS NULL
+  > 1356: RETURNING id, token_hash, user_id, expires_at_utc, redeemed_at_utc, used_at_utc, created_at_utc
+  > 1357: `
+    1358: 
+
+Autofix: 
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go:1315-1322[0m] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+    1314: 
+  > 1315: const markDeviceLinkTokenUsed = `-- name: MarkDeviceLinkTokenUsed :execrows
+  > 1316: UPDATE device_link_tokens
+  > 1317: SET used_at_utc = ?1
+  > 1318: WHERE id = ?2
+  > 1319:     AND user_id = ?3
+  > 1320:     AND redeemed_at_utc IS NOT NULL
+  > 1321:     AND used_at_utc IS NULL
+  > 1322: `
+    1323: 
+
+Autofix: 
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go:1276-1281[0m] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+    1275: 
+  > 1276: const listWebauthnCredentialsByUser = `-- name: ListWebauthnCredentialsByUser :many
+  > 1277: SELECT id, user_id, credential_id, public_key, sign_count, flags, transports, created_at_utc
+  > 1278: FROM webauthn_credentials
+  > 1279: WHERE user_id = ?
+  > 1280: ORDER BY created_at_utc DESC
+  > 1281: `
+    1282: 
+
+Autofix: 
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go:433-436[0m] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+    432: 
+  > 433: const deleteWebauthnCredentialsByUser = `-- name: DeleteWebauthnCredentialsByUser :exec
+  > 434: DELETE FROM webauthn_credentials
+  > 435: WHERE user_id = ?
+  > 436: `
+    437: 
+
+Autofix: 
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go:301-313[0m] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+    300: 
+  > 301: const createWebauthnCredential = `-- name: CreateWebauthnCredential :one
+  > 302: INSERT INTO webauthn_credentials (
+  > 303:     user_id,
+  > 304:     credential_id,
+  > 305:     public_key,
+  > 306:     sign_count,
+  > 307:     flags,
+  > 308:     transports,
+  > 309:     created_at_utc
+  > 310: )
+  > 311: VALUES (?, ?, ?, ?, ?, ?, ?)
+  > 312: RETURNING id, user_id, credential_id, public_key, sign_count, flags, transports, created_at_utc
+  > 313: `
+    314: 
+
+Autofix: 
+
+[[97;41m/home/oyvindr/projects/symptomstracker/internal/db/queries.sql.go:13-22[0m] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+    12: 
+  > 13: const createDeviceLinkToken = `-- name: CreateDeviceLinkToken :one
+  > 14: INSERT INTO device_link_tokens (
+  > 15:         token_hash,
+  > 16:         user_id,
+  > 17:         expires_at_utc,
+  > 18:         created_at_utc
+  > 19: )
+  > 20: VALUES (?, ?, ?, ?)
+  > 21: RETURNING id, token_hash, user_id, expires_at_utc, redeemed_at_utc, used_at_utc, created_at_utc
+  > 22: `
+    23: 
+
+Autofix: 
+
+[[30;43m/home/oyvindr/projects/symptomstracker/cmd/server/main.go:22[0m] - G114 (CWE-676): Use of net/http serve function that has no support for setting timeouts (Confidence: HIGH, Severity: MEDIUM)
+    21: 
+  > 22: 	err := http.ListenAndServe(cfg.ListenAddr, s)
+    23: 	if err != nil {
+
+Autofix: 
+
+[[30;43m/home/oyvindr/projects/symptomstracker/internal/server/templates.go:95[0m] - G203 (CWE-79): The used method does not auto-escape HTML. This can potentially lead to 'Cross-site Scripting' vulnerabilities, in case the attacker controls the input. (Confidence: LOW, Severity: MEDIUM)
+    94: 		Title:             strings.TrimSpace(titleBuf.String()),
+  > 95: 		Content:           template.HTML(contentBuf.String()),
+    96: 		Data:              data,
+
+Autofix: 
+
+[[30;43m/home/oyvindr/projects/symptomstracker/internal/server/server.go:139[0m] - G203 (CWE-79): The used method does not auto-escape HTML. This can potentially lead to 'Cross-site Scripting' vulnerabilities, in case the attacker controls the input. (Confidence: LOW, Severity: MEDIUM)
+    138: 			}
+  > 139: 			return template.JS(b)
+    140: 		},
+
+Autofix: 
+
+[[30;43m/home/oyvindr/projects/symptomstracker/internal/server/voice.go:70[0m] - G304 (CWE-22): Potential file inclusion via variable (Confidence: HIGH, Severity: MEDIUM)
+    69: 
+  > 70: 	dst, err := os.OpenFile(audioFilePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+    71: 	if err != nil {
+
+Autofix: Consider using os.Root to scope file access under a fixed root (Go >=1.24). Prefer root.Open/root.Stat over os.Open/os.Stat to prevent directory traversal.
+
+[[30;43m/home/oyvindr/projects/symptomstracker/internal/server/voice.go:70[0m] - G302 (CWE-276): Expect file permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
+    69: 
+  > 70: 	dst, err := os.OpenFile(audioFilePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+    71: 	if err != nil {
+
+Autofix: 
+
+[[30;43m/home/oyvindr/projects/symptomstracker/internal/server/voice.go:55[0m] - G301 (CWE-276): Expect directory permissions to be 0750 or less (Confidence: HIGH, Severity: MEDIUM)
+    54: 	audioDir := s.cfg.AudioStorageDir
+  > 55: 	if err := os.MkdirAll(audioDir, 0755); err != nil {
+    56: 		log.Printf("failed to create audio dir %s: %v", audioDir, err)
+
+Autofix: 
+
+[[37;40m/home/oyvindr/projects/symptomstracker/internal/server/voice.go:95[0m] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    94: 	if err != nil {
+  > 95: 		os.Remove(audioFilePath)
+    96: 		log.Printf("failed to create draft entry: %v", err)
+
+Autofix: 
+
+[[37;40m/home/oyvindr/projects/symptomstracker/internal/server/voice.go:83[0m] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    82: 	}
+  > 83: 	dst.Close()
+    84: 
+
+Autofix: 
+
+[[37;40m/home/oyvindr/projects/symptomstracker/internal/server/voice.go:78[0m] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    77: 		dst.Close()
+  > 78: 		os.Remove(audioFilePath)
+    79: 		log.Printf("failed to write audio file %s: %v", audioFilePath, err)
+
+Autofix: 
+
+[[37;40m/home/oyvindr/projects/symptomstracker/internal/server/voice.go:77[0m] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    76: 	if _, err := io.Copy(dst, audioFile); err != nil {
+  > 77: 		dst.Close()
+    78: 		os.Remove(audioFilePath)
+
+Autofix: 
+
+[1;36mSummary:[0m
+  Gosec  : v2.22.11
+  Files  : 35
+  Lines  : 7299
+  Nosec  : 2
+  Issues : [1;31m19[0m
+

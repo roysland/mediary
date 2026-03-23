@@ -91,7 +91,8 @@ func (s *Server) renderPage(w http.ResponseWriter, r *http.Request, titleTemplat
 	}
 
 	err = tmpl.ExecuteTemplate(w, "layout", pageTemplate{
-		Title:             strings.TrimSpace(titleBuf.String()),
+		Title: strings.TrimSpace(titleBuf.String()),
+		// #nosec G203 -- contentBuf contains output from html/template execution, not raw user HTML.
 		Content:           template.HTML(contentBuf.String()),
 		Data:              data,
 		Locale:            settings.Language,

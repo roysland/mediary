@@ -1,13 +1,22 @@
 .git
 .gitignore
 .vscode
+.env
+.env.*
 
 # Build/test artifacts
 server
+node_modules/
 tmp/
+test-results/
+tests/
 
 # Local runtime data
 data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
 
 # Docs and planning notes not needed in image
 AGENTS.md
@@ -16,3 +25,6 @@ NEXT_STEPS.md
 thoughts.md
 todo.md
 open
+
+# Local scan output
+docs/security/

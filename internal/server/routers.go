@@ -12,6 +12,7 @@ func (s *Server) routes() {
 	audioFS := http.FileServer(http.Dir(s.cfg.AudioStorageDir))
 	s.mux.Handle("/data/audio/", http.StripPrefix("/data/audio/", audioFS))
 
+	s.mux.HandleFunc("/healthz", s.health)
 	s.mux.HandleFunc("/", s.home)
 	s.mux.HandleFunc("/auth", s.authPage)
 	s.mux.HandleFunc("/auth/e2e/login", s.e2eLogin)

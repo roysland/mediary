@@ -37,20 +37,20 @@ function formatRelativeTime(date) {
 
 class RelativeTime extends HTMLTimeElement {
   connectedCallback() {
-  this.update();
-  this.interval = setInterval(() => this.update(), 60000);
-}
+    this.update();
+    this.interval = setInterval(() => this.update(), 60000);
+  }
 
-    disconnectedCallback() {
+  disconnectedCallback() {
     clearInterval(this.interval);
-    }
+  }
 
-    update() {
+  update() {
     const datetimeAttr = this.getAttribute('datetime');
     if (!datetimeAttr) return;
     const date = new Date(datetimeAttr);
     this.textContent = formatRelativeTime(date);
-    }
+  }
 }
 
 customElements.define('relative-time', RelativeTime, { extends: 'time' });
