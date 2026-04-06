@@ -1,0 +1,9 @@
+{{ define "onboarding_step3_trackables" }}
+<section>
+    <p>{{ t "onboarding.step3.body" }}</p>
+    {{ template "trackablePresetList" . }}
+    <p>
+        <a class="button button--ghost" href="/trackables/add">{{ t "onboarding.step3.add_now" }}</a>
+    </p>
+</section>
+{{ end }}

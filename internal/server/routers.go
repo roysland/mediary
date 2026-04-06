@@ -15,6 +15,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/healthz", s.health)
 	s.mux.HandleFunc("/{$}", s.home)
 	s.mux.HandleFunc("/auth", s.authPage)
+	s.mux.HandleFunc("/onboarding/preview", s.onboardingPreview)
+	s.mux.HandleFunc("/onboarding", s.onboardingRoot)
+	s.mux.HandleFunc("/onboarding/{step}/skip", s.onboardingStepPost)
+	s.mux.HandleFunc("/onboarding/{step}", s.onboardingStepRoute)
 	s.registerE2ERoutes()
 	s.mux.HandleFunc("/webauthn/register/options", s.beginRegistration)
 	s.mux.HandleFunc("/webauthn/register/verify", s.finishRegistration)
@@ -47,5 +51,5 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/trackables/{id}", s.registerTrackable)
 
 	// Wrap all routes once so CSRF checks apply uniformly.
-	s.handler = withCrossOriginProtection(withSessionRequired(s.mux), s.cfg)
+	s.handler = withCrossOriginProtection(withSessionRequired(s, s.mux), s.cfg)
 }

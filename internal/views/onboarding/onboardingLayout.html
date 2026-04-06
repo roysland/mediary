@@ -1,0 +1,67 @@
+{{ define "onboarding_title" }}{{ if .IsPreview }}{{ t "onboarding.preview.title" }}{{ else }}{{ t .Step.TitleKey }}{{ end }}{{ end }}
+
+{{ define "onboarding_content" }}
+{{ template "onboarding_layout" . }}
+{{ end }}
+
+{{ define "onboarding_layout" }}
+<section class="card onboarding-card">
+    <header>
+        <h1>{{ if .IsPreview }}{{ t "onboarding.preview.title" }}{{ else }}{{ t .Step.TitleKey }}{{ end }}</h1>
+        {{ if .IsPreview }}
+        <p>{{ t "onboarding.preview.body" }}</p>
+        {{ else }}
+        <p>{{ t "onboarding.progress_label" }} {{ .CurrentStep }}/{{ len .Steps }}</p>
+        {{ end }}
+    </header>
+
+    {{ if not .IsPreview }}
+    <ol class="onboarding-progress" aria-label="{{ t "onboarding.progress_label" }}">
+        {{ range .Steps }}
+        <li {{ if eq .Number $.CurrentStep }}aria-current="step"{{ end }}>
+            <span>{{ .Number }}</span>
+        </li>
+        {{ end }}
+    </ol>
+    {{ end }}
+
+    <p class="onboarding-image-description">
+        <strong>{{ t "onboarding.image_description_label" }}</strong>
+        <span>{{ .Step.ImageDesc }}</span>
+    </p>
+
+    {{ if .IsPreview }}
+    <div class="onboarding-step-content">
+        {{ template "onboarding_step1_passkey" . }}
+    </div>
+    <p>
+        <a class="button" href="/auth">{{ t "onboarding.preview.cta" }}</a>
+    </p>
+    {{ else }}
+    <form method="post" action="/onboarding/{{ .CurrentStep }}" data-submit-state>
+        <div class="onboarding-step-content">
+            {{ if eq .CurrentStep 1 }}
+                {{ template "onboarding_step1_passkey" . }}
+            {{ else if eq .CurrentStep 2 }}
+                {{ template "onboarding_step2_language" . }}
+            {{ else if eq .CurrentStep 3 }}
+                {{ template "onboarding_step3_trackables" . }}
+            {{ else if eq .CurrentStep 4 }}
+                {{ template "onboarding_step4_audio" . }}
+            {{ else if eq .CurrentStep 5 }}
+                {{ template "onboarding_step5_navigation" . }}
+            {{ end }}
+        </div>
+        <button type="submit" class="submit-button" data-submit-state-button data-submit-visual="idle">
+            <span class="submit-layer submit-label">{{ if .IsFinalStep }}{{ t "onboarding.finish" }}{{ else }}{{ t "onboarding.next" }}{{ end }}</span>
+            <span class="submit-layer submit-spinner" aria-hidden="true"></span>
+            <span class="submit-layer submit-check" aria-hidden="true"></span>
+        </button>
+    </form>
+
+    <form method="post" action="/onboarding/{{ .CurrentStep }}/skip">
+        <button type="submit" class="button button--ghost">{{ t "onboarding.skip" }}</button>
+    </form>
+    {{ end }}
+</section>
+{{ end }}

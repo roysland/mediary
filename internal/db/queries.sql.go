@@ -697,6 +697,31 @@ func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTr
 	return items, nil
 }
 
+const getSetting = `-- name: GetSetting :one
+SELECT id, user_id, settings_key, settings_value, created_at_utc
+FROM settings
+WHERE user_id = ?1
+    AND settings_key = ?2
+`
+
+type GetSettingParams struct {
+	UserID      int64  `json:"user_id"`
+	SettingsKey string `json:"settings_key"`
+}
+
+func (q *Queries) GetSetting(ctx context.Context, arg GetSettingParams) (Setting, error) {
+	row := q.db.QueryRowContext(ctx, getSetting, arg.UserID, arg.SettingsKey)
+	var i Setting
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.SettingsKey,
+		&i.SettingsValue,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
 const getTrackableById = `-- name: GetTrackableById :one
 SELECT id, user_id, template_id, name, icon, value_type, unit, min_value, max_value, is_sensitive, private_label, category, active, deleted_at_utc, created_at_utc
 FROM trackable_definitions

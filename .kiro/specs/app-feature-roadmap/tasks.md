@@ -8,23 +8,23 @@ Implementation follows the priority order established in requirements: onboardin
 
 ## Tasks
 
-- [ ] 1. Onboarding flow — DB, queries, and middleware
-  - [ ] 1.1 Add onboarding queries to `db/queries.sql` and run `sqlc generate`
+- [x] 1. Onboarding flow — DB, queries, and middleware
+  - [x] 1.1 Add onboarding queries to `db/queries.sql` and run `sqlc generate`
     - Add `GetSetting :one` query (select by `user_id` + `settings_key`) if not already present
     - Verify `UpsertSetting` covers the `onboarding_complete` key
     - Run `sqlc generate` to regenerate `internal/db/`
     - _Requirements: 2.1, 2.2_
-  - [ ] 1.2 Extend `withSessionRequired` middleware in `internal/server/auth_middleware.go`
+  - [x] 1.2 Extend `withSessionRequired` middleware in `internal/server/auth_middleware.go`
     - After session check, read `onboarding_complete` setting for the user on the home route (`/`)
     - If absent or not `"1"`, redirect to `/onboarding/1`
     - Onboarding routes (`/onboarding/...`) must bypass this check but still require a session
     - _Requirements: 1.1, 1.9, 2.2_
-  - [ ]* 1.3 Write property test for onboarding redirect invariant
+  - [x]* 1.3 Write property test for onboarding redirect invariant
     - **Property 1: Onboarding redirect invariant**
     - **Validates: Requirements 1.1, 1.9, 2.2**
 
-- [ ] 2. Onboarding flow — handlers and templates
-  - [ ] 2.1 Create `internal/server/onboarding.go` with step handlers
+- [x] 2. Onboarding flow — handlers and templates
+  - [x] 2.1 Create `internal/server/onboarding.go` with step handlers
     - Define `onboardingStep` struct with `Number`, `TemplateKey`, `TitleKey`, `ImageDesc`
     - Implement `func (s *Server) onboardingStep(w, r)` — GET renders step page
     - Implement `func (s *Server) onboardingStepPost(w, r)` — POST processes step and redirects
@@ -32,31 +32,31 @@ Implementation follows the priority order established in requirements: onboardin
     - Handle skip via `POST /onboarding/{step}/skip` — advance to next step or `/` on step 5
     - Add a public `/onboarding/preview` route (no session required) for the auth page "How to get started" button
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.10, 1.11_
-  - [ ]* 2.2 Write property test for onboarding completion persistence
+  - [x]* 2.2 Write property test for onboarding completion persistence
     - **Property 2: Onboarding completion persistence**
     - **Validates: Requirements 1.8, 2.1**
-  - [ ]* 2.3 Write property test for onboarding skip advances step
+  - [x]* 2.3 Write property test for onboarding skip advances step
     - **Property 3: Onboarding skip advances step**
     - **Validates: Requirements 1.11**
-  - [ ] 2.4 Register onboarding routes in `internal/server/routers.go`
+  - [x] 2.4 Register onboarding routes in `internal/server/routers.go`
     - `GET /onboarding` → redirect to `/onboarding/1`
     - `GET /onboarding/{step}` → `onboardingStep`
     - `POST /onboarding/{step}` → `onboardingStepPost`
     - `POST /onboarding/{step}/skip` → `onboardingStepPost` (skip variant)
     - `GET /onboarding/preview` → public preview (no session)
     - _Requirements: 1.1, 1.10_
-  - [ ] 2.5 Create onboarding templates in `internal/views/onboarding/`
+  - [x] 2.5 Create onboarding templates in `internal/views/onboarding/`
     - Create `onboardingLayout.html` with step progress indicator, skip button, and next button
     - Create one partial per step: `step1_passkey.html`, `step2_language.html`, `step3_trackables.html`, `step4_audio.html`, `step5_navigation.html`
     - Step 3 reuses the existing `trackablePresetList` partial via HTMX
     - Step 2 reuses the language `<select>` from settings
     - Include image descriptions as `alt` text per design spec
     - _Requirements: 1.3, 1.4, 1.5, 1.6, 1.7, 1.12_
-  - [ ] 2.6 Add "How to get started" button to `internal/views/auth.html`
+  - [x] 2.6 Add "How to get started" button to `internal/views/auth.html`
     - Link to `/onboarding/preview`
     - _Requirements: 1.0_
 
-- [ ] 3. Checkpoint — onboarding
+- [x] 3. Checkpoint — onboarding
   - Ensure all tests pass. Verify redirect works for new users and is skipped for returning users. Ask the user if questions arise.
 
 - [ ] 4. Alert banner

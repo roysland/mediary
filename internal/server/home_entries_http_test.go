@@ -673,6 +673,9 @@ func newHomeEntriesHTTPTestServer(t *testing.T) *Server {
 	if _, err := conn.Exec(`INSERT INTO users (id, created_at_utc, webauthn_user_id, display_name, timezone) VALUES (1, 0, X'01', 'Test User', 'UTC')`); err != nil {
 		t.Fatalf("seed test user: %v", err)
 	}
+	if _, err := conn.Exec(`INSERT INTO settings (user_id, settings_key, settings_value, created_at_utc) VALUES (1, 'onboarding_complete', '1', 0)`); err != nil {
+		t.Fatalf("seed onboarding setting: %v", err)
+	}
 
 	tmpl, err := parseTemplatesFromRoot(root, i18n.DefaultLocale)
 	if err != nil {

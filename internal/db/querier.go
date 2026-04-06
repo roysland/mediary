@@ -29,6 +29,7 @@ type Querier interface {
 	GetAvailableTrackableTemplateByID(ctx context.Context, arg GetAvailableTrackableTemplateByIDParams) (TrackableTemplate, error)
 	GetEntryByID(ctx context.Context, arg GetEntryByIDParams) (Entry, error)
 	GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTrackablesParams) ([]GetEntryWithTrackablesRow, error)
+	GetSetting(ctx context.Context, arg GetSettingParams) (Setting, error)
 	GetTrackableById(ctx context.Context, arg GetTrackableByIdParams) (TrackableDefinition, error)
 	GetTrackableTemplates(ctx context.Context, userID int64) ([]TrackableTemplate, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)

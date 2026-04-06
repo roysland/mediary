@@ -275,6 +275,12 @@ SELECT *
 FROM settings
 WHERE user_id = ?;
 
+-- name: GetSetting :one
+SELECT *
+FROM settings
+WHERE user_id = sqlc.arg(user_id)
+    AND settings_key = sqlc.arg(settings_key);
+
 -- name: ListEntriesByUser :many
 SELECT *
 FROM entries
