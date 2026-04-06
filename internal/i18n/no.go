@@ -11,6 +11,8 @@ var norwegianCatalog = Catalog{
 	"auth.sign_in":                             "Logg inn",
 	"auth.subtitle":                            "Velg hvordan du vil fortsette.",
 	"auth.title":                               "Velkommen",
+	"alert.2025_07_01":                         "Ny oppdatering: onboarding er tilgjengelig for å hjelpe nye brukere i gang.",
+	"alert.dismiss":                            "Lukk",
 	"common.cancel":                            "Avbryt",
 	"common.close":                             "Lukk",
 	"common.restore":                           "Gjenopprett",

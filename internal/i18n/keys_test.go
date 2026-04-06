@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -73,8 +74,13 @@ func TestRegisteredLocalesExposeSortedMetadata(t *testing.T) {
 	if len(keys) == 0 {
 		t.Fatal("expected default locale to expose translation keys")
 	}
-	if keys[0] != "app.title" {
-		t.Fatalf("expected sorted keys, got first key %q", keys[0])
+
+	if !sort.StringsAreSorted(keys) {
+		t.Fatal("expected keys to be sorted")
+	}
+
+	if !slices.Contains(keys, "app.title") {
+		t.Fatal("expected app.title to exist in default locale keys")
 	}
 }
 

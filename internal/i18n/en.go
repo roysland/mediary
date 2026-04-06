@@ -11,6 +11,8 @@ var englishCatalog = Catalog{
 	"auth.sign_in":                             "Sign in",
 	"auth.subtitle":                            "Choose how you want to continue.",
 	"auth.title":                               "Welcome",
+	"alert.2025_07_01":                         "New update: onboarding is now available to help first-time users get started.",
+	"alert.dismiss":                            "Dismiss",
 	"common.cancel":                            "Cancel",
 	"common.close":                             "Close",
 	"common.restore":                           "Restore",

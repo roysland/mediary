@@ -59,38 +59,38 @@ Implementation follows the priority order established in requirements: onboardin
 - [x] 3. Checkpoint — onboarding
   - Ensure all tests pass. Verify redirect works for new users and is skipped for returning users. Ask the user if questions arise.
 
-- [ ] 4. Alert banner
-  - [ ] 4.1 Add alert constants to `internal/server/constants.go`
+- [x] 4. Alert banner
+  - [x] 4.1 Add alert constants to `internal/server/constants.go`
     - `activeAlertVersion` string constant (empty = no active alert)
     - `activeAlertI18nKey` string constant for the i18n message key
     - _Requirements: 3.7_
-  - [ ] 4.2 Add alert i18n keys to `internal/i18n/en.go` and `internal/i18n/no.go`
+  - [x] 4.2 Add alert i18n keys to `internal/i18n/en.go` and `internal/i18n/no.go`
     - Add key `alert.2025_07_01` (or matching `activeAlertI18nKey`) with placeholder message text
     - _Requirements: 3.1, 3.7_
-  - [ ] 4.3 Extend `home` handler in `internal/server/home.go` to pass alert data to template
+  - [x] 4.3 Extend `home` handler in `internal/server/home.go` to pass alert data to template
     - Read `alert_dismissed_{version}` from settings for the current user
     - If `activeAlertVersion != ""` and setting is absent, pass `Alert` struct to template data
     - _Requirements: 3.1, 3.4, 3.6_
-  - [ ] 4.4 Create `POST /alert/{version}/dismiss` handler in `internal/server/home.go`
+  - [x] 4.4 Create `POST /alert/{version}/dismiss` handler in `internal/server/home.go`
     - Call `UpsertSetting` with key `alert_dismissed_{version}` = `"1"`
     - Return `200 OK` with empty body on success; `500` on DB error
     - Register route in `routers.go`
     - _Requirements: 3.2, 3.3_
-  - [ ] 4.5 Add alert banner partial to `internal/views/home.html`
+  - [x] 4.5 Add alert banner partial to `internal/views/home.html`
     - Render `#alert-banner` div with dismiss button using `hx-post="/alert/{version}/dismiss"`, `hx-target="#alert-banner"`, `hx-swap="outerHTML"`
     - Only render when `Alert` data is present in template context
     - _Requirements: 3.1, 3.3_
-  - [ ]* 4.6 Write property test for alert banner visibility
+  - [x]* 4.6 Write property test for alert banner visibility
     - **Property 4: Alert banner visibility**
     - **Validates: Requirements 3.1, 3.4, 3.6**
-  - [ ]* 4.7 Write property test for alert dismissal persistence
+  - [x]* 4.7 Write property test for alert dismissal persistence
     - **Property 5: Alert dismissal persistence**
     - **Validates: Requirements 3.2**
-  - [ ]* 4.8 Write property test for alert version isolation
+  - [x]* 4.8 Write property test for alert version isolation
     - **Property 6: Alert version isolation**
     - **Validates: Requirements 3.5**
 
-- [ ] 5. Checkpoint — alert banner
+- [x] 5. Checkpoint — alert banner
   - Ensure all tests pass. Verify banner appears for new alert version and disappears after dismiss without page reload. Ask the user if questions arise.
 
 - [ ] 6. Image upload — DB schema and queries
@@ -282,6 +282,7 @@ Implementation follows the priority order established in requirements: onboardin
   - [ ]* 15.5 Write property test for service worker passthrough for non-static requests
     - **Property 14: Service worker passthrough for non-static requests**
     - **Validates: Requirements 6.5**
+  - [ ]* 15.6 Create a config setting for enabling/disabling service worker
 
 - [ ] 16. Checkpoint — service worker
   - Ensure all tests pass. Verify static assets are cached and non-static requests pass through. Ask the user if questions arise.

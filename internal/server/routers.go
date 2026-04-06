@@ -49,6 +49,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/trackables/{id}/delete", s.deleteTrackable)
 	s.mux.HandleFunc("/trackables/{id}/add", s.saveTrackableValue)
 	s.mux.HandleFunc("/trackables/{id}", s.registerTrackable)
+	s.mux.HandleFunc("/alert/{version}/dismiss", s.dismissAlert)
 
 	// Wrap all routes once so CSRF checks apply uniformly.
 	s.handler = withCrossOriginProtection(withSessionRequired(s, s.mux), s.cfg)

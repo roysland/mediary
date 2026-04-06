@@ -1,6 +1,18 @@
 {{ define "home_title" }}{{ t "nav.home" }}{{ end }}
 
 {{ define "home_content" }}
+{{ if .Alert }}
+<section id="alert-banner" class="card" role="status">
+	<p>{{ t .Alert.Key }}</p>
+	<button
+		type="button"
+		class="button button--ghost"
+		hx-post="/alert/{{ .Alert.Version }}/dismiss"
+		hx-target="#alert-banner"
+		hx-swap="outerHTML"
+	>{{ t "alert.dismiss" }}</button>
+</section>
+{{ end }}
 <section class="card">
 	{{ template "add_entry_content" .AddEntryForm }}
 </section>
