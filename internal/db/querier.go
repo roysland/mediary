@@ -18,6 +18,8 @@ type Querier interface {
 	CreateWebauthnCredential(ctx context.Context, arg CreateWebauthnCredentialParams) (WebauthnCredential, error)
 	DeleteEntriesByUser(ctx context.Context, userID int64) error
 	DeleteEntry(ctx context.Context, arg DeleteEntryParams) error
+	DeleteEntryImage(ctx context.Context, arg DeleteEntryImageParams) error
+	DeleteImagesByEntryID(ctx context.Context, arg DeleteImagesByEntryIDParams) error
 	DeleteSettingsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableDailyDismissalsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableDefinitionsByUser(ctx context.Context, userID int64) error
@@ -29,11 +31,14 @@ type Querier interface {
 	GetAvailableTrackableTemplateByID(ctx context.Context, arg GetAvailableTrackableTemplateByIDParams) (TrackableTemplate, error)
 	GetEntryByID(ctx context.Context, arg GetEntryByIDParams) (Entry, error)
 	GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTrackablesParams) ([]GetEntryWithTrackablesRow, error)
+	GetImageByID(ctx context.Context, arg GetImageByIDParams) (EntryImage, error)
+	GetImagesByEntryID(ctx context.Context, arg GetImagesByEntryIDParams) ([]EntryImage, error)
 	GetSetting(ctx context.Context, arg GetSettingParams) (Setting, error)
 	GetTrackableById(ctx context.Context, arg GetTrackableByIdParams) (TrackableDefinition, error)
 	GetTrackableTemplates(ctx context.Context, userID int64) ([]TrackableTemplate, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
 	GetUserByWebauthnUserID(ctx context.Context, webauthnUserID []byte) (User, error)
+	InsertEntryImage(ctx context.Context, arg InsertEntryImageParams) (EntryImage, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListEntriesByUser(ctx context.Context, userID int64) ([]Entry, error)
 	ListPendingTranscriptions(ctx context.Context) ([]ListPendingTranscriptionsRow, error)

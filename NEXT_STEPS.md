@@ -1,5 +1,9 @@
 ## Remaining Follow-ups
 
+- Make image file deletion in `deleteEntry` resilient to DB delete failures.
+	Why: Current flow removes image files before deleting the entry row to satisfy the roadmap sequence, but if the DB delete fails after file removal, metadata can temporarily point to missing files.
+	How: Wrap entry delete in a DB transaction and add a small compensating strategy (best-effort restore queue or deferred file cleanup) so file-system and DB state stay aligned on failure paths.
+
 - Add CI checks for the E2E auth isolation contract.
 	Why: The `/auth/e2e/login` bypass is now split behind the `e2e` build tag plus `APP_ENV=test` and a required `PLAYWRIGHT_E2E_AUTH_TOKEN`, but that guarantee should be enforced automatically so future refactors do not reopen the path.
 	How: Add one CI job that runs `go test ./...`, one that runs `go test -tags e2e ./internal/server`, and one smoke check that starts a normal binary and asserts `/auth/e2e/login` returns 404.

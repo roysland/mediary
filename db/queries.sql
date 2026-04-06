@@ -124,6 +124,38 @@ UPDATE entries
 SET transcription_status = 'failed'
 WHERE id = ?;
 
+-- name: InsertEntryImage :one
+INSERT INTO entry_images (
+    entry_id,
+    user_id,
+    file_path,
+    mime_type,
+    original_size,
+    storage_tier,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: GetImagesByEntryID :many
+SELECT *
+FROM entry_images
+WHERE entry_id = ? AND user_id = ?
+ORDER BY created_at_utc ASC;
+
+-- name: GetImageByID :one
+SELECT *
+FROM entry_images
+WHERE id = ? AND user_id = ?;
+
+-- name: DeleteEntryImage :exec
+DELETE FROM entry_images
+WHERE id = ? AND user_id = ?;
+
+-- name: DeleteImagesByEntryID :exec
+DELETE FROM entry_images
+WHERE entry_id = ? AND user_id = ?;
+
 -- name: ListPendingTranscriptions :many
 SELECT id, audio_file_path
 FROM entries

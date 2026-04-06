@@ -93,18 +93,18 @@ Implementation follows the priority order established in requirements: onboardin
 - [x] 5. Checkpoint — alert banner
   - Ensure all tests pass. Verify banner appears for new alert version and disappears after dismiss without page reload. Ask the user if questions arise.
 
-- [ ] 6. Image upload — DB schema and queries
-  - [ ] 6.1 Add `entry_images` table to `db/schema.sql`
+- [x] 6. Image upload — DB schema and queries
+  - [x] 6.1 Add `entry_images` table to `db/schema.sql`
     - Full schema per design: `id`, `entry_id`, `user_id`, `file_path`, `mime_type`, `original_size`, `storage_tier TEXT DEFAULT 'local'`, `created_at_utc`
     - Foreign keys with `ON DELETE CASCADE` on both `entry_id` and `user_id`
     - `CHECK (mime_type IN ('image/jpeg','image/png','image/webp','image/gif'))`
     - `CHECK (storage_tier IN ('local','object'))`
     - Indexes: `idx_entry_images_entry`, `idx_entry_images_user`
     - _Requirements: 4.7_
-  - [ ] 6.2 Create goose migration `db/migrations/00009_entry_images.sql`
+  - [x] 6.2 Create goose migration `db/migrations/00009_entry_images.sql`
     - Goose Up/Down format with `StatementBegin`/`StatementEnd`
     - _Requirements: 5.1_
-  - [ ] 6.3 Add image queries to `db/queries.sql` and run `sqlc generate`
+  - [x] 6.3 Add image queries to `db/queries.sql` and run `sqlc generate`
     - `InsertEntryImage :one` — insert and return row
     - `GetImagesByEntryID :many` — list images for an entry
     - `GetImageByID :one` — fetch single image by id + user_id
@@ -113,11 +113,11 @@ Implementation follows the priority order established in requirements: onboardin
     - Run `sqlc generate`
     - _Requirements: 4.7, 4.11_
 
-- [ ] 7. Image upload — handler and storage
-  - [ ] 7.1 Add `ImageStorageDir` to server config in `internal/server/config.go`
+- [x] 7. Image upload — handler and storage
+  - [x] 7.1 Add `ImageStorageDir` to server config in `internal/server/config.go`
     - Default value: `"data/images"`
     - _Requirements: 4.6_
-  - [ ] 7.2 Create `internal/server/images.go` with upload and delete handlers
+  - [x] 7.2 Create `internal/server/images.go` with upload and delete handlers
     - `func (s *Server) uploadEntryImage(w, r)` — POST `/entry/{id}/images`
       - Parse multipart form, enforce 2 MB limit via `http.MaxBytesReader`
       - Validate MIME type against allowlist `{image/jpeg, image/png, image/webp, image/gif}`
@@ -128,28 +128,28 @@ Implementation follows the priority order established in requirements: onboardin
     - `func (s *Server) deleteEntryImage(w, r)` — DELETE `/entry/{id}/images/{imgID}`
       - Fetch image record, delete file from disk, delete DB row
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10_
-  - [ ] 7.3 Extend `deleteEntry` handler in `internal/server/entries.go`
+  - [x] 7.3 Extend `deleteEntry` handler in `internal/server/entries.go`
     - Before deleting the entry, fetch all images via `GetImagesByEntryID`
     - Delete each image file from disk (log errors but continue)
     - DB cascade handles `entry_images` row deletion
     - _Requirements: 4.11_
-  - [ ] 7.4 Register image routes in `internal/server/routers.go`
+  - [x] 7.4 Register image routes in `internal/server/routers.go`
     - `POST /entry/{id}/images` → `uploadEntryImage`
     - `DELETE /entry/{id}/images/{imgID}` → `deleteEntryImage`
     - _Requirements: 4.1_
-  - [ ]* 7.5 Write property test for image size enforcement
+  - [x]* 7.5 Write property test for image size enforcement
     - **Property 7: Image size enforcement**
     - **Validates: Requirements 4.2, 4.4**
-  - [ ]* 7.6 Write property test for image MIME type enforcement
+  - [x]* 7.6 Write property test for image MIME type enforcement
     - **Property 8: Image MIME type enforcement**
     - **Validates: Requirements 4.3, 4.5**
-  - [ ]* 7.7 Write property test for image filename safety
+  - [x]* 7.7 Write property test for image filename safety
     - **Property 9: Image filename safety**
     - **Validates: Requirements 4.6**
-  - [ ]* 7.8 Write property test for image metadata persistence
+  - [x]* 7.8 Write property test for image metadata persistence
     - **Property 10: Image metadata persistence**
     - **Validates: Requirements 4.7, 4.8**
-  - [ ]* 7.9 Write property test for image cascade delete
+  - [x]* 7.9 Write property test for image cascade delete
     - **Property 11: Image cascade delete**
     - **Validates: Requirements 4.11**
 

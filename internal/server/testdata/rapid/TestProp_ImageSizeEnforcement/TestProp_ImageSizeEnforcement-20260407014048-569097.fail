@@ -1,0 +1,9 @@
+# 2026/04/07 01:40:48.068385 [TestProp_ImageSizeEnforcement] [rapid] draw over_limit: false
+# 2026/04/07 01:40:48.068389 [TestProp_ImageSizeEnforcement] [rapid] draw size: 1
+# 2026/04/07 01:40:48.068490 [TestProp_ImageSizeEnforcement] expected 200 for in-limit upload (1 bytes), got 400
+# 
+v0.4.8#18165961320655520295
+0x0
+0x0
+0x0
+0x0

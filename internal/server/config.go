@@ -21,6 +21,8 @@ type Config struct {
 
 	// AudioStorageDir is the directory where uploaded voice recordings are stored.
 	AudioStorageDir string
+	// ImageStorageDir is the directory where uploaded entry images are stored.
+	ImageStorageDir string
 	// WhisperBinaryPath is the path (or name on PATH) of the whisper.cpp binary.
 	// Leave empty to disable transcription.
 	WhisperBinaryPath string
@@ -64,6 +66,7 @@ func LoadConfig() Config {
 		ListenAddr:                  getEnv("LISTEN_ADDR", ":8080"),
 		DevMode:                     appEnv != "production",
 		AudioStorageDir:             getEnv("AUDIO_STORAGE_DIR", "data/audio"),
+		ImageStorageDir:             getEnv("IMAGE_STORAGE_DIR", "data/images"),
 		WhisperBinaryPath:           getEnv("WHISPER_BINARY_PATH", ""),
 		WhisperModelPath:            getEnv("WHISPER_MODEL_PATH", ""),
 		FFmpegBinaryPath:            getEnv("FFMPEG_BINARY_PATH", "ffmpeg"),

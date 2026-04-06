@@ -211,6 +211,31 @@ func (s *Server) deleteEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	images, err := s.queries.GetImagesByEntryID(r.Context(), db.GetImagesByEntryIDParams{
+		EntryID: entryID,
+		UserID:  userID,
+	})
+	if err != nil {
+		log.Printf("Failed to fetch images for entry %d: %v", entryID, err)
+		respondInternalError(w, r, "Failed to delete entry")
+		return
+	}
+
+	for _, image := range images {
+		if err := s.removeImageFile(image.FilePath); err != nil {
+			log.Printf("Warning: failed to delete image file %s: %v", image.FilePath, err)
+		}
+	}
+
+	if err := s.queries.DeleteImagesByEntryID(r.Context(), db.DeleteImagesByEntryIDParams{
+		EntryID: entryID,
+		UserID:  userID,
+	}); err != nil {
+		log.Printf("Failed to delete image metadata for entry %d: %v", entryID, err)
+		respondInternalError(w, r, "Failed to delete entry")
+		return
+	}
+
 	// Delete the entry from the database.
 	err = s.queries.DeleteEntry(r.Context(), db.DeleteEntryParams{
 		ID:     entryID,

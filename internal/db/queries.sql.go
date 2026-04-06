@@ -371,6 +371,36 @@ func (q *Queries) DeleteEntry(ctx context.Context, arg DeleteEntryParams) error 
 	return err
 }
 
+const deleteEntryImage = `-- name: DeleteEntryImage :exec
+DELETE FROM entry_images
+WHERE id = ? AND user_id = ?
+`
+
+type DeleteEntryImageParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) DeleteEntryImage(ctx context.Context, arg DeleteEntryImageParams) error {
+	_, err := q.db.ExecContext(ctx, deleteEntryImage, arg.ID, arg.UserID)
+	return err
+}
+
+const deleteImagesByEntryID = `-- name: DeleteImagesByEntryID :exec
+DELETE FROM entry_images
+WHERE entry_id = ? AND user_id = ?
+`
+
+type DeleteImagesByEntryIDParams struct {
+	EntryID int64 `json:"entry_id"`
+	UserID  int64 `json:"user_id"`
+}
+
+func (q *Queries) DeleteImagesByEntryID(ctx context.Context, arg DeleteImagesByEntryIDParams) error {
+	_, err := q.db.ExecContext(ctx, deleteImagesByEntryID, arg.EntryID, arg.UserID)
+	return err
+}
+
 const deleteSettingsByUser = `-- name: DeleteSettingsByUser :exec
 DELETE FROM settings
 WHERE user_id = ?
@@ -697,6 +727,77 @@ func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTr
 	return items, nil
 }
 
+const getImageByID = `-- name: GetImageByID :one
+SELECT id, entry_id, user_id, file_path, mime_type, original_size, storage_tier, created_at_utc
+FROM entry_images
+WHERE id = ? AND user_id = ?
+`
+
+type GetImageByIDParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) GetImageByID(ctx context.Context, arg GetImageByIDParams) (EntryImage, error) {
+	row := q.db.QueryRowContext(ctx, getImageByID, arg.ID, arg.UserID)
+	var i EntryImage
+	err := row.Scan(
+		&i.ID,
+		&i.EntryID,
+		&i.UserID,
+		&i.FilePath,
+		&i.MimeType,
+		&i.OriginalSize,
+		&i.StorageTier,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
+const getImagesByEntryID = `-- name: GetImagesByEntryID :many
+SELECT id, entry_id, user_id, file_path, mime_type, original_size, storage_tier, created_at_utc
+FROM entry_images
+WHERE entry_id = ? AND user_id = ?
+ORDER BY created_at_utc ASC
+`
+
+type GetImagesByEntryIDParams struct {
+	EntryID int64 `json:"entry_id"`
+	UserID  int64 `json:"user_id"`
+}
+
+func (q *Queries) GetImagesByEntryID(ctx context.Context, arg GetImagesByEntryIDParams) ([]EntryImage, error) {
+	rows, err := q.db.QueryContext(ctx, getImagesByEntryID, arg.EntryID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EntryImage
+	for rows.Next() {
+		var i EntryImage
+		if err := rows.Scan(
+			&i.ID,
+			&i.EntryID,
+			&i.UserID,
+			&i.FilePath,
+			&i.MimeType,
+			&i.OriginalSize,
+			&i.StorageTier,
+			&i.CreatedAtUtc,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSetting = `-- name: GetSetting :one
 SELECT id, user_id, settings_key, settings_value, created_at_utc
 FROM settings
@@ -836,6 +937,54 @@ func (q *Queries) GetUserByWebauthnUserID(ctx context.Context, webauthnUserID []
 		&i.WebauthnUserID,
 		&i.DisplayName,
 		&i.Timezone,
+	)
+	return i, err
+}
+
+const insertEntryImage = `-- name: InsertEntryImage :one
+INSERT INTO entry_images (
+    entry_id,
+    user_id,
+    file_path,
+    mime_type,
+    original_size,
+    storage_tier,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING id, entry_id, user_id, file_path, mime_type, original_size, storage_tier, created_at_utc
+`
+
+type InsertEntryImageParams struct {
+	EntryID      int64  `json:"entry_id"`
+	UserID       int64  `json:"user_id"`
+	FilePath     string `json:"file_path"`
+	MimeType     string `json:"mime_type"`
+	OriginalSize int64  `json:"original_size"`
+	StorageTier  string `json:"storage_tier"`
+	CreatedAtUtc int64  `json:"created_at_utc"`
+}
+
+func (q *Queries) InsertEntryImage(ctx context.Context, arg InsertEntryImageParams) (EntryImage, error) {
+	row := q.db.QueryRowContext(ctx, insertEntryImage,
+		arg.EntryID,
+		arg.UserID,
+		arg.FilePath,
+		arg.MimeType,
+		arg.OriginalSize,
+		arg.StorageTier,
+		arg.CreatedAtUtc,
+	)
+	var i EntryImage
+	err := row.Scan(
+		&i.ID,
+		&i.EntryID,
+		&i.UserID,
+		&i.FilePath,
+		&i.MimeType,
+		&i.OriginalSize,
+		&i.StorageTier,
+		&i.CreatedAtUtc,
 	)
 	return i, err
 }

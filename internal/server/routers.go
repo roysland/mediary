@@ -39,6 +39,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/entry/{id}/edit", s.editEntry)
 	s.mux.HandleFunc("/entry/{id}", s.entryItem)
 	s.mux.HandleFunc("/entry/{id}/trackables", s.entryTrackablesDialog)
+	s.mux.HandleFunc("/entry/{id}/images", s.uploadEntryImage)
+	s.mux.HandleFunc("/entry/{id}/images/{imgID}", s.deleteEntryImage)
 	s.mux.HandleFunc("/settings", s.settings)
 	s.mux.HandleFunc("/settings/sensitive-content", s.settingsSensitiveContent)
 	s.mux.HandleFunc("/settings/export-data", s.exportUserData)

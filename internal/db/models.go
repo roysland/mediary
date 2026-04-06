@@ -32,6 +32,17 @@ type Entry struct {
 	CreatedAtUtc          int64          `json:"created_at_utc"`
 }
 
+type EntryImage struct {
+	ID           int64  `json:"id"`
+	EntryID      int64  `json:"entry_id"`
+	UserID       int64  `json:"user_id"`
+	FilePath     string `json:"file_path"`
+	MimeType     string `json:"mime_type"`
+	OriginalSize int64  `json:"original_size"`
+	StorageTier  string `json:"storage_tier"`
+	CreatedAtUtc int64  `json:"created_at_utc"`
+}
+
 type Setting struct {
 	ID            int64          `json:"id"`
 	UserID        int64          `json:"user_id"`
