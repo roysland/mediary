@@ -82,7 +82,8 @@ function updateEntriesEmptyState(root) {
 }
 
 function updateDismissedTrackablePanels(root) {
-  if (!(root instanceof ParentNode)) {
+  console.log(root)
+  if (!(root instanceof Element) && !(root instanceof Document)) {
     return;
   }
 

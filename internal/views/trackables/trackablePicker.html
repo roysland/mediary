@@ -14,8 +14,8 @@
                 {{ if $.HasEntryID }}<input type="hidden" name="entry_id" value="{{ $.EntryID }}">{{ end }}
                 <label>
                     <span class="icon">{{ .Icon.String }}</span><span> {{ .Name }}</span>
-                    <output id="trackable-{{ $.PickerID }}-{{ .ID }}-output">0</output>
-                    <input data-swipe-ignore type="range" min="{{ .MinValue.Int64 }}" max="{{ .MaxValue.Int64 }}" value="0" class="slider" name="value_int" data-range-output="trackable-{{ $.PickerID }}-{{ .ID }}-output"
+                    <output id="trackable-{{ $.PickerID }}-{{ .ID }}-output" for="trackable-input-{{ .ID }}-slider">0</output>
+                    <input id="trackable-input-{{ .ID }}-slider" data-swipe-ignore type="range" min="{{ .MinValue.Int64 }}" max="{{ .MaxValue.Int64 }}" value="0" class="slider" name="value_int" data-range-output="trackable-{{ $.PickerID }}-{{ .ID }}-output"
                     hx-post="/trackables/{{ .ID }}/add" hx-trigger="pointerup, change" hx-swap="none" hx-indicator="closest form" hx-include="closest form"
                     >
                 </label>

@@ -157,6 +157,15 @@
                 <source src="/{{ .AudioFilePath.String }}" type="audio/webm">
             </audio>
             {{ end }}
+            {{ if .Images }}
+            <ul class="entry-card__images">
+                {{ range .Images }}
+                <li class="entry-card__image-item">
+                    <img src="/{{ .FilePath }}" alt="Entry attachment" loading="lazy" class="entry-card__image">
+                </li>
+                {{ end }}
+            </ul>
+            {{ end }}
             <div class="entry-card__actions">
                 <button id="entry-{{ .ID }}-context-button" type="button" class="button--ghost button--sm entry-card__more-btn" popovertarget="entry-{{ .ID }}-context">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">

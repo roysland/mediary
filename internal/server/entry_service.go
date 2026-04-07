@@ -88,7 +88,13 @@ func (s *Server) listEntryViewsByDay(ctx context.Context, userID int64, day stri
 	if err != nil {
 		return nil, err
 	}
-	return buildEntryViews(rows), nil
+
+	entries := buildEntryViews(rows)
+	if err := s.attachImagesToEntryViews(ctx, userID, entries); err != nil {
+		return nil, err
+	}
+
+	return entries, nil
 }
 
 func (s *Server) loadEntryViewByID(ctx context.Context, userID, entryID int64) (entryView, error) {
@@ -119,5 +125,43 @@ func (s *Server) loadEntryViewByID(ctx context.Context, userID, entryID int64) (
 		return entryView{}, errEntryNotFound
 	}
 
+	images, err := s.queries.GetImagesByEntryID(ctx, db.GetImagesByEntryIDParams{
+		EntryID: entry.ID,
+		UserID:  userID,
+	})
+	if err != nil {
+		return entryView{}, err
+	}
+
+	entry.Images = mapEntryImages(images)
+
 	return entry, nil
+}
+
+func (s *Server) attachImagesToEntryViews(ctx context.Context, userID int64, entries []entryView) error {
+	for i := range entries {
+		images, err := s.queries.GetImagesByEntryID(ctx, db.GetImagesByEntryIDParams{
+			EntryID: entries[i].ID,
+			UserID:  userID,
+		})
+		if err != nil {
+			return err
+		}
+
+		entries[i].Images = mapEntryImages(images)
+	}
+
+	return nil
+}
+
+func mapEntryImages(images []db.EntryImage) []entryImageView {
+	out := make([]entryImageView, 0, len(images))
+	for _, img := range images {
+		out = append(out, entryImageView{
+			ID:       img.ID,
+			FilePath: img.FilePath,
+			MimeType: img.MimeType,
+		})
+	}
+	return out
 }

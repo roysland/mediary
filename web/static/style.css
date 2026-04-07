@@ -328,6 +328,27 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
   height: 44px;
 }
 
+.entry-card__images {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-xs);
+}
+
+.entry-card__image-item {
+  margin: 0;
+}
+
+.entry-card__image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: var(--size-border-thin) solid var(--color-border-muted);
+}
+
 .entry-card__draft-badge {
   font-size: var(--font-size-00);
   color: var(--color-text-muted);

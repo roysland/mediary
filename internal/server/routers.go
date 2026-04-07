@@ -12,6 +12,10 @@ func (s *Server) routes() {
 	audioFS := http.FileServer(http.Dir(s.cfg.AudioStorageDir))
 	s.mux.Handle("/data/audio/", http.StripPrefix("/data/audio/", audioFS))
 
+	// Serve uploaded entry images from the image storage directory.
+	imageFS := http.FileServer(http.Dir(s.cfg.ImageStorageDir))
+	s.mux.Handle("/data/images/", http.StripPrefix("/data/images/", imageFS))
+
 	s.mux.HandleFunc("/healthz", s.health)
 	s.mux.HandleFunc("/{$}", s.home)
 	s.mux.HandleFunc("/auth", s.authPage)
