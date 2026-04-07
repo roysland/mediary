@@ -38,18 +38,21 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	today := time.Now().Format(dateLayoutISO)
+	addEntryForm := buildEntryFormViewData(
+		"/entry/add",
+		today,
+		today,
+		false,
+		true,
+		false,
+	)
+	addEntryForm.ShowImageUpload = false
+
 	s.renderPage(w, r, "home_title", "home_content", map[string]interface{}{
-		"SelectedDay": today,
-		"TodayStr":    today,
-		"Alert":       alert,
-		"AddEntryForm": buildEntryFormViewData(
-			"/entry/add",
-			today,
-			today,
-			false,
-			true,
-			false,
-		),
+		"SelectedDay":  today,
+		"TodayStr":     today,
+		"Alert":        alert,
+		"AddEntryForm": addEntryForm,
 	})
 }
 

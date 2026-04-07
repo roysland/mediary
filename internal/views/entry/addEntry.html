@@ -51,6 +51,7 @@
     </button>
 </form>
 
+{{ if .ShowImageUpload }}
 <section class="entry-image-upload" data-image-upload-root>
     <label for="entry_image_input">{{ t "entry.image.label" }}</label>
     <p class="entry-image-upload__helper">{{ t "entry.image.helper" }}</p>
@@ -74,5 +75,6 @@
     <p class="entry-image-upload__status" data-image-upload-status aria-live="polite"></p>
     <ul class="entry-image-upload__list" data-image-upload-list></ul>
 </section>
+{{ end }}
 
 {{ end }}

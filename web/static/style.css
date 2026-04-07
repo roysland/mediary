@@ -366,7 +366,11 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
 }
 
 .entry-card__context-menu {
+  z-index: -1;
   flex-direction: column;
+}
+.entry-card__context-menu[open] {
+  z-index: 10;
 }
 
 .entry-note-dialog {
@@ -823,3 +827,12 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
   padding: 0.5rem;
 }
 
+[popover] {
+  z-index: -1;
+  display: none;
+}
+[popover]:popover-open {
+  opacity: 1 !important;
+  z-index: 10 !important;
+  display: flex; /* Popover API sets display: block by default; override if needed */
+}

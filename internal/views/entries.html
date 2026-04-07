@@ -161,7 +161,13 @@
             <ul class="entry-card__images">
                 {{ range .Images }}
                 <li class="entry-card__image-item">
+                    <button class="button--ghost" type="button" commandfor="entry-card__image-dialog-{{ .ID }}-{{ .FilePath }}" command="show-modal">
                     <img src="/{{ .FilePath }}" alt="Entry attachment" loading="lazy" class="entry-card__image">
+                    </button>
+                    <dialog style="padding: 0; display: flex; flex-direction: column;" id="entry-card__image-dialog-{{ .ID }}-{{ .FilePath }}" class="sheet" data-entry-image-dialog>
+                        <img src="/{{ .FilePath }}" alt="Entry attachment" class="entry-card__image-dialog-content">
+                        <button type="button" class="button--ghost entry-card__image-dialog-close" commandfor="entry-card__image-dialog-{{ .ID }}-{{ .FilePath }}" command="close">{{ t "common.close" }}</button>
+                    </dialog>
                 </li>
                 {{ end }}
             </ul>
