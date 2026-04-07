@@ -1,0 +1,31 @@
+{{ define "share_list_title" }}Share Links{{ end }}
+
+{{ define "share_token_list" }}
+<section class="card">
+    <h2>Active share links</h2>
+    {{ if .Tokens }}
+    <ul>
+        {{ range .Tokens }}
+        <li>
+            <strong>ID {{ .ID }}</strong><br>
+            Expires: {{ formatUnix .ExpiresAtUTC }}<br>
+            Range: {{ .ScopeDateFrom }} - {{ .ScopeDateTo }}<br>
+            Includes private entries: {{ .ScopePrivate }}
+            <form method="post" action="/settings/shares/{{ .ID }}/revoke">
+                <button type="submit" class="button button--ghost">Revoke</button>
+            </form>
+        </li>
+        {{ end }}
+    </ul>
+    {{ else }}
+    <p>No active share links.</p>
+    {{ end }}
+</section>
+{{ end }}
+
+{{ define "share_list_content" }}
+<section>
+    {{ template "share_create_form" . }}
+    {{ template "share_token_list" . }}
+</section>
+{{ end }}

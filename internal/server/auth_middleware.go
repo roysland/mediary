@@ -18,7 +18,7 @@ func withSessionRequired(s *Server, mux *http.ServeMux) http.Handler {
 			return
 		}
 
-		if isPublicRoute(r.URL.Path) {
+		if isPublicRoute(r) {
 			mux.ServeHTTP(w, r)
 			return
 		}
@@ -93,7 +93,12 @@ func routeExists(mux *http.ServeMux, r *http.Request) bool {
 	return pattern != ""
 }
 
-func isPublicRoute(path string) bool {
+func isPublicRoute(r *http.Request) bool {
+	path := r.URL.Path
+	if strings.HasPrefix(path, "/share/") && path != "/share/create" {
+		return r.Method == http.MethodGet || r.Method == http.MethodPost
+	}
+
 	switch {
 	case path == "/healthz":
 		return true

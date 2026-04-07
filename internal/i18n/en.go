@@ -21,7 +21,7 @@ var englishCatalog = Catalog{
 	"entries.delete.failed":                    "Failed to delete entry. Please try again.",
 	"entries.sensitive_filter.label":           "Show private and sensitive",
 	"entries.title":                            "Entries",
-	"entry.add_trackable":                      "Add trackable",
+	"entry.add_trackable":                      "Add or Edit trackable",
 	"entry.add_trackable_link":                 "Add Trackable",
 	"entry.add_trackables":                     "Add Trackables",
 	"entry.add_text":                           "Add text",

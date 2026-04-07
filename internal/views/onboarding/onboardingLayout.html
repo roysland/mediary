@@ -9,6 +9,9 @@
     .onboarding-card {
   background-color: #5B97C9;
   color: #fff;
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
 }
 .onboarding-card select {
     color: #333;
@@ -17,6 +20,7 @@
   max-width: 100%;
   height: auto;
   margin: 1.5rem 0;
+
 }
 .onboarding-card .onboarding-progress {
     display: flex;
@@ -40,6 +44,12 @@
     font-weight: bold;
     color:#5B97C9;
 }
+.onboarding-card h1 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 900;
+    color: #fff;
+}
 </style>
 <section class="card onboarding-card">
     <header>
@@ -47,7 +57,7 @@
         {{ if .IsPreview }}
         <p>{{ t "onboarding.preview.body" }}</p>
         {{ else }}
-        <p>{{ t "onboarding.progress_label" }} {{ .CurrentStep }}/{{ len .Steps }}</p>
+        <!-- <p>{{ t "onboarding.progress_label" }} {{ .CurrentStep }}/{{ len .Steps }}</p> -->
         {{ end }}
     </header>
 

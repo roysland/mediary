@@ -51,6 +51,20 @@ type Setting struct {
 	CreatedAtUtc  int64          `json:"created_at_utc"`
 }
 
+type ShareToken struct {
+	ID            int64          `json:"id"`
+	UserID        int64          `json:"user_id"`
+	TokenHash     []byte         `json:"token_hash"`
+	PasswordHash  []byte         `json:"password_hash"`
+	ScopeDateFrom sql.NullString `json:"scope_date_from"`
+	ScopeDateTo   sql.NullString `json:"scope_date_to"`
+	ScopePrivate  int64          `json:"scope_private"`
+	ExpiresAtUtc  int64          `json:"expires_at_utc"`
+	AccessedAtUtc sql.NullInt64  `json:"accessed_at_utc"`
+	RevokedAtUtc  sql.NullInt64  `json:"revoked_at_utc"`
+	CreatedAtUtc  int64          `json:"created_at_utc"`
+}
+
 type TrackableDailyDismissal struct {
 	ID                    int64  `json:"id"`
 	UserID                int64  `json:"user_id"`

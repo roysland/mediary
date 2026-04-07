@@ -43,6 +43,23 @@ CREATE TABLE IF NOT EXISTS device_link_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS share_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash BLOB NOT NULL UNIQUE,
+    password_hash BLOB NOT NULL,
+    scope_date_from TEXT,
+    scope_date_to TEXT,
+    scope_private INTEGER NOT NULL DEFAULT 0,
+    expires_at_utc INTEGER NOT NULL,
+    accessed_at_utc INTEGER,
+    revoked_at_utc INTEGER,
+    created_at_utc INTEGER NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CHECK (scope_private IN (0,1))
+);
+
 CREATE TABLE IF NOT EXISTS entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -237,6 +254,12 @@ ON device_link_tokens(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_device_link_tokens_expires
 ON device_link_tokens(expires_at_utc);
+
+CREATE INDEX IF NOT EXISTS idx_share_tokens_user
+ON share_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_share_tokens_expires
+ON share_tokens(expires_at_utc);
 
 INSERT OR IGNORE INTO trackable_templates
 (name, value_type, unit, min_value, max_value, icon, is_sensitive, private_label, custom_control_type, category, created_at_utc)

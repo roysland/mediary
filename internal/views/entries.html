@@ -177,6 +177,15 @@
                         {{ if .NoteText.String }}{{ t "entry.edit_text" }}{{ else }}{{ t "entry.add_text" }}{{ end }}
                     </button>
                     <button type="button" class="button--ghost button--sm edit-trackables-button" data-entry-id="{{ .ID }}">{{ t "entry.add_trackable" }}</button>
+                    <button
+                        type="button"
+                        class="button--ghost button--sm upload-image-button"
+                        data-entry-id="{{ .ID }}"
+                        data-entry-date="{{ .EntryDate }}"
+                        data-entry-private="{{ if .IsPrivate }}true{{ else }}false{{ end }}"
+                        data-entry-has-note="{{ if .NoteText.String }}true{{ else }}false{{ end }}"
+                        data-entry-note-source="entry-{{ .ID }}-note-source"
+                    >{{ t "entry.image.label" }}</button>
                     <button type="button" class="button--ghost button--sm delete-note-button" data-entry-id="{{ .ID }}">{{ t "entry.delete_note" }}</button>
                 </div>
             </div>

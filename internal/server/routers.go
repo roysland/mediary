@@ -29,6 +29,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/auth/passkeys/register/options", s.beginAddPasskey)
 	s.mux.HandleFunc("/auth/passkeys/register/verify", s.finishAddPasskey)
 	s.mux.HandleFunc("/auth/device-link/create", s.createDeviceLink)
+	s.mux.HandleFunc("/share/create", withShareSecurityHeaders(s.createShareLink))
+	s.mux.HandleFunc("/share/{token}", withShareSecurityHeaders(s.shareTokenRoute))
 	s.mux.HandleFunc("/link", s.redeemDeviceLink)
 	s.mux.HandleFunc("/auth/logout", s.logout)
 	s.mux.HandleFunc("/entries", s.entries)
@@ -45,6 +47,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/settings/sensitive-content", s.settingsSensitiveContent)
 	s.mux.HandleFunc("/settings/export-data", s.exportUserData)
 	s.mux.HandleFunc("/settings/clear-data", s.clearUserData)
+	s.mux.HandleFunc("/settings/shares", s.listShareTokens)
+	s.mux.HandleFunc("/settings/shares/{id}/revoke", s.revokeShareTokenByID)
 	s.mux.HandleFunc("/trackables/add", s.addTrackable)
 	s.mux.HandleFunc("/trackables", s.listTrackables)
 	s.mux.HandleFunc("/trackables/{id}/dismissal", s.saveTrackableDismissal)
@@ -55,4 +59,13 @@ func (s *Server) routes() {
 
 	// Wrap all routes once so CSRF checks apply uniformly.
 	s.handler = withCrossOriginProtection(withSessionRequired(s, s.mux), s.cfg)
+}
+
+func withShareSecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Robots-Tag", "noindex")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("Cache-Control", "no-store")
+		next(w, r)
+	}
 }

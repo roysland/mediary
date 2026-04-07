@@ -63,7 +63,17 @@ function initRangeOutputBindings(root) {
     }
 
     const outputId = slider.dataset.rangeOutput;
-    const output = outputId ? document.getElementById(outputId) : null;
+    let output = null;
+    if (outputId) {
+      try {
+        output = root.querySelector(`#${CSS.escape(outputId)}`);
+      } catch {
+        output = root.querySelector(`#${outputId}`);
+      }
+    }
+    if (!(output instanceof HTMLOutputElement)) {
+      output = slider.closest("form")?.querySelector("output");
+    }
     if (!(output instanceof HTMLOutputElement)) {
       return;
     }

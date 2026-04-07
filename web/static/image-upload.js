@@ -177,6 +177,7 @@ async function handleUpload(root, form, fileInput) {
   const messages = parseMessages(root);
   const entryID = readEntryID(root);
   if (entryID <= 0) {
+    fileInput.value = "";
     setStatus(root, messages.missingEntry);
     return;
   }
@@ -270,13 +271,12 @@ function initImageUpload(rootScope = document) {
 
     root.dataset.imageUploadReady = "true";
 
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      handleUpload(root, form, fileInput).catch(() => {
-        const messages = parseMessages(root);
-        setStatus(root, messages.failed);
+      fileInput.addEventListener("change", () => {
+        handleUpload(root, form, fileInput).catch(() => {
+          const messages = parseMessages(root);
+          setStatus(root, messages.failed);
+        });
       });
-    });
 
     root.addEventListener("click", (event) => {
       const target = event.target instanceof Element ? event.target.closest("button[data-image-id][data-entry-id]") : null;

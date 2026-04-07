@@ -27,3 +27,7 @@
 - Make voice recorder bindings instance-safe (no global IDs).
 	Why: `web/static/voice-recorder.js` currently binds via `getElementById`, which assumes one recorder on the page. Any future second recorder instance or partial swap with duplicate IDs can bind listeners to the wrong element.
 	How: Replace IDs with `data-voice-*` hooks, initialize per `.voice-entry-section`, and scope queries/listeners to each section root.
+
+- Tighten share-token single-use semantics under race conditions.
+	Why: `MarkShareTokenAccessed` currently updates `accessed_at_utc` with a guard (`accessed_at_utc IS NULL`) but the handler does not verify affected rows, so two near-simultaneous submissions could both proceed before one update is observed.
+	How: Change the sqlc query to return affected rows (or use `UPDATE ... RETURNING`) and only render the report when exactly one row is transitioned from unused to accessed.

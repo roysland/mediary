@@ -1,0 +1,11 @@
+{{ define "share_confirmation_title" }}Share Link Created{{ end }}
+{{ define "share_confirmation_content" }}
+<section class="card">
+    <h1>Share link created</h1>
+    <p>This link and password are shown once. Save them now.</p>
+    <p><strong>Link:</strong> <a href="{{ .ShareURL }}">{{ .ShareURL }}</a></p>
+    <p><strong>Password:</strong> {{ .SharePassword }}</p>
+    <p><strong>Expires:</strong> {{ formatUnix .ExpiresAtUTC }}</p>
+    <img src="{{ .QRCodeDataURL }}" alt="Share link QR code">
+</section>
+{{ end }}

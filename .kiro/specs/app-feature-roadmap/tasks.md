@@ -167,16 +167,16 @@ Implementation follows the priority order established in requirements: onboardin
 - [x] 9. Checkpoint — image upload
   - Ensure all tests pass. Verify upload, validation errors, and cascade delete on entry removal. Ask the user if questions arise.
 
-- [ ] 10. Secure share links — DB schema and queries
-  - [ ] 10.1 Add `share_tokens` table to `db/schema.sql`
+- [x] 10. Secure share links — DB schema and queries
+  - [x] 10.1 Add `share_tokens` table to `db/schema.sql`
     - Full schema per design: `id`, `user_id`, `token_hash BLOB UNIQUE`, `password_hash BLOB`, `scope_date_from`, `scope_date_to`, `scope_private`, `expires_at_utc`, `accessed_at_utc`, `revoked_at_utc`, `created_at_utc`
     - Foreign key `user_id → users(id) ON DELETE CASCADE`
     - Indexes: `idx_share_tokens_user`, `idx_share_tokens_expires`
     - _Requirements: 10.2, 10.3_
-  - [ ] 10.2 Create goose migration `db/migrations/00010_share_tokens.sql`
+  - [x] 10.2 Create goose migration `db/migrations/00010_share_tokens.sql`
     - Goose Up/Down format
     - _Requirements: 5.1_
-  - [ ] 10.3 Add share token queries to `db/queries.sql` and run `sqlc generate`
+  - [x] 10.3 Add share token queries to `db/queries.sql` and run `sqlc generate`
     - `CreateShareToken :one`
     - `GetShareTokenByHash :one` — lookup by `token_hash`
     - `MarkShareTokenAccessed :exec` — set `accessed_at_utc`
@@ -186,8 +186,8 @@ Implementation follows the priority order established in requirements: onboardin
     - Run `sqlc generate`
     - _Requirements: 10.17, 10.18, 10.19_
 
-- [ ] 11. Secure share links — token generation and handlers
-  - [ ] 11.1 Create `internal/server/share.go` with token generation helpers
+- [x] 11. Secure share links — token generation and handlers
+  - [x] 11.1 Create `internal/server/share.go` with token generation helpers
     - `generateShareToken() (rawToken string, tokenHash []byte, err error)` — 20 bytes `crypto/rand` → base64url; hash with SHA-256
     - `generateSharePassword() (password string, err error)` — 7 chars from `[A-Z2-9]` via `crypto/rand`
     - `func (s *Server) createShareLink(w, r)` — POST `/share/create`
@@ -199,15 +199,15 @@ Implementation follows the priority order established in requirements: onboardin
     - `func (s *Server) revokeShareToken(w, r)` — DELETE `/share/{token}` — set `revoked_at_utc`
     - `func (s *Server) listShareTokens(w, r)` — GET `/settings/shares`
     - _Requirements: 10.1, 10.2, 10.4, 10.5, 10.6, 10.8, 10.9, 10.10, 10.17, 10.18_
-  - [ ] 11.2 Add security headers middleware for `/share/` routes
+  - [x] 11.2 Add security headers middleware for `/share/` routes
     - `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`, `Cache-Control: no-store`
     - Apply to all `/share/` responses
     - _Requirements: 10.15, 10.16_
-  - [ ] 11.3 Start cleanup goroutine in `server.New` (or `internal/server/server.go`)
+  - [x] 11.3 Start cleanup goroutine in `server.New` (or `internal/server/server.go`)
     - Every 5 minutes: call `DeleteExpiredOrUsedShareTokens`
     - Log errors but do not crash
     - _Requirements: 10.19_
-  - [ ] 11.4 Register share routes in `internal/server/routers.go`
+  - [x] 11.4 Register share routes in `internal/server/routers.go`
     - `POST /share/create`, `GET /share/{token}`, `POST /share/{token}`, `DELETE /share/{token}`, `GET /settings/shares`
     - Share token routes (`GET/POST /share/{token}`) are public (no session required)
     - _Requirements: 10.6_
@@ -233,23 +233,23 @@ Implementation follows the priority order established in requirements: onboardin
     - **Property 28: Share page security headers**
     - **Validates: Requirements 10.15, 10.16**
 
-- [ ] 12. Secure share links — templates
-  - [ ] 12.1 Create share templates in `internal/views/`
+- [x] 12. Secure share links — templates
+  - [x] 12.1 Create share templates in `internal/views/`
     - `share/createForm.html` — scope selection form (date range, privacy toggle)
     - `share/confirmation.html` — displays token URL, QR code (base64 PNG), and plaintext password once
     - `share/passwordForm.html` — public password entry form; no report content visible
     - `share/report.html` — read-only report with print stylesheet link
     - `share/tokenList.html` — settings page partial listing active tokens with revoke buttons
     - _Requirements: 10.4, 10.5, 10.7, 10.9, 10.11, 10.17_
-  - [ ] 12.2 Create `web/static/share-print.css`
+  - [x] 12.2 Create `web/static/share-print.css`
     - Print-friendly stylesheet for the share report
     - _Requirements: 10.11_
-  - [ ] 12.3 Add "Share" link to settings page `internal/views/settings.html`
+  - [x] 12.3 Add "Share" link to settings page `internal/views/settings.html`
     - Link to `GET /settings/shares` to view and manage active share tokens
     - Add "Generate share link" button linking to `POST /share/create` form
     - _Requirements: 10.17_
 
-- [ ] 13. Checkpoint — secure share links
+- [x] 13. Checkpoint — secure share links
   - Ensure all tests pass. Verify token creation, single-use enforcement, expiry, revocation, and security headers. Ask the user if questions arise.
 
 - [ ] 14. Safe DB migrations — test and process
