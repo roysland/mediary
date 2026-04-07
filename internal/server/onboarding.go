@@ -16,6 +16,7 @@ type onboardingStep struct {
 	Number      int
 	TemplateKey string
 	TitleKey    string
+	Image       string
 	ImageDesc   string
 }
 
@@ -24,30 +25,35 @@ var onboardingSteps = []onboardingStep{
 		Number:      1,
 		TemplateKey: "onboarding_step1_passkey",
 		TitleKey:    "onboarding.step1.title",
+		Image:       "onboard_passkey.png",
 		ImageDesc:   "A smartphone with a fingerprint sensor glowing, next to a broken padlock representing a discarded password, on a calm blue background.",
 	},
 	{
 		Number:      2,
 		TemplateKey: "onboarding_step2_language",
 		TitleKey:    "onboarding.step2.title",
+		Image:       "onboard_language.png",
 		ImageDesc:   "A globe with speech bubbles in different languages floating around it, soft pastel colors.",
 	},
 	{
 		Number:      3,
 		TemplateKey: "onboarding_step3_trackables",
 		TitleKey:    "onboarding.step3.title",
+		Image:       "onboard_symptoms.png",
 		ImageDesc:   "A simple checklist with colorful icons for fatigue, sleep, and mood, being ticked off one by one.",
 	},
 	{
 		Number:      4,
 		TemplateKey: "onboarding_step4_audio",
 		TitleKey:    "onboarding.step4.title",
+		Image:       "onboard_mic.png",
 		ImageDesc:   "A microphone with sound waves, and a small document appearing beside it to represent transcription.",
 	},
 	{
 		Number:      5,
 		TemplateKey: "onboarding_step5_navigation",
 		TitleKey:    "onboarding.step5.title",
+		Image:       "onboard_navigation.png",
 		ImageDesc:   "Two paths diverging, one leading to a list view and one leading to a diary entry form, with clear signpost labels.",
 	},
 }

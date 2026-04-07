@@ -153,18 +153,18 @@ Implementation follows the priority order established in requirements: onboardin
     - **Property 11: Image cascade delete**
     - **Validates: Requirements 4.11**
 
-- [ ] 8. Image upload — frontend
-  - [ ] 8.1 Create `web/static/image-upload.js`
+- [x] 8. Image upload — frontend
+  - [x] 8.1 Create `web/static/image-upload.js`
     - Use Canvas API to resize images client-side before upload if they exceed 2 MB
     - Best-effort only; server enforces the limit independently
     - _Requirements: 4.1.1_
-  - [ ] 8.2 Add image upload UI to entry form template `internal/views/entry/addEntry.html`
+  - [x] 8.2 Add image upload UI to entry form template `internal/views/entry/addEntry.html`
     - File input with `accept="image/jpeg,image/png,image/webp,image/gif"`
     - HTMX `hx-post` to `/entry/{id}/images` with `hx-encoding="multipart/form-data"`
     - Display uploaded image thumbnails with delete buttons
     - _Requirements: 4.1, 4.8_
 
-- [ ] 9. Checkpoint — image upload
+- [x] 9. Checkpoint — image upload
   - Ensure all tests pass. Verify upload, validation errors, and cascade delete on entry removal. Ask the user if questions arise.
 
 - [ ] 10. Secure share links — DB schema and queries

@@ -5,6 +5,42 @@
 {{ end }}
 
 {{ define "onboarding_layout" }}
+<style>
+    .onboarding-card {
+  background-color: #5B97C9;
+  color: #fff;
+}
+.onboarding-card select {
+    color: #333;
+}
+.onboarding-card img.onboarding-image {
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+}
+.onboarding-card .onboarding-progress {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+.onboarding-card .onboarding-progress li {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0.5rem;
+}
+.onboarding-card .onboarding-progress li[aria-current="step"] {
+    background-color: #fff;
+    font-weight: bold;
+    color:#5B97C9;
+}
+</style>
 <section class="card onboarding-card">
     <header>
         <h1>{{ if .IsPreview }}{{ t "onboarding.preview.title" }}{{ else }}{{ t .Step.TitleKey }}{{ end }}</h1>
@@ -24,11 +60,7 @@
         {{ end }}
     </ol>
     {{ end }}
-
-    <p class="onboarding-image-description">
-        <strong>{{ t "onboarding.image_description_label" }}</strong>
-        <span>{{ .Step.ImageDesc }}</span>
-    </p>
+    <img src="/static/images/{{ .Step.Image }}" alt="{{ .Step.ImageDesc }}" class="onboarding-image" aria-hidden="true">
 
     {{ if .IsPreview }}
     <div class="onboarding-step-content">
@@ -59,9 +91,9 @@
         </button>
     </form>
 
-    <form method="post" action="/onboarding/{{ .CurrentStep }}/skip">
+<!--     <form method="post" action="/onboarding/{{ .CurrentStep }}/skip">
         <button type="submit" class="button button--ghost">{{ t "onboarding.skip" }}</button>
-    </form>
+    </form> -->
     {{ end }}
 </section>
 {{ end }}
