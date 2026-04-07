@@ -19,6 +19,15 @@
 
 </mecfs-app-shell>
 <script type="module" src="/static/main.js"></script>
+{{ if .ServiceWorker }}
+<script>
+	if ("serviceWorker" in navigator) {
+		navigator.serviceWorker.register("/static/sw.js?v={{ .BuildVersion }}", { scope: "/" }).catch(function(err) {
+			console.warn("service worker registration failed", err);
+		});
+	}
+</script>
+{{ end }}
 
 {{ if .DebugTemplateData }}
 <script>

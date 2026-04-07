@@ -82,7 +82,8 @@ function updateEntriesEmptyState(root) {
 }
 
 function updateDismissedTrackablePanels(root) {
-  if (!(root instanceof ParentNode)) {
+  console.log(root)
+  if (!(root instanceof Element) && !(root instanceof Document)) {
     return;
   }
 
@@ -413,24 +414,53 @@ function initEntriesInteractions() {
     }
 
     const trigger = target.closest(".edit-trackables-button");
-    if (!trigger) {
+    if (trigger) {
+      const popover = trigger.closest("[popover]");
+      if (popover && typeof popover.hidePopover === "function") {
+        popover.hidePopover();
+      }
+
+      const entryId = Number(trigger.dataset.entryId);
+      const quickTrackableDialog = document.getElementById("add-quick-trackable-dialog");
+      if (!quickTrackableDialog || !Number.isFinite(entryId) || entryId <= 0) {
+        return;
+      }
+
+      setDialogEntryId(quickTrackableDialog, entryId);
+      if (!quickTrackableDialog.open) {
+        quickTrackableDialog.showModal();
+      }
       return;
     }
 
-    const popover = trigger.closest("[popover]");
-    if (popover && typeof popover.hidePopover === "function") {
-      popover.hidePopover();
-    }
+    const uploadImageButton = target.closest(".upload-image-button");
+    if (uploadImageButton) {
+      const popover = uploadImageButton.closest("[popover]");
+      if (popover && typeof popover.hidePopover === "function") {
+        popover.hidePopover();
+      }
 
-    const entryId = Number(trigger.dataset.entryId);
-    const quickTrackableDialog = document.getElementById("add-quick-trackable-dialog");
-    if (!quickTrackableDialog || !Number.isFinite(entryId) || entryId <= 0) {
-      return;
-    }
+      const entryId = Number(uploadImageButton.dataset.entryId);
+      const noteSourceId = uploadImageButton.dataset.entryNoteSource || "";
+      const noteSource = noteSourceId ? document.getElementById(noteSourceId) : null;
+      const noteText = noteSource instanceof HTMLTextAreaElement ? noteSource.value : "";
 
-    setDialogEntryId(quickTrackableDialog, entryId);
-    if (!quickTrackableDialog.open) {
-      quickTrackableDialog.showModal();
+      const dialog = configureEntryNoteDialog({
+        mode: "edit",
+        entryId,
+        entryDate: uploadImageButton.dataset.entryDate || "",
+        isPrivate: uploadImageButton.dataset.entryPrivate === "true",
+        hasNote: uploadImageButton.dataset.entryHasNote === "true",
+        noteText,
+      });
+      if (!(dialog instanceof HTMLDialogElement)) {
+        return;
+      }
+
+      const fileInput = dialog.querySelector("[data-image-upload-input]");
+      if (fileInput instanceof HTMLInputElement) {
+        window.requestAnimationFrame(() => fileInput.click());
+      }
     }
   });
 

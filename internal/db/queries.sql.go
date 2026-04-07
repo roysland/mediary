@@ -151,6 +151,60 @@ func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry
 	return i, err
 }
 
+const createShareToken = `-- name: CreateShareToken :one
+INSERT INTO share_tokens (
+    user_id,
+    token_hash,
+    password_hash,
+    scope_date_from,
+    scope_date_to,
+    scope_private,
+    expires_at_utc,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, user_id, token_hash, password_hash, scope_date_from, scope_date_to, scope_private, expires_at_utc, accessed_at_utc, revoked_at_utc, created_at_utc
+`
+
+type CreateShareTokenParams struct {
+	UserID        int64          `json:"user_id"`
+	TokenHash     []byte         `json:"token_hash"`
+	PasswordHash  []byte         `json:"password_hash"`
+	ScopeDateFrom sql.NullString `json:"scope_date_from"`
+	ScopeDateTo   sql.NullString `json:"scope_date_to"`
+	ScopePrivate  int64          `json:"scope_private"`
+	ExpiresAtUtc  int64          `json:"expires_at_utc"`
+	CreatedAtUtc  int64          `json:"created_at_utc"`
+}
+
+func (q *Queries) CreateShareToken(ctx context.Context, arg CreateShareTokenParams) (ShareToken, error) {
+	row := q.db.QueryRowContext(ctx, createShareToken,
+		arg.UserID,
+		arg.TokenHash,
+		arg.PasswordHash,
+		arg.ScopeDateFrom,
+		arg.ScopeDateTo,
+		arg.ScopePrivate,
+		arg.ExpiresAtUtc,
+		arg.CreatedAtUtc,
+	)
+	var i ShareToken
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TokenHash,
+		&i.PasswordHash,
+		&i.ScopeDateFrom,
+		&i.ScopeDateTo,
+		&i.ScopePrivate,
+		&i.ExpiresAtUtc,
+		&i.AccessedAtUtc,
+		&i.RevokedAtUtc,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
 const createTrackableDefinition = `-- name: CreateTrackableDefinition :one
 INSERT INTO trackable_definitions (
     user_id,
@@ -368,6 +422,48 @@ type DeleteEntryParams struct {
 
 func (q *Queries) DeleteEntry(ctx context.Context, arg DeleteEntryParams) error {
 	_, err := q.db.ExecContext(ctx, deleteEntry, arg.ID, arg.UserID)
+	return err
+}
+
+const deleteEntryImage = `-- name: DeleteEntryImage :exec
+DELETE FROM entry_images
+WHERE id = ? AND user_id = ?
+`
+
+type DeleteEntryImageParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) DeleteEntryImage(ctx context.Context, arg DeleteEntryImageParams) error {
+	_, err := q.db.ExecContext(ctx, deleteEntryImage, arg.ID, arg.UserID)
+	return err
+}
+
+const deleteExpiredOrUsedShareTokens = `-- name: DeleteExpiredOrUsedShareTokens :exec
+DELETE FROM share_tokens
+WHERE expires_at_utc <= ?1
+    OR accessed_at_utc IS NOT NULL
+    OR revoked_at_utc IS NOT NULL
+`
+
+func (q *Queries) DeleteExpiredOrUsedShareTokens(ctx context.Context, nowUtc int64) error {
+	_, err := q.db.ExecContext(ctx, deleteExpiredOrUsedShareTokens, nowUtc)
+	return err
+}
+
+const deleteImagesByEntryID = `-- name: DeleteImagesByEntryID :exec
+DELETE FROM entry_images
+WHERE entry_id = ? AND user_id = ?
+`
+
+type DeleteImagesByEntryIDParams struct {
+	EntryID int64 `json:"entry_id"`
+	UserID  int64 `json:"user_id"`
+}
+
+func (q *Queries) DeleteImagesByEntryID(ctx context.Context, arg DeleteImagesByEntryIDParams) error {
+	_, err := q.db.ExecContext(ctx, deleteImagesByEntryID, arg.EntryID, arg.UserID)
 	return err
 }
 
@@ -697,6 +793,127 @@ func (q *Queries) GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTr
 	return items, nil
 }
 
+const getImageByID = `-- name: GetImageByID :one
+SELECT id, entry_id, user_id, file_path, mime_type, original_size, storage_tier, created_at_utc
+FROM entry_images
+WHERE id = ? AND user_id = ?
+`
+
+type GetImageByIDParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) GetImageByID(ctx context.Context, arg GetImageByIDParams) (EntryImage, error) {
+	row := q.db.QueryRowContext(ctx, getImageByID, arg.ID, arg.UserID)
+	var i EntryImage
+	err := row.Scan(
+		&i.ID,
+		&i.EntryID,
+		&i.UserID,
+		&i.FilePath,
+		&i.MimeType,
+		&i.OriginalSize,
+		&i.StorageTier,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
+const getImagesByEntryID = `-- name: GetImagesByEntryID :many
+SELECT id, entry_id, user_id, file_path, mime_type, original_size, storage_tier, created_at_utc
+FROM entry_images
+WHERE entry_id = ? AND user_id = ?
+ORDER BY created_at_utc ASC
+`
+
+type GetImagesByEntryIDParams struct {
+	EntryID int64 `json:"entry_id"`
+	UserID  int64 `json:"user_id"`
+}
+
+func (q *Queries) GetImagesByEntryID(ctx context.Context, arg GetImagesByEntryIDParams) ([]EntryImage, error) {
+	rows, err := q.db.QueryContext(ctx, getImagesByEntryID, arg.EntryID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EntryImage
+	for rows.Next() {
+		var i EntryImage
+		if err := rows.Scan(
+			&i.ID,
+			&i.EntryID,
+			&i.UserID,
+			&i.FilePath,
+			&i.MimeType,
+			&i.OriginalSize,
+			&i.StorageTier,
+			&i.CreatedAtUtc,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSetting = `-- name: GetSetting :one
+SELECT id, user_id, settings_key, settings_value, created_at_utc
+FROM settings
+WHERE user_id = ?1
+    AND settings_key = ?2
+`
+
+type GetSettingParams struct {
+	UserID      int64  `json:"user_id"`
+	SettingsKey string `json:"settings_key"`
+}
+
+func (q *Queries) GetSetting(ctx context.Context, arg GetSettingParams) (Setting, error) {
+	row := q.db.QueryRowContext(ctx, getSetting, arg.UserID, arg.SettingsKey)
+	var i Setting
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.SettingsKey,
+		&i.SettingsValue,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
+const getShareTokenByHash = `-- name: GetShareTokenByHash :one
+SELECT id, user_id, token_hash, password_hash, scope_date_from, scope_date_to, scope_private, expires_at_utc, accessed_at_utc, revoked_at_utc, created_at_utc
+FROM share_tokens
+WHERE token_hash = ?
+`
+
+func (q *Queries) GetShareTokenByHash(ctx context.Context, tokenHash []byte) (ShareToken, error) {
+	row := q.db.QueryRowContext(ctx, getShareTokenByHash, tokenHash)
+	var i ShareToken
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TokenHash,
+		&i.PasswordHash,
+		&i.ScopeDateFrom,
+		&i.ScopeDateTo,
+		&i.ScopePrivate,
+		&i.ExpiresAtUtc,
+		&i.AccessedAtUtc,
+		&i.RevokedAtUtc,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
 const getTrackableById = `-- name: GetTrackableById :one
 SELECT id, user_id, template_id, name, icon, value_type, unit, min_value, max_value, is_sensitive, private_label, category, active, deleted_at_utc, created_at_utc
 FROM trackable_definitions
@@ -813,6 +1030,104 @@ func (q *Queries) GetUserByWebauthnUserID(ctx context.Context, webauthnUserID []
 		&i.Timezone,
 	)
 	return i, err
+}
+
+const insertEntryImage = `-- name: InsertEntryImage :one
+INSERT INTO entry_images (
+    entry_id,
+    user_id,
+    file_path,
+    mime_type,
+    original_size,
+    storage_tier,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING id, entry_id, user_id, file_path, mime_type, original_size, storage_tier, created_at_utc
+`
+
+type InsertEntryImageParams struct {
+	EntryID      int64  `json:"entry_id"`
+	UserID       int64  `json:"user_id"`
+	FilePath     string `json:"file_path"`
+	MimeType     string `json:"mime_type"`
+	OriginalSize int64  `json:"original_size"`
+	StorageTier  string `json:"storage_tier"`
+	CreatedAtUtc int64  `json:"created_at_utc"`
+}
+
+func (q *Queries) InsertEntryImage(ctx context.Context, arg InsertEntryImageParams) (EntryImage, error) {
+	row := q.db.QueryRowContext(ctx, insertEntryImage,
+		arg.EntryID,
+		arg.UserID,
+		arg.FilePath,
+		arg.MimeType,
+		arg.OriginalSize,
+		arg.StorageTier,
+		arg.CreatedAtUtc,
+	)
+	var i EntryImage
+	err := row.Scan(
+		&i.ID,
+		&i.EntryID,
+		&i.UserID,
+		&i.FilePath,
+		&i.MimeType,
+		&i.OriginalSize,
+		&i.StorageTier,
+		&i.CreatedAtUtc,
+	)
+	return i, err
+}
+
+const listActiveShareTokensByUser = `-- name: ListActiveShareTokensByUser :many
+SELECT id, user_id, token_hash, password_hash, scope_date_from, scope_date_to, scope_private, expires_at_utc, accessed_at_utc, revoked_at_utc, created_at_utc
+FROM share_tokens
+WHERE user_id = ?1
+    AND accessed_at_utc IS NULL
+    AND revoked_at_utc IS NULL
+    AND expires_at_utc > ?2
+ORDER BY created_at_utc DESC
+`
+
+type ListActiveShareTokensByUserParams struct {
+	UserID int64 `json:"user_id"`
+	NowUtc int64 `json:"now_utc"`
+}
+
+func (q *Queries) ListActiveShareTokensByUser(ctx context.Context, arg ListActiveShareTokensByUserParams) ([]ShareToken, error) {
+	rows, err := q.db.QueryContext(ctx, listActiveShareTokensByUser, arg.UserID, arg.NowUtc)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ShareToken
+	for rows.Next() {
+		var i ShareToken
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.TokenHash,
+			&i.PasswordHash,
+			&i.ScopeDateFrom,
+			&i.ScopeDateTo,
+			&i.ScopePrivate,
+			&i.ExpiresAtUtc,
+			&i.AccessedAtUtc,
+			&i.RevokedAtUtc,
+			&i.CreatedAtUtc,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listEntries = `-- name: ListEntries :many
@@ -1335,6 +1650,23 @@ func (q *Queries) MarkDeviceLinkTokenUsed(ctx context.Context, arg MarkDeviceLin
 	return result.RowsAffected()
 }
 
+const markShareTokenAccessed = `-- name: MarkShareTokenAccessed :exec
+UPDATE share_tokens
+SET accessed_at_utc = ?1
+WHERE id = ?2
+    AND accessed_at_utc IS NULL
+`
+
+type MarkShareTokenAccessedParams struct {
+	AccessedAtUtc sql.NullInt64 `json:"accessed_at_utc"`
+	ID            int64         `json:"id"`
+}
+
+func (q *Queries) MarkShareTokenAccessed(ctx context.Context, arg MarkShareTokenAccessedParams) error {
+	_, err := q.db.ExecContext(ctx, markShareTokenAccessed, arg.AccessedAtUtc, arg.ID)
+	return err
+}
+
 const markTranscriptionFailed = `-- name: MarkTranscriptionFailed :exec
 UPDATE entries
 SET transcription_status = 'failed'
@@ -1375,6 +1707,25 @@ func (q *Queries) RedeemDeviceLinkToken(ctx context.Context, arg RedeemDeviceLin
 		&i.CreatedAtUtc,
 	)
 	return i, err
+}
+
+const revokeShareToken = `-- name: RevokeShareToken :exec
+UPDATE share_tokens
+SET revoked_at_utc = ?1
+WHERE id = ?2
+    AND user_id = ?3
+    AND revoked_at_utc IS NULL
+`
+
+type RevokeShareTokenParams struct {
+	RevokedAtUtc sql.NullInt64 `json:"revoked_at_utc"`
+	ID           int64         `json:"id"`
+	UserID       int64         `json:"user_id"`
+}
+
+func (q *Queries) RevokeShareToken(ctx context.Context, arg RevokeShareTokenParams) error {
+	_, err := q.db.ExecContext(ctx, revokeShareToken, arg.RevokedAtUtc, arg.ID, arg.UserID)
+	return err
 }
 
 const softDeleteTrackableDefinition = `-- name: SoftDeleteTrackableDefinition :exec

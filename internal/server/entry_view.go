@@ -13,6 +13,12 @@ type entryTrackableValueView struct {
 	IsSensitive bool
 }
 
+type entryImageView struct {
+	ID       int64
+	FilePath string
+	MimeType string
+}
+
 type entryView struct {
 	ID                  int64
 	RecordedAtUtc       int64
@@ -23,6 +29,7 @@ type entryView struct {
 	AudioFilePath       sql.NullString
 	TranscriptionStatus string
 	Trackables          []entryTrackableValueView
+	Images              []entryImageView
 }
 
 type entryWithTrackableRow struct {

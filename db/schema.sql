@@ -43,6 +43,23 @@ CREATE TABLE IF NOT EXISTS device_link_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS share_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash BLOB NOT NULL UNIQUE,
+    password_hash BLOB NOT NULL,
+    scope_date_from TEXT,
+    scope_date_to TEXT,
+    scope_private INTEGER NOT NULL DEFAULT 0,
+    expires_at_utc INTEGER NOT NULL,
+    accessed_at_utc INTEGER,
+    revoked_at_utc INTEGER,
+    created_at_utc INTEGER NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CHECK (scope_private IN (0,1))
+);
+
 CREATE TABLE IF NOT EXISTS entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -63,6 +80,22 @@ CREATE TABLE IF NOT EXISTS entries (
     created_at_utc INTEGER NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS entry_images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    file_path TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    original_size INTEGER NOT NULL,
+    storage_tier TEXT NOT NULL DEFAULT 'local',
+    created_at_utc INTEGER NOT NULL,
+
+    FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CHECK (mime_type IN ('image/jpeg','image/png','image/webp','image/gif')),
+    CHECK (storage_tier IN ('local','object'))
 );
 
 CREATE TABLE IF NOT EXISTS settings (
@@ -204,6 +237,12 @@ ON entries(user_id, recorded_at_utc);
 CREATE INDEX IF NOT EXISTS idx_trackable_values_entry
 ON trackable_values(entry_id);
 
+CREATE INDEX IF NOT EXISTS idx_entry_images_entry
+ON entry_images(entry_id);
+
+CREATE INDEX IF NOT EXISTS idx_entry_images_user
+ON entry_images(user_id);
+
 CREATE INDEX IF NOT EXISTS idx_trackable_values_definition
 ON trackable_values(trackable_definition_id);
 
@@ -215,6 +254,12 @@ ON device_link_tokens(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_device_link_tokens_expires
 ON device_link_tokens(expires_at_utc);
+
+CREATE INDEX IF NOT EXISTS idx_share_tokens_user
+ON share_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_share_tokens_expires
+ON share_tokens(expires_at_utc);
 
 INSERT OR IGNORE INTO trackable_templates
 (name, value_type, unit, min_value, max_value, icon, is_sensitive, private_label, custom_control_type, category, created_at_utc)

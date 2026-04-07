@@ -14,6 +14,8 @@ import (
 	"roysland.me/symptomstracker/internal/i18n"
 )
 
+const trackableRegisterDelay = 350 * time.Millisecond
+
 type trackablePickerViewData struct {
 	EntryID              int64
 	HasEntryID           bool
@@ -400,6 +402,8 @@ func (s *Server) saveTrackableValue(w http.ResponseWriter, r *http.Request) {
 		respondInternalError(w, r, "Failed to save value")
 		return
 	}
+
+	time.Sleep(trackableRegisterDelay)
 
 	if req.IsAJAX {
 		respondJSON(w, http.StatusOK, map[string]interface{}{

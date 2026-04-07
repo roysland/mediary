@@ -7,6 +7,7 @@ type entryFormViewData struct {
 	UseDialogRefresh   bool
 	EntryDate          string
 	ShowEntryDate      bool
+	ShowImageUpload    bool
 	ShowPastDayWarning bool
 	NoteText           string
 	IsPrivate          bool
@@ -19,6 +20,7 @@ func buildEntryFormViewData(formAction, entryDate, today string, showEntryDate, 
 		UseDialogRefresh:   useDialogRefresh,
 		EntryDate:          entryDate,
 		ShowEntryDate:      showEntryDate,
+		ShowImageUpload:    true,
 		ShowPastDayWarning: entryDate != "" && today != "" && entryDate < today,
 	}
 }

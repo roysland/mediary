@@ -17,6 +17,8 @@ type pageTemplate struct {
 	Locale            string
 	Theme             string
 	ActiveNav         string
+	BuildVersion      string
+	ServiceWorker     bool
 	DebugTemplateData bool
 }
 
@@ -98,6 +100,8 @@ func (s *Server) renderPage(w http.ResponseWriter, r *http.Request, titleTemplat
 		Locale:            settings.Language,
 		Theme:             settings.Theme,
 		ActiveNav:         activeNavFromPath(r.URL.Path),
+		BuildVersion:      s.cfg.BuildVersion,
+		ServiceWorker:     s.cfg.ServiceWorkerEnabled,
 		DebugTemplateData: s.devMode,
 	})
 	if err != nil {

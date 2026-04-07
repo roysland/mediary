@@ -63,7 +63,17 @@ function initRangeOutputBindings(root) {
     }
 
     const outputId = slider.dataset.rangeOutput;
-    const output = outputId ? document.getElementById(outputId) : null;
+    let output = null;
+    if (outputId) {
+      try {
+        output = root.querySelector(`#${CSS.escape(outputId)}`);
+      } catch {
+        output = root.querySelector(`#${outputId}`);
+      }
+    }
+    if (!(output instanceof HTMLOutputElement)) {
+      output = slider.closest("form")?.querySelector("output");
+    }
     if (!(output instanceof HTMLOutputElement)) {
       return;
     }
@@ -71,11 +81,46 @@ function initRangeOutputBindings(root) {
     slider.dataset.rangeReady = "true";
     const sync = () => {
       output.value = slider.value;
+      output.textContent = slider.value;
     };
 
     slider.addEventListener("input", sync);
+    slider.addEventListener("change", sync);
     sync();
   });
+}
+
+function syncRangeOutputFromSlider(slider) {
+  if (!(slider instanceof HTMLInputElement)) {
+    return;
+  }
+
+  const outputId = slider.dataset.rangeOutput;
+  if (!outputId) {
+    return;
+  }
+
+  const pickerRoot = slider.closest("[data-trackable-picker]");
+  let output = null;
+  if (pickerRoot instanceof Element) {
+    try {
+      output = pickerRoot.querySelector(`#${CSS.escape(outputId)}`);
+    } catch {
+      output = pickerRoot.querySelector(`#${outputId}`);
+    }
+  }
+
+  if (!(output instanceof HTMLElement)) {
+    output = slider.closest("form")?.querySelector("output");
+  }
+  if (!(output instanceof HTMLElement)) {
+    return;
+  }
+
+  output.textContent = slider.value;
+  if ("value" in output) {
+    output.value = slider.value;
+  }
 }
 
 function initTrackablePickers(scope = document) {
@@ -98,6 +143,19 @@ window.initTrackablePickers = initTrackablePickers;
 
 function initTrackablePickerEvents() {
   initTrackablePickers(document);
+
+  const delegatedRangeSync = (event) => {
+    if (!(event.target instanceof HTMLInputElement)) {
+      return;
+    }
+    if (!event.target.matches("input[type='range'][data-range-output]")) {
+      return;
+    }
+    syncRangeOutputFromSlider(event.target);
+  };
+
+  document.body.addEventListener("input", delegatedRangeSync);
+  document.body.addEventListener("change", delegatedRangeSync);
 
   // Intercept HTMX requests on elements with data-confirm-label and prompt the user.
   document.body.addEventListener("htmx:confirm", (event) => {

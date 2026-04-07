@@ -26,12 +26,19 @@ type entryAPIItem struct {
 	AudioFilePath       *string                 `json:"audio_file_path"`
 	TranscriptionStatus string                  `json:"transcription_status"`
 	Trackables          []entryTrackableAPIItem `json:"trackables"`
+	Images              []entryImageAPIItem     `json:"images"`
 }
 
 type entryTrackableAPIItem struct {
 	Name  string `json:"name"`
 	Icon  string `json:"icon"`
 	Value string `json:"value"`
+}
+
+type entryImageAPIItem struct {
+	ID       int64  `json:"id"`
+	FilePath string `json:"file_path"`
+	MimeType string `json:"mime_type"`
 }
 
 func nullableEntryString(v sql.NullString) *string {
@@ -54,6 +61,15 @@ func mapEntryViewsToAPIItems(entries []entryView) []entryAPIItem {
 			})
 		}
 
+		images := make([]entryImageAPIItem, 0, len(entry.Images))
+		for _, image := range entry.Images {
+			images = append(images, entryImageAPIItem{
+				ID:       image.ID,
+				FilePath: image.FilePath,
+				MimeType: image.MimeType,
+			})
+		}
+
 		items = append(items, entryAPIItem{
 			ID:                  entry.ID,
 			RecordedAtUtc:       entry.RecordedAtUtc,
@@ -64,6 +80,7 @@ func mapEntryViewsToAPIItems(entries []entryView) []entryAPIItem {
 			AudioFilePath:       nullableEntryString(entry.AudioFilePath),
 			TranscriptionStatus: entry.TranscriptionStatus,
 			Trackables:          trackables,
+			Images:              images,
 		})
 	}
 
@@ -207,6 +224,31 @@ func (s *Server) deleteEntry(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Printf("Failed to fetch entry %d: %v", entryID, err)
+		respondInternalError(w, r, "Failed to delete entry")
+		return
+	}
+
+	images, err := s.queries.GetImagesByEntryID(r.Context(), db.GetImagesByEntryIDParams{
+		EntryID: entryID,
+		UserID:  userID,
+	})
+	if err != nil {
+		log.Printf("Failed to fetch images for entry %d: %v", entryID, err)
+		respondInternalError(w, r, "Failed to delete entry")
+		return
+	}
+
+	for _, image := range images {
+		if err := s.removeImageFile(image.FilePath); err != nil {
+			log.Printf("Warning: failed to delete image file %s: %v", image.FilePath, err)
+		}
+	}
+
+	if err := s.queries.DeleteImagesByEntryID(r.Context(), db.DeleteImagesByEntryIDParams{
+		EntryID: entryID,
+		UserID:  userID,
+	}); err != nil {
+		log.Printf("Failed to delete image metadata for entry %d: %v", entryID, err)
 		respondInternalError(w, r, "Failed to delete entry")
 		return
 	}

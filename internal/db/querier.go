@@ -12,12 +12,16 @@ type Querier interface {
 	CreateDeviceLinkToken(ctx context.Context, arg CreateDeviceLinkTokenParams) (DeviceLinkToken, error)
 	CreateDraftEntry(ctx context.Context, arg CreateDraftEntryParams) (Entry, error)
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error)
+	CreateShareToken(ctx context.Context, arg CreateShareTokenParams) (ShareToken, error)
 	CreateTrackableDefinition(ctx context.Context, arg CreateTrackableDefinitionParams) (TrackableDefinition, error)
 	CreateTrackableValue(ctx context.Context, arg CreateTrackableValueParams) (TrackableValue, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateWebauthnCredential(ctx context.Context, arg CreateWebauthnCredentialParams) (WebauthnCredential, error)
 	DeleteEntriesByUser(ctx context.Context, userID int64) error
 	DeleteEntry(ctx context.Context, arg DeleteEntryParams) error
+	DeleteEntryImage(ctx context.Context, arg DeleteEntryImageParams) error
+	DeleteExpiredOrUsedShareTokens(ctx context.Context, nowUtc int64) error
+	DeleteImagesByEntryID(ctx context.Context, arg DeleteImagesByEntryIDParams) error
 	DeleteSettingsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableDailyDismissalsByUser(ctx context.Context, userID int64) error
 	DeleteTrackableDefinitionsByUser(ctx context.Context, userID int64) error
@@ -29,10 +33,16 @@ type Querier interface {
 	GetAvailableTrackableTemplateByID(ctx context.Context, arg GetAvailableTrackableTemplateByIDParams) (TrackableTemplate, error)
 	GetEntryByID(ctx context.Context, arg GetEntryByIDParams) (Entry, error)
 	GetEntryWithTrackables(ctx context.Context, arg GetEntryWithTrackablesParams) ([]GetEntryWithTrackablesRow, error)
+	GetImageByID(ctx context.Context, arg GetImageByIDParams) (EntryImage, error)
+	GetImagesByEntryID(ctx context.Context, arg GetImagesByEntryIDParams) ([]EntryImage, error)
+	GetSetting(ctx context.Context, arg GetSettingParams) (Setting, error)
+	GetShareTokenByHash(ctx context.Context, tokenHash []byte) (ShareToken, error)
 	GetTrackableById(ctx context.Context, arg GetTrackableByIdParams) (TrackableDefinition, error)
 	GetTrackableTemplates(ctx context.Context, userID int64) ([]TrackableTemplate, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
 	GetUserByWebauthnUserID(ctx context.Context, webauthnUserID []byte) (User, error)
+	InsertEntryImage(ctx context.Context, arg InsertEntryImageParams) (EntryImage, error)
+	ListActiveShareTokensByUser(ctx context.Context, arg ListActiveShareTokensByUserParams) ([]ShareToken, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListEntriesByUser(ctx context.Context, userID int64) ([]Entry, error)
 	ListPendingTranscriptions(ctx context.Context) ([]ListPendingTranscriptionsRow, error)
@@ -43,8 +53,10 @@ type Querier interface {
 	ListTrackableValuesByUser(ctx context.Context, userID int64) ([]TrackableValue, error)
 	ListWebauthnCredentialsByUser(ctx context.Context, userID int64) ([]WebauthnCredential, error)
 	MarkDeviceLinkTokenUsed(ctx context.Context, arg MarkDeviceLinkTokenUsedParams) (int64, error)
+	MarkShareTokenAccessed(ctx context.Context, arg MarkShareTokenAccessedParams) error
 	MarkTranscriptionFailed(ctx context.Context, id int64) error
 	RedeemDeviceLinkToken(ctx context.Context, arg RedeemDeviceLinkTokenParams) (DeviceLinkToken, error)
+	RevokeShareToken(ctx context.Context, arg RevokeShareTokenParams) error
 	SoftDeleteTrackableDefinition(ctx context.Context, arg SoftDeleteTrackableDefinitionParams) error
 	UpdateEntryText(ctx context.Context, arg UpdateEntryTextParams) (Entry, error)
 	UpdateEntryTranscription(ctx context.Context, arg UpdateEntryTranscriptionParams) error

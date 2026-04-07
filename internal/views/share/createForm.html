@@ -1,0 +1,18 @@
+{{ define "share_create_form" }}
+<form method="post" action="{{ .CreateAction }}" class="card">
+    <h2>Generate share link</h2>
+
+    <label for="scope_date_from">From date</label>
+    <input id="scope_date_from" name="scope_date_from" type="date">
+
+    <label for="scope_date_to">To date</label>
+    <input id="scope_date_to" name="scope_date_to" type="date" value="{{ .DefaultToDate }}">
+
+    <label for="scope_private">
+        <input id="scope_private" name="scope_private" type="checkbox" value="1">
+        Include private entries
+    </label>
+
+    <button type="submit" class="button">Generate share link</button>
+</form>
+{{ end }}

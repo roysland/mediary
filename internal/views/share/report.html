@@ -1,0 +1,34 @@
+{{ define "share_report_title" }}Shared Report{{ end }}
+{{ define "share_report_content" }}
+<link rel="stylesheet" href="/static/share-print.css" media="print">
+<section class="card">
+    <h1>Shared report</h1>
+    <p>Access granted at {{ formatUnix .AccessedAtUTC }}.</p>
+    <p>Scope from: {{ .ScopeDateFrom }}</p>
+    <p>Scope to: {{ .ScopeDateTo }}</p>
+    <p>Private entries included: {{ .ScopePrivate }}</p>
+
+    <h2>Entries</h2>
+    {{ if .Entries }}
+    <ul>
+        {{ range .Entries }}
+        <li>
+            <strong>{{ .EntryDate }}</strong> - {{ formatUnix .RecordedAtUtc }}
+            {{ if .NoteText.Valid }}
+            <p>{{ .NoteText.String }}</p>
+            {{ end }}
+            {{ if .Trackables }}
+            <ul>
+                {{ range .Trackables }}
+                <li>{{ .Name }}: {{ .Value }}</li>
+                {{ end }}
+            </ul>
+            {{ end }}
+        </li>
+        {{ end }}
+    </ul>
+    {{ else }}
+    <p>No entries matched this scope.</p>
+    {{ end }}
+</section>
+{{ end }}

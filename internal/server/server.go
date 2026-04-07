@@ -112,6 +112,7 @@ func New(cfg Config) *Server {
 	ctx := context.Background()
 	worker.Start(ctx)
 	worker.RecoverPending(ctx)
+	s.startShareTokenCleanupWorker(ctx)
 
 	if !s.devMode {
 		for _, locale := range i18n.Locales() {
@@ -127,6 +128,27 @@ func New(cfg Config) *Server {
 	s.routes()
 
 	return s
+}
+
+func (s *Server) startShareTokenCleanupWorker(ctx context.Context) {
+	const cleanupInterval = 5 * time.Minute
+
+	go func() {
+		ticker := time.NewTicker(cleanupInterval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				err := s.queries.DeleteExpiredOrUsedShareTokens(context.Background(), time.Now().UTC().Unix())
+				if err != nil {
+					log.Printf("share token cleanup failed: %v", err)
+				}
+			}
+		}
+	}()
 }
 
 func templateFuncMap(locale string) template.FuncMap {

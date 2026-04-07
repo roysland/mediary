@@ -124,6 +124,85 @@ UPDATE entries
 SET transcription_status = 'failed'
 WHERE id = ?;
 
+-- name: InsertEntryImage :one
+INSERT INTO entry_images (
+    entry_id,
+    user_id,
+    file_path,
+    mime_type,
+    original_size,
+    storage_tier,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: GetImagesByEntryID :many
+SELECT *
+FROM entry_images
+WHERE entry_id = ? AND user_id = ?
+ORDER BY created_at_utc ASC;
+
+-- name: GetImageByID :one
+SELECT *
+FROM entry_images
+WHERE id = ? AND user_id = ?;
+
+-- name: DeleteEntryImage :exec
+DELETE FROM entry_images
+WHERE id = ? AND user_id = ?;
+
+-- name: DeleteImagesByEntryID :exec
+DELETE FROM entry_images
+WHERE entry_id = ? AND user_id = ?;
+
+-- name: CreateShareToken :one
+INSERT INTO share_tokens (
+    user_id,
+    token_hash,
+    password_hash,
+    scope_date_from,
+    scope_date_to,
+    scope_private,
+    expires_at_utc,
+    created_at_utc
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: GetShareTokenByHash :one
+SELECT *
+FROM share_tokens
+WHERE token_hash = ?;
+
+-- name: MarkShareTokenAccessed :exec
+UPDATE share_tokens
+SET accessed_at_utc = sqlc.arg(accessed_at_utc)
+WHERE id = sqlc.arg(id)
+    AND accessed_at_utc IS NULL;
+
+-- name: RevokeShareToken :exec
+UPDATE share_tokens
+SET revoked_at_utc = sqlc.arg(revoked_at_utc)
+WHERE id = sqlc.arg(id)
+    AND user_id = sqlc.arg(user_id)
+    AND revoked_at_utc IS NULL;
+
+-- name: ListActiveShareTokensByUser :many
+SELECT *
+FROM share_tokens
+WHERE user_id = sqlc.arg(user_id)
+    AND accessed_at_utc IS NULL
+    AND revoked_at_utc IS NULL
+    AND expires_at_utc > sqlc.arg(now_utc)
+ORDER BY created_at_utc DESC;
+
+-- name: DeleteExpiredOrUsedShareTokens :exec
+DELETE FROM share_tokens
+WHERE expires_at_utc <= sqlc.arg(now_utc)
+    OR accessed_at_utc IS NOT NULL
+    OR revoked_at_utc IS NOT NULL;
+
 -- name: ListPendingTranscriptions :many
 SELECT id, audio_file_path
 FROM entries
@@ -274,6 +353,12 @@ WHERE id = sqlc.arg(id)
 SELECT *
 FROM settings
 WHERE user_id = ?;
+
+-- name: GetSetting :one
+SELECT *
+FROM settings
+WHERE user_id = sqlc.arg(user_id)
+    AND settings_key = sqlc.arg(settings_key);
 
 -- name: ListEntriesByUser :many
 SELECT *

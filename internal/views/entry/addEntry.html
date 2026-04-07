@@ -51,4 +51,30 @@
     </button>
 </form>
 
+{{ if .ShowImageUpload }}
+<section class="entry-image-upload" data-image-upload-root>
+    <!-- <label for="entry_image_input">{{ t "entry.image.label" }}</label>
+    <p class="entry-image-upload__helper">{{ t "entry.image.helper" }}</p> -->
+    <form style="display: none;"
+        method="post"
+        action="/entry/{{ .EntryID }}/images"
+        hx-post="/entry/{{ .EntryID }}/images"
+        hx-encoding="multipart/form-data"
+        hx-target="[data-image-upload-list]"
+        hx-swap="beforeend"
+        data-image-upload-form
+    >
+        <input
+            id="entry_image_input"
+            type="file"
+            name="image"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            data-image-upload-input
+        >
+    </form>
+    <p class="entry-image-upload__status" data-image-upload-status aria-live="polite"></p>
+    <ul class="entry-image-upload__list" data-image-upload-list></ul>
+</section>
+{{ end }}
+
 {{ end }}

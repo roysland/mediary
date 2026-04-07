@@ -59,7 +59,7 @@
         <p>{{ t "settings.passkeys.link_instruction" }}</p>
         <img class="device-link__qr" data-auth-device-link-qr alt="{{ t "settings.passkeys.qr_alt" }}">
         <p>
-            <a data-auth-device-link-url target="_blank" rel="noopener noreferrer"></a>
+            <a style="word-break: break-all;" data-auth-device-link-url target="_blank" rel="noopener noreferrer"></a>
         </p>
         <p class="auth-status" data-auth-device-link-status aria-live="polite"></p>
     </div>
@@ -67,6 +67,12 @@
     <form action="/auth/logout" method="post">
         <button type="submit" class="button button--ghost">Log out</button>
     </form>
+</fieldset>
+
+<fieldset>
+    <legend>Share</legend>
+    <p>Create and manage secure one-time share links.</p>
+    <a class="button" href="/settings/shares">Open share links</a>
 </fieldset>
 
 <fieldset>

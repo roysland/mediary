@@ -328,6 +328,27 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
   height: 44px;
 }
 
+.entry-card__images {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-xs);
+}
+
+.entry-card__image-item {
+  margin: 0;
+}
+
+.entry-card__image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: var(--size-border-thin) solid var(--color-border-muted);
+}
+
 .entry-card__draft-badge {
   font-size: var(--font-size-00);
   color: var(--color-text-muted);
@@ -345,7 +366,11 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
 }
 
 .entry-card__context-menu {
+  z-index: -1;
   flex-direction: column;
+}
+.entry-card__context-menu[open] {
+  z-index: 10;
 }
 
 .entry-note-dialog {
@@ -800,4 +825,18 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
   border: 1px solid var(--color-border, rgba(0, 0, 0, 0.15));
   background: #fff;
   padding: 0.5rem;
+}
+
+[popover] {
+  z-index: -1;
+  display: none;
+}
+[popover]:popover-open {
+  opacity: 1 !important;
+  z-index: 10 !important;
+  display: flex; /* Popover API sets display: block by default; override if needed */
+}
+
+.entries-page {
+  margin-block: 0;
 }

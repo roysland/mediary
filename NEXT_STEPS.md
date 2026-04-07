@@ -1,5 +1,9 @@
 ## Remaining Follow-ups
 
+- Make image file deletion in `deleteEntry` resilient to DB delete failures.
+	Why: Current flow removes image files before deleting the entry row to satisfy the roadmap sequence, but if the DB delete fails after file removal, metadata can temporarily point to missing files.
+	How: Wrap entry delete in a DB transaction and add a small compensating strategy (best-effort restore queue or deferred file cleanup) so file-system and DB state stay aligned on failure paths.
+
 - Add CI checks for the E2E auth isolation contract.
 	Why: The `/auth/e2e/login` bypass is now split behind the `e2e` build tag plus `APP_ENV=test` and a required `PLAYWRIGHT_E2E_AUTH_TOKEN`, but that guarantee should be enforced automatically so future refactors do not reopen the path.
 	How: Add one CI job that runs `go test ./...`, one that runs `go test -tags e2e ./internal/server`, and one smoke check that starts a normal binary and asserts `/auth/e2e/login` returns 404.
@@ -23,3 +27,11 @@
 - Make voice recorder bindings instance-safe (no global IDs).
 	Why: `web/static/voice-recorder.js` currently binds via `getElementById`, which assumes one recorder on the page. Any future second recorder instance or partial swap with duplicate IDs can bind listeners to the wrong element.
 	How: Replace IDs with `data-voice-*` hooks, initialize per `.voice-entry-section`, and scope queries/listeners to each section root.
+
+- Tighten share-token single-use semantics under race conditions.
+	Why: `MarkShareTokenAccessed` currently updates `accessed_at_utc` with a guard (`accessed_at_utc IS NULL`) but the handler does not verify affected rows, so two near-simultaneous submissions could both proceed before one update is observed.
+	How: Change the sqlc query to return affected rows (or use `UPDATE ... RETURNING`) and only render the report when exactly one row is transitioned from unused to accessed.
+
+- Replace map-based share confirmation data with a typed view model.
+	Why: The QR image source requires `template.URL` for safe `data:` URL rendering, and loose `map[string]any` payloads make these typed template-safety requirements easier to miss.
+	How: Introduce a small struct for `share_confirmation` template data (including a `template.URL` field for QR code source) and use it in `createShareLink`.

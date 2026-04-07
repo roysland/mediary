@@ -8,23 +8,23 @@ Implementation follows the priority order established in requirements: onboardin
 
 ## Tasks
 
-- [ ] 1. Onboarding flow — DB, queries, and middleware
-  - [ ] 1.1 Add onboarding queries to `db/queries.sql` and run `sqlc generate`
+- [x] 1. Onboarding flow — DB, queries, and middleware
+  - [x] 1.1 Add onboarding queries to `db/queries.sql` and run `sqlc generate`
     - Add `GetSetting :one` query (select by `user_id` + `settings_key`) if not already present
     - Verify `UpsertSetting` covers the `onboarding_complete` key
     - Run `sqlc generate` to regenerate `internal/db/`
     - _Requirements: 2.1, 2.2_
-  - [ ] 1.2 Extend `withSessionRequired` middleware in `internal/server/auth_middleware.go`
+  - [x] 1.2 Extend `withSessionRequired` middleware in `internal/server/auth_middleware.go`
     - After session check, read `onboarding_complete` setting for the user on the home route (`/`)
     - If absent or not `"1"`, redirect to `/onboarding/1`
     - Onboarding routes (`/onboarding/...`) must bypass this check but still require a session
     - _Requirements: 1.1, 1.9, 2.2_
-  - [ ]* 1.3 Write property test for onboarding redirect invariant
+  - [x]* 1.3 Write property test for onboarding redirect invariant
     - **Property 1: Onboarding redirect invariant**
     - **Validates: Requirements 1.1, 1.9, 2.2**
 
-- [ ] 2. Onboarding flow — handlers and templates
-  - [ ] 2.1 Create `internal/server/onboarding.go` with step handlers
+- [x] 2. Onboarding flow — handlers and templates
+  - [x] 2.1 Create `internal/server/onboarding.go` with step handlers
     - Define `onboardingStep` struct with `Number`, `TemplateKey`, `TitleKey`, `ImageDesc`
     - Implement `func (s *Server) onboardingStep(w, r)` — GET renders step page
     - Implement `func (s *Server) onboardingStepPost(w, r)` — POST processes step and redirects
@@ -32,79 +32,79 @@ Implementation follows the priority order established in requirements: onboardin
     - Handle skip via `POST /onboarding/{step}/skip` — advance to next step or `/` on step 5
     - Add a public `/onboarding/preview` route (no session required) for the auth page "How to get started" button
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.10, 1.11_
-  - [ ]* 2.2 Write property test for onboarding completion persistence
+  - [x]* 2.2 Write property test for onboarding completion persistence
     - **Property 2: Onboarding completion persistence**
     - **Validates: Requirements 1.8, 2.1**
-  - [ ]* 2.3 Write property test for onboarding skip advances step
+  - [x]* 2.3 Write property test for onboarding skip advances step
     - **Property 3: Onboarding skip advances step**
     - **Validates: Requirements 1.11**
-  - [ ] 2.4 Register onboarding routes in `internal/server/routers.go`
+  - [x] 2.4 Register onboarding routes in `internal/server/routers.go`
     - `GET /onboarding` → redirect to `/onboarding/1`
     - `GET /onboarding/{step}` → `onboardingStep`
     - `POST /onboarding/{step}` → `onboardingStepPost`
     - `POST /onboarding/{step}/skip` → `onboardingStepPost` (skip variant)
     - `GET /onboarding/preview` → public preview (no session)
     - _Requirements: 1.1, 1.10_
-  - [ ] 2.5 Create onboarding templates in `internal/views/onboarding/`
+  - [x] 2.5 Create onboarding templates in `internal/views/onboarding/`
     - Create `onboardingLayout.html` with step progress indicator, skip button, and next button
     - Create one partial per step: `step1_passkey.html`, `step2_language.html`, `step3_trackables.html`, `step4_audio.html`, `step5_navigation.html`
     - Step 3 reuses the existing `trackablePresetList` partial via HTMX
     - Step 2 reuses the language `<select>` from settings
     - Include image descriptions as `alt` text per design spec
     - _Requirements: 1.3, 1.4, 1.5, 1.6, 1.7, 1.12_
-  - [ ] 2.6 Add "How to get started" button to `internal/views/auth.html`
+  - [x] 2.6 Add "How to get started" button to `internal/views/auth.html`
     - Link to `/onboarding/preview`
     - _Requirements: 1.0_
 
-- [ ] 3. Checkpoint — onboarding
+- [x] 3. Checkpoint — onboarding
   - Ensure all tests pass. Verify redirect works for new users and is skipped for returning users. Ask the user if questions arise.
 
-- [ ] 4. Alert banner
-  - [ ] 4.1 Add alert constants to `internal/server/constants.go`
+- [x] 4. Alert banner
+  - [x] 4.1 Add alert constants to `internal/server/constants.go`
     - `activeAlertVersion` string constant (empty = no active alert)
     - `activeAlertI18nKey` string constant for the i18n message key
     - _Requirements: 3.7_
-  - [ ] 4.2 Add alert i18n keys to `internal/i18n/en.go` and `internal/i18n/no.go`
+  - [x] 4.2 Add alert i18n keys to `internal/i18n/en.go` and `internal/i18n/no.go`
     - Add key `alert.2025_07_01` (or matching `activeAlertI18nKey`) with placeholder message text
     - _Requirements: 3.1, 3.7_
-  - [ ] 4.3 Extend `home` handler in `internal/server/home.go` to pass alert data to template
+  - [x] 4.3 Extend `home` handler in `internal/server/home.go` to pass alert data to template
     - Read `alert_dismissed_{version}` from settings for the current user
     - If `activeAlertVersion != ""` and setting is absent, pass `Alert` struct to template data
     - _Requirements: 3.1, 3.4, 3.6_
-  - [ ] 4.4 Create `POST /alert/{version}/dismiss` handler in `internal/server/home.go`
+  - [x] 4.4 Create `POST /alert/{version}/dismiss` handler in `internal/server/home.go`
     - Call `UpsertSetting` with key `alert_dismissed_{version}` = `"1"`
     - Return `200 OK` with empty body on success; `500` on DB error
     - Register route in `routers.go`
     - _Requirements: 3.2, 3.3_
-  - [ ] 4.5 Add alert banner partial to `internal/views/home.html`
+  - [x] 4.5 Add alert banner partial to `internal/views/home.html`
     - Render `#alert-banner` div with dismiss button using `hx-post="/alert/{version}/dismiss"`, `hx-target="#alert-banner"`, `hx-swap="outerHTML"`
     - Only render when `Alert` data is present in template context
     - _Requirements: 3.1, 3.3_
-  - [ ]* 4.6 Write property test for alert banner visibility
+  - [x]* 4.6 Write property test for alert banner visibility
     - **Property 4: Alert banner visibility**
     - **Validates: Requirements 3.1, 3.4, 3.6**
-  - [ ]* 4.7 Write property test for alert dismissal persistence
+  - [x]* 4.7 Write property test for alert dismissal persistence
     - **Property 5: Alert dismissal persistence**
     - **Validates: Requirements 3.2**
-  - [ ]* 4.8 Write property test for alert version isolation
+  - [x]* 4.8 Write property test for alert version isolation
     - **Property 6: Alert version isolation**
     - **Validates: Requirements 3.5**
 
-- [ ] 5. Checkpoint — alert banner
+- [x] 5. Checkpoint — alert banner
   - Ensure all tests pass. Verify banner appears for new alert version and disappears after dismiss without page reload. Ask the user if questions arise.
 
-- [ ] 6. Image upload — DB schema and queries
-  - [ ] 6.1 Add `entry_images` table to `db/schema.sql`
+- [x] 6. Image upload — DB schema and queries
+  - [x] 6.1 Add `entry_images` table to `db/schema.sql`
     - Full schema per design: `id`, `entry_id`, `user_id`, `file_path`, `mime_type`, `original_size`, `storage_tier TEXT DEFAULT 'local'`, `created_at_utc`
     - Foreign keys with `ON DELETE CASCADE` on both `entry_id` and `user_id`
     - `CHECK (mime_type IN ('image/jpeg','image/png','image/webp','image/gif'))`
     - `CHECK (storage_tier IN ('local','object'))`
     - Indexes: `idx_entry_images_entry`, `idx_entry_images_user`
     - _Requirements: 4.7_
-  - [ ] 6.2 Create goose migration `db/migrations/00009_entry_images.sql`
+  - [x] 6.2 Create goose migration `db/migrations/00009_entry_images.sql`
     - Goose Up/Down format with `StatementBegin`/`StatementEnd`
     - _Requirements: 5.1_
-  - [ ] 6.3 Add image queries to `db/queries.sql` and run `sqlc generate`
+  - [x] 6.3 Add image queries to `db/queries.sql` and run `sqlc generate`
     - `InsertEntryImage :one` — insert and return row
     - `GetImagesByEntryID :many` — list images for an entry
     - `GetImageByID :one` — fetch single image by id + user_id
@@ -113,11 +113,11 @@ Implementation follows the priority order established in requirements: onboardin
     - Run `sqlc generate`
     - _Requirements: 4.7, 4.11_
 
-- [ ] 7. Image upload — handler and storage
-  - [ ] 7.1 Add `ImageStorageDir` to server config in `internal/server/config.go`
+- [x] 7. Image upload — handler and storage
+  - [x] 7.1 Add `ImageStorageDir` to server config in `internal/server/config.go`
     - Default value: `"data/images"`
     - _Requirements: 4.6_
-  - [ ] 7.2 Create `internal/server/images.go` with upload and delete handlers
+  - [x] 7.2 Create `internal/server/images.go` with upload and delete handlers
     - `func (s *Server) uploadEntryImage(w, r)` — POST `/entry/{id}/images`
       - Parse multipart form, enforce 2 MB limit via `http.MaxBytesReader`
       - Validate MIME type against allowlist `{image/jpeg, image/png, image/webp, image/gif}`
@@ -128,55 +128,55 @@ Implementation follows the priority order established in requirements: onboardin
     - `func (s *Server) deleteEntryImage(w, r)` — DELETE `/entry/{id}/images/{imgID}`
       - Fetch image record, delete file from disk, delete DB row
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10_
-  - [ ] 7.3 Extend `deleteEntry` handler in `internal/server/entries.go`
+  - [x] 7.3 Extend `deleteEntry` handler in `internal/server/entries.go`
     - Before deleting the entry, fetch all images via `GetImagesByEntryID`
     - Delete each image file from disk (log errors but continue)
     - DB cascade handles `entry_images` row deletion
     - _Requirements: 4.11_
-  - [ ] 7.4 Register image routes in `internal/server/routers.go`
+  - [x] 7.4 Register image routes in `internal/server/routers.go`
     - `POST /entry/{id}/images` → `uploadEntryImage`
     - `DELETE /entry/{id}/images/{imgID}` → `deleteEntryImage`
     - _Requirements: 4.1_
-  - [ ]* 7.5 Write property test for image size enforcement
+  - [x]* 7.5 Write property test for image size enforcement
     - **Property 7: Image size enforcement**
     - **Validates: Requirements 4.2, 4.4**
-  - [ ]* 7.6 Write property test for image MIME type enforcement
+  - [x]* 7.6 Write property test for image MIME type enforcement
     - **Property 8: Image MIME type enforcement**
     - **Validates: Requirements 4.3, 4.5**
-  - [ ]* 7.7 Write property test for image filename safety
+  - [x]* 7.7 Write property test for image filename safety
     - **Property 9: Image filename safety**
     - **Validates: Requirements 4.6**
-  - [ ]* 7.8 Write property test for image metadata persistence
+  - [x]* 7.8 Write property test for image metadata persistence
     - **Property 10: Image metadata persistence**
     - **Validates: Requirements 4.7, 4.8**
-  - [ ]* 7.9 Write property test for image cascade delete
+  - [x]* 7.9 Write property test for image cascade delete
     - **Property 11: Image cascade delete**
     - **Validates: Requirements 4.11**
 
-- [ ] 8. Image upload — frontend
-  - [ ] 8.1 Create `web/static/image-upload.js`
+- [x] 8. Image upload — frontend
+  - [x] 8.1 Create `web/static/image-upload.js`
     - Use Canvas API to resize images client-side before upload if they exceed 2 MB
     - Best-effort only; server enforces the limit independently
     - _Requirements: 4.1.1_
-  - [ ] 8.2 Add image upload UI to entry form template `internal/views/entry/addEntry.html`
+  - [x] 8.2 Add image upload UI to entry form template `internal/views/entry/addEntry.html`
     - File input with `accept="image/jpeg,image/png,image/webp,image/gif"`
     - HTMX `hx-post` to `/entry/{id}/images` with `hx-encoding="multipart/form-data"`
     - Display uploaded image thumbnails with delete buttons
     - _Requirements: 4.1, 4.8_
 
-- [ ] 9. Checkpoint — image upload
+- [x] 9. Checkpoint — image upload
   - Ensure all tests pass. Verify upload, validation errors, and cascade delete on entry removal. Ask the user if questions arise.
 
-- [ ] 10. Secure share links — DB schema and queries
-  - [ ] 10.1 Add `share_tokens` table to `db/schema.sql`
+- [x] 10. Secure share links — DB schema and queries
+  - [x] 10.1 Add `share_tokens` table to `db/schema.sql`
     - Full schema per design: `id`, `user_id`, `token_hash BLOB UNIQUE`, `password_hash BLOB`, `scope_date_from`, `scope_date_to`, `scope_private`, `expires_at_utc`, `accessed_at_utc`, `revoked_at_utc`, `created_at_utc`
     - Foreign key `user_id → users(id) ON DELETE CASCADE`
     - Indexes: `idx_share_tokens_user`, `idx_share_tokens_expires`
     - _Requirements: 10.2, 10.3_
-  - [ ] 10.2 Create goose migration `db/migrations/00010_share_tokens.sql`
+  - [x] 10.2 Create goose migration `db/migrations/00010_share_tokens.sql`
     - Goose Up/Down format
     - _Requirements: 5.1_
-  - [ ] 10.3 Add share token queries to `db/queries.sql` and run `sqlc generate`
+  - [x] 10.3 Add share token queries to `db/queries.sql` and run `sqlc generate`
     - `CreateShareToken :one`
     - `GetShareTokenByHash :one` — lookup by `token_hash`
     - `MarkShareTokenAccessed :exec` — set `accessed_at_utc`
@@ -186,8 +186,8 @@ Implementation follows the priority order established in requirements: onboardin
     - Run `sqlc generate`
     - _Requirements: 10.17, 10.18, 10.19_
 
-- [ ] 11. Secure share links — token generation and handlers
-  - [ ] 11.1 Create `internal/server/share.go` with token generation helpers
+- [x] 11. Secure share links — token generation and handlers
+  - [x] 11.1 Create `internal/server/share.go` with token generation helpers
     - `generateShareToken() (rawToken string, tokenHash []byte, err error)` — 20 bytes `crypto/rand` → base64url; hash with SHA-256
     - `generateSharePassword() (password string, err error)` — 7 chars from `[A-Z2-9]` via `crypto/rand`
     - `func (s *Server) createShareLink(w, r)` — POST `/share/create`
@@ -199,15 +199,15 @@ Implementation follows the priority order established in requirements: onboardin
     - `func (s *Server) revokeShareToken(w, r)` — DELETE `/share/{token}` — set `revoked_at_utc`
     - `func (s *Server) listShareTokens(w, r)` — GET `/settings/shares`
     - _Requirements: 10.1, 10.2, 10.4, 10.5, 10.6, 10.8, 10.9, 10.10, 10.17, 10.18_
-  - [ ] 11.2 Add security headers middleware for `/share/` routes
+  - [x] 11.2 Add security headers middleware for `/share/` routes
     - `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`, `Cache-Control: no-store`
     - Apply to all `/share/` responses
     - _Requirements: 10.15, 10.16_
-  - [ ] 11.3 Start cleanup goroutine in `server.New` (or `internal/server/server.go`)
+  - [x] 11.3 Start cleanup goroutine in `server.New` (or `internal/server/server.go`)
     - Every 5 minutes: call `DeleteExpiredOrUsedShareTokens`
     - Log errors but do not crash
     - _Requirements: 10.19_
-  - [ ] 11.4 Register share routes in `internal/server/routers.go`
+  - [x] 11.4 Register share routes in `internal/server/routers.go`
     - `POST /share/create`, `GET /share/{token}`, `POST /share/{token}`, `DELETE /share/{token}`, `GET /settings/shares`
     - Share token routes (`GET/POST /share/{token}`) are public (no session required)
     - _Requirements: 10.6_
@@ -233,23 +233,23 @@ Implementation follows the priority order established in requirements: onboardin
     - **Property 28: Share page security headers**
     - **Validates: Requirements 10.15, 10.16**
 
-- [ ] 12. Secure share links — templates
-  - [ ] 12.1 Create share templates in `internal/views/`
+- [x] 12. Secure share links — templates
+  - [x] 12.1 Create share templates in `internal/views/`
     - `share/createForm.html` — scope selection form (date range, privacy toggle)
     - `share/confirmation.html` — displays token URL, QR code (base64 PNG), and plaintext password once
     - `share/passwordForm.html` — public password entry form; no report content visible
     - `share/report.html` — read-only report with print stylesheet link
     - `share/tokenList.html` — settings page partial listing active tokens with revoke buttons
     - _Requirements: 10.4, 10.5, 10.7, 10.9, 10.11, 10.17_
-  - [ ] 12.2 Create `web/static/share-print.css`
+  - [x] 12.2 Create `web/static/share-print.css`
     - Print-friendly stylesheet for the share report
     - _Requirements: 10.11_
-  - [ ] 12.3 Add "Share" link to settings page `internal/views/settings.html`
+  - [x] 12.3 Add "Share" link to settings page `internal/views/settings.html`
     - Link to `GET /settings/shares` to view and manage active share tokens
     - Add "Generate share link" button linking to `POST /share/create` form
     - _Requirements: 10.17_
 
-- [ ] 13. Checkpoint — secure share links
+- [x] 13. Checkpoint — secure share links
   - Ensure all tests pass. Verify token creation, single-use enforcement, expiry, revocation, and security headers. Ask the user if questions arise.
 
 - [ ] 14. Safe DB migrations — test and process
@@ -262,26 +262,27 @@ Implementation follows the priority order established in requirements: onboardin
     - Add `db/snapshots/production.sql` as the current baseline
     - _Requirements: 5.3_
 
-- [ ] 15. Service worker
-  - [ ] 15.1 Create `web/static/sw.js`
+- [x] 15. Service worker
+  - [x] 15.1 Create `web/static/sw.js`
     - Cache name: `static-v{BUILD_VERSION}` (version injected at build time; `"dev"` in dev mode)
     - `install` event: pre-cache all `/static/` asset URLs from the manifest constant
     - `activate` event: delete all caches not matching current `CACHE_NAME`
     - `fetch` event: cache-first for `/static/` requests; network pass-through for all other URLs (HTML, API, audio, images)
     - No `Notification.requestPermission()` or `push` event listener
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.8_
-  - [ ] 15.2 Add service worker registration to `internal/views/layout.html`
+  - [x] 15.2 Add service worker registration to `internal/views/layout.html`
     - Register `sw.js` scoped to `/` only if `'serviceWorker' in navigator`
     - _Requirements: 6.1_
-  - [ ]* 15.3 Write property test for service worker asset pre-cache completeness
+  - [x]* 15.3 Write property test for service worker asset pre-cache completeness
     - **Property 12: Service worker asset pre-cache completeness**
     - **Validates: Requirements 6.2**
-  - [ ]* 15.4 Write property test for service worker cache invalidation on version change
+  - [x]* 15.4 Write property test for service worker cache invalidation on version change
     - **Property 13: Service worker cache invalidation on version change**
     - **Validates: Requirements 6.4**
-  - [ ]* 15.5 Write property test for service worker passthrough for non-static requests
+  - [x]* 15.5 Write property test for service worker passthrough for non-static requests
     - **Property 14: Service worker passthrough for non-static requests**
     - **Validates: Requirements 6.5**
+  - [x]* 15.6 Create a config setting for enabling/disabling service worker
 
 - [ ] 16. Checkpoint — service worker
   - Ensure all tests pass. Verify static assets are cached and non-static requests pass through. Ask the user if questions arise.

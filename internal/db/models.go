@@ -32,11 +32,36 @@ type Entry struct {
 	CreatedAtUtc          int64          `json:"created_at_utc"`
 }
 
+type EntryImage struct {
+	ID           int64  `json:"id"`
+	EntryID      int64  `json:"entry_id"`
+	UserID       int64  `json:"user_id"`
+	FilePath     string `json:"file_path"`
+	MimeType     string `json:"mime_type"`
+	OriginalSize int64  `json:"original_size"`
+	StorageTier  string `json:"storage_tier"`
+	CreatedAtUtc int64  `json:"created_at_utc"`
+}
+
 type Setting struct {
 	ID            int64          `json:"id"`
 	UserID        int64          `json:"user_id"`
 	SettingsKey   string         `json:"settings_key"`
 	SettingsValue sql.NullString `json:"settings_value"`
+	CreatedAtUtc  int64          `json:"created_at_utc"`
+}
+
+type ShareToken struct {
+	ID            int64          `json:"id"`
+	UserID        int64          `json:"user_id"`
+	TokenHash     []byte         `json:"token_hash"`
+	PasswordHash  []byte         `json:"password_hash"`
+	ScopeDateFrom sql.NullString `json:"scope_date_from"`
+	ScopeDateTo   sql.NullString `json:"scope_date_to"`
+	ScopePrivate  int64          `json:"scope_private"`
+	ExpiresAtUtc  int64          `json:"expires_at_utc"`
+	AccessedAtUtc sql.NullInt64  `json:"accessed_at_utc"`
+	RevokedAtUtc  sql.NullInt64  `json:"revoked_at_utc"`
 	CreatedAtUtc  int64          `json:"created_at_utc"`
 }
 

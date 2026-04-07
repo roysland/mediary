@@ -14,9 +14,9 @@
                 {{ if $.HasEntryID }}<input type="hidden" name="entry_id" value="{{ $.EntryID }}">{{ end }}
                 <label>
                     <span class="icon">{{ .Icon.String }}</span><span> {{ .Name }}</span>
-                    <output id="trackable-{{ $.PickerID }}-{{ .ID }}-output">0</output>
-                    <input data-swipe-ignore type="range" min="{{ .MinValue.Int64 }}" max="{{ .MaxValue.Int64 }}" value="0" class="slider" name="value_int" data-range-output="trackable-{{ $.PickerID }}-{{ .ID }}-output"
-                    hx-post="/trackables/{{ .ID }}/add" hx-trigger="pointerup, change" hx-swap="none" hx-indicator="closest form"
+                    <output id="trackable-{{ $.PickerID }}-{{ .ID }}-output" for="trackable-input-{{ .ID }}-slider">0</output>
+                    <input id="trackable-input-{{ .ID }}-slider" data-swipe-ignore type="range" min="{{ .MinValue.Int64 }}" max="{{ .MaxValue.Int64 }}" value="0" class="slider" name="value_int" data-range-output="trackable-{{ $.PickerID }}-{{ .ID }}-output"
+                    hx-post="/trackables/{{ .ID }}/add" hx-trigger="pointerup, change" hx-swap="none" hx-indicator="closest form" hx-include="closest form"
                     >
                 </label>
                 <span class="save-status" aria-live="polite">…</span>
@@ -28,7 +28,7 @@
                 {{ if $.HasEntryID }}<input type="hidden" name="entry_id" value="{{ $.EntryID }}">{{ end }}
                 <label>
                     <span class="icon">{{ .Icon.String }}</span><span> {{ .Name }}</span>
-                    <button type="button" class="boolean-trigger" data-swipe-ignore hx-post="/trackables/{{ .ID }}/add" hx-trigger="click" hx-swap="none" hx-indicator="closest form">{{ .Name }}</button>
+                    <button type="button" class="boolean-trigger" data-swipe-ignore hx-post="/trackables/{{ .ID }}/add" hx-trigger="click" hx-swap="none" hx-indicator="closest form" hx-include="closest form">{{ .Name }}</button>
                 </label>
                 <span class="save-status" aria-live="polite">…</span>
             </form>
@@ -40,7 +40,7 @@
                 <label class="textinput">
                     <span class="icon">{{ .Icon.String }}</span>
                     <div>{{ .Name }}</div>
-                    <input type="text" name="value_text" hx-post="/trackables/{{ .ID }}/add" hx-trigger="blur, delay:1000ms from:this" hx-swap="none" hx-indicator="closest form" />
+                    <input type="text" name="value_text" hx-post="/trackables/{{ .ID }}/add" hx-trigger="blur, delay:1000ms from:this" hx-swap="none" hx-indicator="closest form" hx-include="closest form" />
                 </label>
                 <span class="save-status" aria-live="polite">…</span>
             </form>
