@@ -6,7 +6,9 @@ import (
 
 func (s *Server) routes() {
 	fs := http.FileServer(http.Dir("web/static"))
-	s.mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	staticHandler := http.StripPrefix("/static/", fs)
+	s.mux.Handle("/static/sw.js", withServiceWorkerAllowed(staticHandler))
+	s.mux.Handle("/static/", staticHandler)
 
 	// Serve audio files from the audio storage directory.
 	audioFS := http.FileServer(http.Dir(s.cfg.AudioStorageDir))
@@ -72,4 +74,11 @@ func withShareSecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
 		w.Header().Set("Cache-Control", "no-store")
 		next(w, r)
 	}
+}
+
+func withServiceWorkerAllowed(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Service-Worker-Allowed", "/")
+		next.ServeHTTP(w, r)
+	})
 }

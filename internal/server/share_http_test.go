@@ -34,6 +34,12 @@ func TestShareCreateFlowPersistsTokenAndRendersConfirmation(t *testing.T) {
 	if !strings.Contains(responseBody, "/share/") {
 		t.Fatalf("expected response to include share URL")
 	}
+	if !strings.Contains(responseBody, "data:image/png;base64,") {
+		t.Fatalf("expected response to include QR data URL")
+	}
+	if strings.Contains(responseBody, "#ZgotmplZ") {
+		t.Fatalf("expected response not to contain template sanitizer marker")
+	}
 
 	tokens, err := s.queries.ListActiveShareTokensByUser(context.Background(), db.ListActiveShareTokensByUserParams{
 		UserID: 1,

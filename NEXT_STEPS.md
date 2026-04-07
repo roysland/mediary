@@ -31,3 +31,7 @@
 - Tighten share-token single-use semantics under race conditions.
 	Why: `MarkShareTokenAccessed` currently updates `accessed_at_utc` with a guard (`accessed_at_utc IS NULL`) but the handler does not verify affected rows, so two near-simultaneous submissions could both proceed before one update is observed.
 	How: Change the sqlc query to return affected rows (or use `UPDATE ... RETURNING`) and only render the report when exactly one row is transitioned from unused to accessed.
+
+- Replace map-based share confirmation data with a typed view model.
+	Why: The QR image source requires `template.URL` for safe `data:` URL rendering, and loose `map[string]any` payloads make these typed template-safety requirements easier to miss.
+	How: Introduce a small struct for `share_confirmation` template data (including a `template.URL` field for QR code source) and use it in `createShareLink`.

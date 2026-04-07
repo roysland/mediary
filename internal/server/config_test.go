@@ -60,6 +60,32 @@ func TestLoadConfigDefaultWebAuthnOrigins(t *testing.T) {
 	}
 }
 
+func TestLoadConfigServiceWorkerSettings(t *testing.T) {
+	t.Setenv("BUILD_VERSION", "2026.04.07")
+	t.Setenv("SERVICE_WORKER_ENABLED", "false")
+
+	cfg := LoadConfig()
+	if cfg.BuildVersion != "2026.04.07" {
+		t.Fatalf("unexpected BuildVersion: %q", cfg.BuildVersion)
+	}
+	if cfg.ServiceWorkerEnabled {
+		t.Fatal("expected ServiceWorkerEnabled=false")
+	}
+}
+
+func TestLoadConfigServiceWorkerDefaults(t *testing.T) {
+	t.Setenv("BUILD_VERSION", "")
+	t.Setenv("SERVICE_WORKER_ENABLED", "")
+
+	cfg := LoadConfig()
+	if cfg.BuildVersion != "dev" {
+		t.Fatalf("unexpected default BuildVersion: %q", cfg.BuildVersion)
+	}
+	if !cfg.ServiceWorkerEnabled {
+		t.Fatal("expected ServiceWorkerEnabled=true by default")
+	}
+}
+
 func TestValidateWebAuthnConfig_AcceptsMatchingOrigins(t *testing.T) {
 	cfg := Config{
 		DevMode:           false,

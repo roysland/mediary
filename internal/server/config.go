@@ -18,6 +18,10 @@ type Config struct {
 	ListenAddr string
 	// DevMode indicates whether the server is running in development mode.
 	DevMode bool
+	// BuildVersion identifies the current build for client cache invalidation.
+	BuildVersion string
+	// ServiceWorkerEnabled controls whether pages register the service worker.
+	ServiceWorkerEnabled bool
 
 	// AudioStorageDir is the directory where uploaded voice recordings are stored.
 	AudioStorageDir string
@@ -65,6 +69,8 @@ func LoadConfig() Config {
 		DBPath:                      getEnv("DB_PATH", "data/app.db"),
 		ListenAddr:                  getEnv("LISTEN_ADDR", ":8080"),
 		DevMode:                     appEnv != "production",
+		BuildVersion:                getEnv("BUILD_VERSION", "dev"),
+		ServiceWorkerEnabled:        getEnvBool("SERVICE_WORKER_ENABLED", true),
 		AudioStorageDir:             getEnv("AUDIO_STORAGE_DIR", "data/audio"),
 		ImageStorageDir:             getEnv("IMAGE_STORAGE_DIR", "data/images"),
 		WhisperBinaryPath:           getEnv("WHISPER_BINARY_PATH", ""),
@@ -97,6 +103,20 @@ func getEnvInt(key string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return defaultValue
+	}
+
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return defaultValue
+	}
+
+	return parsed
 }
 
 // getEnvCSV splits a comma-separated environment variable into trimmed values.

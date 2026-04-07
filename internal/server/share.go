@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
+	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -127,7 +128,7 @@ func (s *Server) createShareLink(w http.ResponseWriter, r *http.Request) {
 		"ShareURL":      tokenURL,
 		"SharePassword": password,
 		"ExpiresAtUTC":  expiresAt,
-		"QRCodeDataURL": "data:image/png;base64," + base64.StdEncoding.EncodeToString(qrPNG),
+		"QRCodeDataURL": template.URL("data:image/png;base64," + base64.StdEncoding.EncodeToString(qrPNG)),
 		"Scope": map[string]any{
 			"DateFrom": scope.DateFrom,
 			"DateTo":   scope.DateTo,

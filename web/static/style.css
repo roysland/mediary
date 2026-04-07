@@ -836,3 +836,7 @@ html[data-show-sensitive-content="true"] .entry-card-wrapper--private .entry-car
   z-index: 10 !important;
   display: flex; /* Popover API sets display: block by default; override if needed */
 }
+
+.entries-page {
+  margin-block: 0;
+}

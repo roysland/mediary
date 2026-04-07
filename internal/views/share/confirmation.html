@@ -3,9 +3,9 @@
 <section class="card">
     <h1>Share link created</h1>
     <p>This link and password are shown once. Save them now.</p>
-    <p><strong>Link:</strong> <a href="{{ .ShareURL }}">{{ .ShareURL }}</a></p>
+    <p><strong>Link:</strong> <a style="word-wrap: break-word;" href="{{ .ShareURL }}">{{ .ShareURL }}</a></p>
     <p><strong>Password:</strong> {{ .SharePassword }}</p>
-    <p><strong>Expires:</strong> {{ formatUnix .ExpiresAtUTC }}</p>
+    <p><strong>Expires:</strong> <time datetime="{{ formatISO .ExpiresAtUTC }}" is="relative-time">{{ formatUnix .ExpiresAtUTC }}</time></p>
     <img src="{{ .QRCodeDataURL }}" alt="Share link QR code">
 </section>
 {{ end }}

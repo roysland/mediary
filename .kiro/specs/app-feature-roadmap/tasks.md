@@ -262,27 +262,27 @@ Implementation follows the priority order established in requirements: onboardin
     - Add `db/snapshots/production.sql` as the current baseline
     - _Requirements: 5.3_
 
-- [ ] 15. Service worker
-  - [ ] 15.1 Create `web/static/sw.js`
+- [x] 15. Service worker
+  - [x] 15.1 Create `web/static/sw.js`
     - Cache name: `static-v{BUILD_VERSION}` (version injected at build time; `"dev"` in dev mode)
     - `install` event: pre-cache all `/static/` asset URLs from the manifest constant
     - `activate` event: delete all caches not matching current `CACHE_NAME`
     - `fetch` event: cache-first for `/static/` requests; network pass-through for all other URLs (HTML, API, audio, images)
     - No `Notification.requestPermission()` or `push` event listener
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.8_
-  - [ ] 15.2 Add service worker registration to `internal/views/layout.html`
+  - [x] 15.2 Add service worker registration to `internal/views/layout.html`
     - Register `sw.js` scoped to `/` only if `'serviceWorker' in navigator`
     - _Requirements: 6.1_
-  - [ ]* 15.3 Write property test for service worker asset pre-cache completeness
+  - [x]* 15.3 Write property test for service worker asset pre-cache completeness
     - **Property 12: Service worker asset pre-cache completeness**
     - **Validates: Requirements 6.2**
-  - [ ]* 15.4 Write property test for service worker cache invalidation on version change
+  - [x]* 15.4 Write property test for service worker cache invalidation on version change
     - **Property 13: Service worker cache invalidation on version change**
     - **Validates: Requirements 6.4**
-  - [ ]* 15.5 Write property test for service worker passthrough for non-static requests
+  - [x]* 15.5 Write property test for service worker passthrough for non-static requests
     - **Property 14: Service worker passthrough for non-static requests**
     - **Validates: Requirements 6.5**
-  - [ ]* 15.6 Create a config setting for enabling/disabling service worker
+  - [x]* 15.6 Create a config setting for enabling/disabling service worker
 
 - [ ] 16. Checkpoint — service worker
   - Ensure all tests pass. Verify static assets are cached and non-static requests pass through. Ask the user if questions arise.

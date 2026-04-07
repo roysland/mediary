@@ -53,9 +53,9 @@
 
 {{ if .ShowImageUpload }}
 <section class="entry-image-upload" data-image-upload-root>
-    <label for="entry_image_input">{{ t "entry.image.label" }}</label>
-    <p class="entry-image-upload__helper">{{ t "entry.image.helper" }}</p>
-    <form
+    <!-- <label for="entry_image_input">{{ t "entry.image.label" }}</label>
+    <p class="entry-image-upload__helper">{{ t "entry.image.helper" }}</p> -->
+    <form style="display: none;"
         method="post"
         action="/entry/{{ .EntryID }}/images"
         hx-post="/entry/{{ .EntryID }}/images"

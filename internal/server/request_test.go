@@ -187,3 +187,20 @@ func TestOptionalInt64ZeroValueIsNull(t *testing.T) {
 		t.Fatalf("expected zero null int64, got %+v", got)
 	}
 }
+
+func TestWithServiceWorkerAllowedSetsHeader(t *testing.T) {
+	h := withServiceWorkerAllowed(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/static/sw.js?v=dev", nil)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d", rr.Code)
+	}
+	if got := rr.Header().Get("Service-Worker-Allowed"); got != "/" {
+		t.Fatalf("expected Service-Worker-Allowed=/, got %q", got)
+	}
+}
