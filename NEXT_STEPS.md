@@ -35,3 +35,7 @@
 - Replace map-based share confirmation data with a typed view model.
 	Why: The QR image source requires `template.URL` for safe `data:` URL rendering, and loose `map[string]any` payloads make these typed template-safety requirements easier to miss.
 	How: Introduce a small struct for `share_confirmation` template data (including a `template.URL` field for QR code source) and use it in `createShareLink`.
+
+- Add explicit Caddy cache-bypass rules for service worker updates.
+	Why: The app now sets no-cache headers for `/static/sw.js`, but a reverse proxy cache policy can still override or ignore origin intent unless configured explicitly.
+	How: In Caddy config, force `/static/sw.js` and `/static/sw.js*` to `Cache-Control: no-store` (or `max-age=0, must-revalidate`) and bypass any stale-cache middleware for those paths.

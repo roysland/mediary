@@ -203,4 +203,13 @@ func TestWithServiceWorkerAllowedSetsHeader(t *testing.T) {
 	if got := rr.Header().Get("Service-Worker-Allowed"); got != "/" {
 		t.Fatalf("expected Service-Worker-Allowed=/, got %q", got)
 	}
+	if got := rr.Header().Get("Cache-Control"); got != "no-store, no-cache, must-revalidate" {
+		t.Fatalf("expected Cache-Control no-store, got %q", got)
+	}
+	if got := rr.Header().Get("Pragma"); got != "no-cache" {
+		t.Fatalf("expected Pragma no-cache, got %q", got)
+	}
+	if got := rr.Header().Get("Expires"); got != "0" {
+		t.Fatalf("expected Expires=0, got %q", got)
+	}
 }

@@ -42,6 +42,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl ffmpeg libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
+ARG BUILD_VERSION=dev
+
 WORKDIR /app
 
 RUN groupadd --system app \
@@ -57,6 +59,7 @@ RUN mkdir -p /app/data/audio /app/data/models \
     && chown -R app:app /app
 
 ENV APP_ENV=production \
+    BUILD_VERSION=${BUILD_VERSION} \
     LISTEN_ADDR=:8080 \
     DB_PATH=/app/data/app.db \
     AUDIO_STORAGE_DIR=/app/data/audio \

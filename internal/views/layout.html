@@ -22,7 +22,7 @@
 {{ if .ServiceWorker }}
 <script>
 	if ("serviceWorker" in navigator) {
-		navigator.serviceWorker.register("/static/sw.js?v={{ .BuildVersion }}", { scope: "/" }).catch(function(err) {
+		navigator.serviceWorker.register("/static/sw.js?v={{ .BuildVersion }}", { scope: "/", updateViaCache: "none" }).catch(function(err) {
 			console.warn("service worker registration failed", err);
 		});
 	}

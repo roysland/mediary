@@ -568,16 +568,207 @@ The app is available in **English** and **Norwegian**. Language is set in Settin
 
 ---
 
+## Feature 10: Onboarding Flow
+
+### What it is
+New users are guided through a 5-step onboarding wizard on first login. The flow is skippable at every step. Once completed (or fully skipped), it never appears again.
+
+A "How to get started" button on the auth page links to a public preview of step 1 — no login required.
+
+### Steps
+
+| Step | Content |
+|---|---|
+| 1 — Passkey explainer | Explains what passkeys are, why they're more secure than passwords, and that the app assumes one device (with a helper for adding more). |
+| 2 — Language selection | Pick a language; selection is saved immediately to user settings. |
+| 3 — Trackable setup | Browse and add preset trackables inline. |
+| 4 — Audio introduction | Explains voice recording and transcription. |
+| 5 — Navigation | Explains the difference between the Trackables list and adding a trackable to an entry. |
+
+### Screen layout (shared shell)
+
+```
+┌────────────────────────────┐
+│  ● ● ○ ○ ○   Step 2 of 5  │  ← Progress indicator
+│                            │
+│  [Step illustration]       │
+│                            │
+│  [Step content / form]     │
+│                            │
+│  [  Skip  ]  [  Next →  ] │
+└────────────────────────────┘
+```
+
+### Notes for designer
+- Each step has a dedicated illustration (see image descriptions in design doc).
+- The progress indicator should be subtle — not a dominant element.
+- Skip and Next should both be clearly tappable but Next should be the primary action.
+
+---
+
+## Feature 11: Home Page Alert Banner
+
+### What it is
+A dismissible informational banner shown on the home page after an app update. Each release can define a new versioned alert message. Once dismissed, it never reappears for that user (even for that version).
+
+```
+┌────────────────────────────┐
+│  ℹ️  What's new: [message] │
+│                    [✕ Dismiss] │
+└────────────────────────────┘
+```
+
+- The banner is removed from the page immediately on dismiss (no page reload — HTMX swap).
+- If no active alert is configured, nothing is shown.
+- Dismissing one version has no effect on future alert versions.
+
+### Notes for designer
+- Should feel informational, not alarming — use a neutral or soft accent color.
+- The dismiss button must be easy to tap on mobile.
+
+---
+
+## Feature 12: Image Attachments on Entries
+
+### What it is
+Users can attach images to diary entries to document visible symptoms (e.g. rashes, swelling). This is not a gallery — images are attached per entry and displayed inline.
+
+### Constraints
+- Max 2 MB per image (enforced server-side; client-side resize attempted first via Canvas API).
+- Accepted formats: JPEG, PNG, WebP, GIF.
+- Images are stored locally on the server, never using the user-supplied filename.
+- Storage tier is tracked per image to support future migration to object storage.
+
+### Entry card (with image)
+
+```
+┌──────────────────────────┐
+│  3:42 PM                 │
+│  "Rash on left arm"      │
+│  ┌────────────────────┐  │
+│  │  [image thumbnail] │  │  ← Inline image
+│  └────────────────────┘  │
+│  ⚡ Energy: 3/10         │
+│                   [⋯]   │
+└──────────────────────────┘
+```
+
+### Add entry form (with image upload)
+
+```
+┌────────────────────────────┐
+│  [textarea]                │
+│  🔒 Private  [toggle]      │
+│  📎 [Attach image]         │  ← File input (image types only)
+│  [thumbnail preview + ✕]  │  ← Shown after selection
+│  [    Save    ]            │
+└────────────────────────────┘
+```
+
+### Notes for designer
+- Image thumbnails in entry cards should be compact — not full-width.
+- The attach button should feel secondary to the text area.
+- Upload errors (too large, wrong type) should appear inline near the file input.
+
+---
+
+## Feature 13: Secure Share Links
+
+### What it is
+Users can generate a one-time share link and short password to give a doctor or carer read-only access to a scoped health report — no account or passkey required on the recipient's end.
+
+### Flow (user side)
+
+1. User opens Settings → Share → "Generate share link".
+2. Selects a date range and whether to include private entries.
+3. App generates a unique URL and a short 7-character password (e.g. `K7MR2XP`).
+4. A QR code is shown alongside the URL and password — **displayed exactly once**.
+5. User hands the URL + password to their doctor (verbally, printed, or via QR scan).
+
+### Flow (recipient side)
+
+1. Doctor opens the share URL in any browser.
+2. Enters the password.
+3. A read-only, print-friendly health report is rendered.
+4. The link is immediately invalidated — it cannot be used again.
+
+### Confirmation screen (user, shown once)
+
+```
+┌────────────────────────────┐
+│  Share link created        │
+│                            │
+│  ┌──────────────────────┐  │
+│  │  [QR CODE]           │  │
+│  └──────────────────────┘  │
+│  URL: https://app/share/…  │
+│  Password: K7MR2XP         │
+│                            │
+│  ⚠️ Save these now.        │
+│  This screen won't repeat. │
+│                            │
+│  Expires in 30 minutes.    │
+└────────────────────────────┘
+```
+
+### Password entry form (recipient)
+
+```
+┌────────────────────────────┐
+│  Health report             │
+│                            │
+│  Enter the password you    │
+│  received to view this     │
+│  report.                   │
+│                            │
+│  [  Password  ]            │
+│  [  View report  ]         │
+└────────────────────────────┘
+```
+
+### Active tokens list (Settings → Share)
+
+```
+┌────────────────────────────┐
+│  Active share links        │
+│                            │
+│  Mar 20 – Mar 27           │
+│  Expires in 12 min         │
+│  [  Revoke  ]              │
+└────────────────────────────┘
+```
+
+### Security properties
+- Token has at least 128 bits of entropy; password is 7 chars from an unambiguous alphanumeric set.
+- Only hashes are stored in the database — plaintext token and password are never persisted.
+- Links expire after 30 minutes and are single-use.
+- Expired or used tokens return 404 — no information leakage.
+- All share pages include `X-Robots-Tag: noindex` and `Referrer-Policy: no-referrer` headers.
+- The QR code encodes only the URL — the password is never in the QR.
+
+### Notes for designer
+- The confirmation screen must feel urgent — "save this now" — without being alarming.
+- The password should be displayed in a large, easy-to-read monospace font.
+- The report page needs a clean print stylesheet — doctors may print or save as PDF.
+- The password form should give no hint about whether a token exists or has expired.
+
+---
+
 ## Screen Map
 
 ```
-/auth           → Auth (login / register)
-/               → Home (quick capture)
-/entries        → Entries list (day browsing)
-/trackables     → Trackable picker (full page)
-/trackables/add → Add new trackable form
-/settings       → Settings
-/link?t=<token> → Cross-device passkey enrollment
+/auth                → Auth (login / register)
+/onboarding/{step}   → Onboarding wizard (steps 1–5, new users only)
+/onboarding/preview  → Public onboarding preview (no login required)
+/                    → Home (quick capture)
+/entries             → Entries list (day browsing)
+/trackables          → Trackable picker (full page)
+/trackables/add      → Add new trackable form
+/settings            → Settings
+/settings/shares     → Active share tokens list
+/share/create        → Generate share link form
+/share/{token}       → Share report (password-protected, public)
+/link?t=<token>      → Cross-device passkey enrollment
 ```
 
 ---
