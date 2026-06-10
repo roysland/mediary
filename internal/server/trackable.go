@@ -416,10 +416,7 @@ func (s *Server) saveTrackableValue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	referer := r.Header.Get("Referer")
-	if referer == "" {
-		referer = "/trackable"
-	}
-	http.Redirect(w, r, referer, http.StatusSeeOther)
+	safeRedirect(w, r, referer, http.StatusSeeOther)
 }
 
 func (s *Server) deleteTrackable(w http.ResponseWriter, r *http.Request) {
@@ -524,8 +521,5 @@ func (s *Server) saveTrackableDismissal(w http.ResponseWriter, r *http.Request) 
 	}
 
 	referer := r.Header.Get("Referer")
-	if referer == "" {
-		referer = "/trackable"
-	}
-	http.Redirect(w, r, referer, http.StatusSeeOther)
+	safeRedirect(w, r, referer, http.StatusSeeOther)
 }

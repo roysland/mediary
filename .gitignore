@@ -40,7 +40,10 @@ debug
 *.swo
 *~
 .DS_Store
+.kiro
+.claude
 
 # Browser test artifacts
 playwright-report/
 test-results/
+

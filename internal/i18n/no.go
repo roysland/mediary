@@ -1,5 +1,6 @@
 package i18n
 
+//nolint:gosec // G101 false positive: this is a translation catalog, not hardcoded credentials
 var norwegianCatalog = Catalog{
 	"app.title":                                "Symptomsporer",
 	"auth.continue":                            "Fortsett",

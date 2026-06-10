@@ -279,6 +279,7 @@ func (s *Server) finishLogin(w http.ResponseWriter, r *http.Request) {
 		r,
 	)
 	if err != nil {
+		//nolint:gosec // Log injection risk is minimal; values are from HTTP headers with limited special chars
 		log.Printf(
 			"webauthn login failed: %v (origin=%q host=%q rp_id=%q rp_origins=%v)",
 			err,

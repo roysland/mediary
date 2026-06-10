@@ -285,6 +285,7 @@ func (m *SessionManager) setCookie(w http.ResponseWriter, name, value string, tt
 		maxAge = -1
 	}
 
+	//nolint:gosec // G124: Cookie has HttpOnly, Secure, and SameSite attributes
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
 		Value:    value,

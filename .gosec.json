@@ -1,0 +1,18 @@
+{
+  "global": {
+    "audit": false
+  },
+  "severity": "medium",
+  "confidence": "high",
+  "exclude-generated": true,
+  "exclude": [
+    {
+      "paths": [
+        "internal/db/queries.sql.go"
+      ],
+      "rules": [
+        "G101"
+      ]
+    }
+  ]
+}

@@ -128,6 +128,7 @@ func (s *Server) createShareLink(w http.ResponseWriter, r *http.Request) {
 		"ShareURL":      tokenURL,
 		"SharePassword": password,
 		"ExpiresAtUTC":  expiresAt,
+		//nolint:gosec // G203: Safe data URI with base64-encoded binary, not user input
 		"QRCodeDataURL": template.URL("data:image/png;base64," + base64.StdEncoding.EncodeToString(qrPNG)),
 		"Scope": map[string]any{
 			"DateFrom": scope.DateFrom,

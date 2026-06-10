@@ -142,7 +142,7 @@ func (s *Server) startShareTokenCleanupWorker(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				err := s.queries.DeleteExpiredOrUsedShareTokens(context.Background(), time.Now().UTC().Unix())
+				err := s.queries.DeleteExpiredOrUsedShareTokens(ctx, time.Now().UTC().Unix())
 				if err != nil {
 					log.Printf("share token cleanup failed: %v", err)
 				}
